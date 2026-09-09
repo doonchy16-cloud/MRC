@@ -35,9 +35,22 @@ internal static class RunnerProcessAssociator
 
         if (listeners.Length == 0)
         {
-            return workersAtRunnerPath.Length == 0
-                ? new RunnerProcessAssociation(null, Array.Empty<ProcessSnapshot>(), null)
-                : Error("A same-runner worker exists without an associated listener.");
+            if (workersAtRunnerPath.Length != 0)
+            {
+                return Error("A same-runner worker exists without an associated listener.");
+            }
+
+            var unresolved = inventory.Processes
+                .Where(process => IsRunnerProcess(process.ProcessName) && string.IsNullOrWhiteSpace(process.ExecutablePath))
+                .ToArray();
+            if (unresolved.Length != 0)
+            {
+                var detail = string.Join("; ", unresolved.Select(process =>
+                    $"PID {process.ProcessId} {process.ProcessName}: {process.InspectionError ?? "executable path unavailable"}"));
+                return Error($"Runner appears OFF, but unresolved runner-process ownership could overlap this runner. {detail}");
+            }
+
+            return new RunnerProcessAssociation(null, Array.Empty<ProcessSnapshot>(), null);
         }
 
         var listener = listeners[0];
@@ -89,6 +102,12 @@ internal static class RunnerProcessAssociator
 
         return false;
     }
+
+    private static bool IsRunnerProcess(string processName) =>
+        processName.Equals("Runner.Listener", StringComparison.OrdinalIgnoreCase)
+        || processName.Equals("Runner.Listener.exe", StringComparison.OrdinalIgnoreCase)
+        || processName.Equals("Runner.Worker", StringComparison.OrdinalIgnoreCase)
+        || processName.Equals("Runner.Worker.exe", StringComparison.OrdinalIgnoreCase);
 
     private static RunnerProcessAssociation Error(string message) =>
         new(null, Array.Empty<ProcessSnapshot>(), message);
