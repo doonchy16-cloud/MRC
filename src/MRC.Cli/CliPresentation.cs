@@ -54,7 +54,7 @@ public static class CliPresentation
                     DoctorCheckStatus.Fail => ("FAIL", CliTone.Error),
                     _ => ("UNKNOWN", CliTone.Secondary)
                 };
-                lines.Add(new($"[{status}] {finding.Name} • {finding.Id} • {finding.Message}", tone));
+                lines.Add(new($"[{status}] {finding.Name} • {finding.Message}", tone));
             }
         }
 
