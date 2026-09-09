@@ -1,0 +1,39 @@
+name: PASS 4 Operations + Updating
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: PASS 4 + PASS 3 + PASS 2 + PASS 1
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup .NET from global.json
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Verify PASS 4 operations
+        shell: pwsh
+        run: ./scripts/verify-pass4.ps1
+
+      - name: Verify PASS 3 UI regressions
+        shell: pwsh
+        run: ./scripts/verify-pass3.ps1
+
+      - name: Verify PASS 2 engine regressions
+        shell: pwsh
+        run: ./scripts/verify-pass2.ps1
+
+      - name: Verify PASS 1 foundation regressions
+        shell: pwsh
+        run: ./scripts/verify-pass1.ps1
