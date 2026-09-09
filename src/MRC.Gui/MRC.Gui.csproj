@@ -6,8 +6,13 @@
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <AssemblyName>MRC.Gui</AssemblyName>
     <RootNamespace>MRC.Gui</RootNamespace>
+    <ApplicationIcon>Assets\MRC.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\MRC.Core\MRC.Core.csproj" />
+    <Resource Include="Assets\MRC.ico" />
   </ItemGroup>
+  <Target Name="MaterializeMrcIcon" BeforeTargets="PrepareForBuild">
+    <Exec Command="powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\..\..\scripts\materialize-icon.ps1&quot; -Base64Path &quot;$(MSBuildProjectDirectory)\Assets\MRC.ico.b64&quot; -OutputPath &quot;$(MSBuildProjectDirectory)\Assets\MRC.ico&quot;" />
+  </Target>
 </Project>
