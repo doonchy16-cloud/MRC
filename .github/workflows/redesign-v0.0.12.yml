@@ -10,9 +10,9 @@ permissions:
 
 jobs:
   redesign:
-    name: Redesign TDD + Regression Gate
+    name: Redesign + Full Regression Gate
     runs-on: windows-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -26,6 +26,18 @@ jobs:
         shell: pwsh
         run: ./scripts/verify-redesign.ps1
 
-      - name: Run PASS2 runtime regression harness
+      - name: Run PASS4 operations and updater regression
+        shell: pwsh
+        run: ./scripts/verify-pass4.ps1
+
+      - name: Run PASS3 presentation regression
+        shell: pwsh
+        run: ./scripts/verify-pass3.ps1
+
+      - name: Run PASS2 runtime regression
         shell: pwsh
         run: ./scripts/verify-pass2.ps1
+
+      - name: Run PASS1 foundation and distribution regression
+        shell: pwsh
+        run: ./scripts/verify-pass1.ps1
