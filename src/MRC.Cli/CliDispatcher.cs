@@ -28,6 +28,7 @@ public sealed class CliDispatcher
                 return 3;
             }
 
+            await output.WriteLineAsync("✓ Main Runner Control opened.");
             return 0;
         }
 
