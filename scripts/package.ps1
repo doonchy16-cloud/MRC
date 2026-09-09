@@ -3,7 +3,8 @@ param(
     [ValidateSet('Debug', 'Release')]
     [string]$Configuration = 'Release',
     [string]$Runtime = 'win-x64',
-    [string]$ArtifactsRoot = (Join-Path (Split-Path $PSScriptRoot -Parent) 'artifacts')
+    [string]$ArtifactsRoot = (Join-Path (Split-Path $PSScriptRoot -Parent) 'artifacts'),
+    [string]$VersionOverride = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -11,9 +12,14 @@ Set-StrictMode -Version Latest
 
 $repoRoot = Split-Path $PSScriptRoot -Parent
 [xml]$buildProps = Get-Content -LiteralPath (Join-Path $repoRoot 'Directory.Build.props') -Raw
-$version = [string]$buildProps.Project.PropertyGroup.Version
-if ([string]::IsNullOrWhiteSpace($version)) {
+$authorityVersion = [string]$buildProps.Project.PropertyGroup.Version
+if ([string]::IsNullOrWhiteSpace($authorityVersion)) {
     throw 'Directory.Build.props does not define Version.'
+}
+
+$version = if ([string]::IsNullOrWhiteSpace($VersionOverride)) { $authorityVersion } else { $VersionOverride.Trim() }
+if ($version -notmatch '^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$') {
+    throw "Invalid package version: $version"
 }
 
 $packageName = "MRC-v$version-$Runtime"
@@ -37,8 +43,16 @@ $publishCommon = @(
     '-p:IncludeNativeLibrariesForSelfExtract=true',
     '-p:DebugType=None',
     '-p:DebugSymbols=false',
+    "-p:Version=$version",
+    "-p:InformationalVersion=$version",
     '-o', $payloadRoot
 )
+
+if ($version -match '^(\d+)\.(\d+)\.(\d+)$') {
+    $assemblyVersion = "$($Matches[1]).$($Matches[2]).$($Matches[3]).0"
+    $publishCommon += "-p:AssemblyVersion=$assemblyVersion"
+    $publishCommon += "-p:FileVersion=$assemblyVersion"
+}
 
 & dotnet publish (Join-Path $repoRoot 'src\MRC.Cli\MRC.Cli.csproj') @publishCommon
 if ($LASTEXITCODE -ne 0) { throw 'CLI publish failed.' }
@@ -75,5 +89,7 @@ Set-Content -LiteralPath $checksumPath -Value "$hash  $([IO.Path]::GetFileName($
 
 Remove-Item -LiteralPath $stagingRoot -Recurse -Force
 
+Write-Host "Source authority version: $authorityVersion"
+Write-Host "Packaged version: $version"
 Write-Host "Candidate package: $zipPath"
 Write-Host "Checksum authority: $checksumPath"
