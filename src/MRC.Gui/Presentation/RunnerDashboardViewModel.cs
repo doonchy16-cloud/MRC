@@ -15,11 +15,14 @@ public sealed class RunnerDashboardViewModel : INotifyPropertyChanged
     private int _offCount;
     private int _errorCount;
     private int _transitionCount;
+    private bool _hasSystemFindings;
+    private string _systemFindingsSummary = "No external or unattributed runner processes observed.";
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public ObservableCollection<RunnerRowViewModel> Rows { get; } = new();
     public ObservableCollection<RunnerRowViewModel> VisibleRows { get; } = new();
+    public ObservableCollection<RunnerSystemFinding> SystemFindings { get; } = new();
 
     public string SearchText
     {
@@ -52,6 +55,45 @@ public sealed class RunnerDashboardViewModel : INotifyPropertyChanged
     public int OffCount { get => _offCount; private set => Set(ref _offCount, value); }
     public int ErrorCount { get => _errorCount; private set => Set(ref _errorCount, value); }
     public int TransitionCount { get => _transitionCount; private set => Set(ref _transitionCount, value); }
+
+    public bool HasSystemFindings
+    {
+        get => _hasSystemFindings;
+        private set
+        {
+            if (_hasSystemFindings == value) return;
+            _hasSystemFindings = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public string SystemFindingsSummary
+    {
+        get => _systemFindingsSummary;
+        private set
+        {
+            if (string.Equals(_systemFindingsSummary, value, StringComparison.Ordinal)) return;
+            _systemFindingsSummary = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public void ApplyRuntimeReport(RunnerRuntimeReport report)
+    {
+        ArgumentNullException.ThrowIfNull(report);
+        ApplySnapshots(report.ManagedRunners);
+
+        SystemFindings.Clear();
+        foreach (var finding in report.SystemFindings
+                     .OrderBy(finding => finding.Kind)
+                     .ThenBy(finding => finding.ProcessId))
+        {
+            SystemFindings.Add(finding);
+        }
+
+        HasSystemFindings = SystemFindings.Count > 0;
+        SystemFindingsSummary = BuildSystemFindingsSummary(SystemFindings);
+    }
 
     public void ApplySnapshots(IReadOnlyList<RunnerSnapshot> snapshots)
     {
@@ -124,6 +166,22 @@ public sealed class RunnerDashboardViewModel : INotifyPropertyChanged
             || row.DirectoryPath.Contains(term, StringComparison.OrdinalIgnoreCase)
             || row.GitHubUrl.Contains(term, StringComparison.OrdinalIgnoreCase);
     }
+
+    private static string BuildSystemFindingsSummary(IReadOnlyCollection<RunnerSystemFinding> findings)
+    {
+        if (findings.Count == 0)
+        {
+            return "No external or unattributed runner processes observed.";
+        }
+
+        var external = findings.Count(finding => finding.Kind == RunnerSystemFindingKind.External);
+        var unattributed = findings.Count(finding => finding.Kind == RunnerSystemFindingKind.Unattributed);
+        var detail = string.Join(" ; ", findings.Select(finding =>
+            $"{finding.Kind.ToString().ToUpperInvariant()} PID {finding.ProcessId} {finding.ProcessName} // PARENT {Value(finding.ParentProcessId)} // SESSION {Value(finding.SessionId)} // {finding.Message}"));
+        return $"EXTERNAL {external} | UNATTRIBUTED {unattributed} // {detail}";
+    }
+
+    private static string Value(int? value) => value?.ToString() ?? "UNKNOWN";
 
     private static void Synchronize(ObservableCollection<RunnerRowViewModel> target, IReadOnlyList<RunnerRowViewModel> desired)
     {
