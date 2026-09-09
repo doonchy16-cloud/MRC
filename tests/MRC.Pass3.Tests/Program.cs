@@ -10,6 +10,7 @@ internal static class Program
     {
         var animationFailures = AnimationAcceptance.Run();
         var layoutFailures = LayoutAcceptance.Run();
+        var previewFailures = VisualPreviewAcceptance.Run();
 
         var tests = new (string Name, Action Body)[]
         {
@@ -44,7 +45,7 @@ internal static class Program
         Console.WriteLine(failures == 0
             ? $"PASS  all {tests.Length} PASS 3 presentation tests"
             : $"FAIL  {failures} of {tests.Length} PASS 3 presentation tests");
-        return failures == 0 && animationFailures == 0 && layoutFailures == 0 ? 0 : 1;
+        return failures == 0 && animationFailures == 0 && layoutFailures == 0 && previewFailures == 0 ? 0 : 1;
     }
 
     private static void StableSort()
