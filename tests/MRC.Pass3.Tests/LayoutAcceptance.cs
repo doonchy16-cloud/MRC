@@ -15,7 +15,7 @@ internal static class LayoutAcceptance
             ("runner rows bind to stable presentation collections", StableBinding),
             ("search filters and state text remain keyboard-readable", AccessibilitySignals),
             ("narrow layout keeps boundary diagnostics without clipped toolbar copy", NarrowLayoutDiagnosticPolish),
-            ("PASS 4 operations are not smuggled into PASS 3", Pass4ScopeFence)
+            ("PASS 4 controls preserve the verified PASS 3 safety architecture", Pass4IntegrationFence)
         };
 
         var failures = 0;
@@ -147,14 +147,17 @@ internal static class LayoutAcceptance
             "Full boundary diagnostics must remain available by hover on the authorization badge.");
     }
 
-    private static void Pass4ScopeFence()
+    private static void Pass4IntegrationFence()
     {
         var xaml = Xaml();
         var code = CodeBehind();
-        Require(!xaml.Contains("TURN ALL ON", StringComparison.OrdinalIgnoreCase), "PASS 4 bulk ON leaked into PASS 3.");
-        Require(!xaml.Contains("TURN ALL OFF", StringComparison.OrdinalIgnoreCase), "PASS 4 bulk OFF leaked into PASS 3.");
-        Require(!code.Contains("_engine.Start(", StringComparison.Ordinal), "PASS 4 per-runner start wiring leaked into PASS 3.");
-        Require(!code.Contains("_engine.StopIdle(", StringComparison.Ordinal), "PASS 4 per-runner stop wiring leaked into PASS 3.");
+        Require(code.Contains("new RunnerOperationsService(_engine)", StringComparison.Ordinal),
+            "PASS 4 controls must route through RunnerOperationsService rather than replacing PASS 3 state truth.");
+        Require(!code.Contains("_engine.Start(", StringComparison.Ordinal), "GUI bypasses PASS 4 safety orchestration for runner start.");
+        Require(!code.Contains("_engine.StopIdle(", StringComparison.Ordinal), "GUI bypasses PASS 4 safety orchestration for runner stop.");
+        Require(!code.Contains("_engine.ForceStopBusy(", StringComparison.Ordinal), "GUI bypasses PASS 4 safety orchestration for force-stop.");
+        Require(xaml.Contains("RunnerPrimaryControl_OnClick", StringComparison.Ordinal), "PASS 4 primary runner control is not integrated into the verified table.");
+        Require(xaml.Contains("RunnerMoreControl_OnClick", StringComparison.Ordinal), "PASS 4 secondary BUSY path is not integrated into the verified table.");
     }
 
     private static string Xaml() => File.ReadAllText(Path.Combine(RepoRoot(), "src", "MRC.Gui", "MainWindow.xaml"));
