@@ -21,6 +21,9 @@ internal static class Task6CliContract
 
         VerifyVersionToneContract();
         Console.WriteLine("PASS  Task6C3 semantic version presentation");
+
+        VerifyHelpSemantics().GetAwaiter().GetResult();
+        Console.WriteLine("PASS  Task6D2B truthful diagnose/Doctor help semantics");
     }
 
     private static async Task VerifyBareLaunchFeedback()
@@ -174,6 +177,33 @@ internal static class Task6CliContract
             Require(line is not null, $"Version presentation is missing '{prefix}'.");
             Require(Tone(line!) == "Path", $"'{prefix}' tone is {Tone(line!)}, expected Path.");
         }
+    }
+
+    private static async Task VerifyHelpSemantics()
+    {
+        var output = new StringWriter();
+        var error = new StringWriter();
+        var dispatcher = new CliDispatcher(new SuccessfulLauncher());
+
+        var exitCode = await dispatcher.ExecuteAsync(new[] { "--help" }, output, error);
+        var text = output.ToString();
+
+        Require(exitCode == 0, $"MRC --help returned exit code {exitCode}.");
+        Require(string.IsNullOrWhiteSpace(error.ToString()), $"MRC --help wrote to stderr: {error}");
+        Require(text.Contains("-diagnose", StringComparison.OrdinalIgnoreCase),
+            $"Help omits the deep diagnose command: {text}");
+        Require(text.Contains("read-only", StringComparison.OrdinalIgnoreCase),
+            $"Help does not identify diagnose as read-only: {text}");
+
+        var doctorLine = text
+            .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+            .FirstOrDefault(line => line.Contains("-doctor", StringComparison.OrdinalIgnoreCase));
+        Require(doctorLine is not null, $"Help omits Doctor: {text}");
+        Require(doctorLine!.Contains("repair", StringComparison.OrdinalIgnoreCase),
+            $"Doctor help does not describe repair behavior: {doctorLine}");
+        Require(doctorLine.Contains("automatic", StringComparison.OrdinalIgnoreCase)
+                || doctorLine.Contains("low-risk", StringComparison.OrdinalIgnoreCase),
+            $"Doctor help does not identify automatic low-risk repair semantics: {doctorLine}");
     }
 
     private static void Require(bool condition, string message)
