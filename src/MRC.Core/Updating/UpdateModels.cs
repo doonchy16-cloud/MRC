@@ -7,12 +7,32 @@ public enum UpdateOutcome
     Failed
 }
 
+public enum UpdateProgressStage
+{
+    Resolve = 0,
+    Compare = 1,
+    Download = 2,
+    Sha256Verify = 3,
+    ManifestValidate = 4,
+    Install = 5,
+    Activate = 6,
+    ActivationVerify = 7,
+    RollbackRetention = 8,
+    Complete = 9
+}
+
+public sealed record UpdateProgress(
+    UpdateProgressStage Stage,
+    string Message,
+    int? Percent = null);
+
 public sealed record UpdateAsset(string Name, Uri DownloadUrl);
 
 public sealed record UpdateRelease(
     string TagName,
     Version Version,
-    IReadOnlyList<UpdateAsset> Assets);
+    IReadOnlyList<UpdateAsset> Assets,
+    bool IsPrerelease = false);
 
 public sealed record UpdateResult(
     UpdateOutcome Outcome,

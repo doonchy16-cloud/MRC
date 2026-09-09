@@ -1,7 +1,7 @@
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
-$version = '0.0.11'
+$version = '0.0.12'
 $targetMachine = 'DOONCHYSCOMPUTI'
 $runnerRoot = 'D:\Git_Runners_Main'
 $packageFile = "MRC-v$version-win-x64.zip"
@@ -24,7 +24,7 @@ $extractRoot = Join-Path $tempRoot 'package'
 try {
     New-Item -ItemType Directory -Force -Path $tempRoot, $extractRoot | Out-Null
 
-    Write-Host "Downloading MRC v$version..."
+    Write-Host "Downloading MRC v$version (pre-cert)..."
     Invoke-WebRequest -Uri $zipUrl -OutFile $zipPath
     Invoke-WebRequest -Uri $checksumUrl -OutFile $checksumPath
 
@@ -55,20 +55,24 @@ try {
     if ([string]$manifest.version -ne $version) {
         throw "Downloaded package version mismatch. Expected $version, got $($manifest.version)."
     }
+    if ([string]$manifest.releaseStage -ne 'PreCertification' -or [string]$manifest.channel -ne 'precert' -or [string]$manifest.finalTarget -ne '0.1.0') {
+        throw 'Downloaded package release-stage authority is invalid for v0.0.12.'
+    }
 
     $installPath = Join-Path $extractRoot 'install.ps1'
     if (-not (Test-Path -LiteralPath $installPath -PathType Leaf)) {
         throw 'Downloaded package is missing install.ps1.'
     }
 
-    Write-Host "Installing MRC v$version..."
+    Write-Host "Installing MRC v$version (pre-cert)..."
     & powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File $installPath -PackageRoot $extractRoot
     if ($LASTEXITCODE -ne 0) {
         throw "MRC installer failed with exit code $LASTEXITCODE."
     }
 
     Write-Host ''
-    Write-Host "MRC v$version installed successfully."
+    Write-Host "MRC v$version pre-cert installed successfully."
+    Write-Host 'Final target remains v0.1.0.'
     Write-Host 'Open a new PowerShell window, then run: MRC --version'
 }
 finally {

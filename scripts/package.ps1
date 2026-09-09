@@ -18,9 +18,22 @@ if ([string]::IsNullOrWhiteSpace($authorityVersion)) {
 }
 
 $version = if ([string]::IsNullOrWhiteSpace($VersionOverride)) { $authorityVersion } else { $VersionOverride.Trim() }
-if ($version -notmatch '^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$') {
+if ($version -notmatch '^\d+\.\d+\.\d+$') {
     throw "Invalid package version: $version"
 }
+
+if ($version -eq '0.1.0') {
+    $channel = 'stable'
+    $releaseStage = 'Final'
+}
+elseif ($version -match '^0\.0\.\d+$') {
+    $channel = 'precert'
+    $releaseStage = 'PreCertification'
+}
+else {
+    throw "Package version $version is outside the authorized MRC release family (0.0.x pre-cert or 0.1.0 final)."
+}
+$finalTarget = '0.1.0'
 
 $packageName = "MRC-v$version-$Runtime"
 $stagingRoot = Join-Path $ArtifactsRoot 'staging'
@@ -48,11 +61,9 @@ $publishCommon = @(
     '-o', $payloadRoot
 )
 
-if ($version -match '^(\d+)\.(\d+)\.(\d+)$') {
-    $assemblyVersion = "$($Matches[1]).$($Matches[2]).$($Matches[3]).0"
-    $publishCommon += "-p:AssemblyVersion=$assemblyVersion"
-    $publishCommon += "-p:FileVersion=$assemblyVersion"
-}
+$assemblyVersion = "$version.0"
+$publishCommon += "-p:AssemblyVersion=$assemblyVersion"
+$publishCommon += "-p:FileVersion=$assemblyVersion"
 
 & dotnet publish (Join-Path $repoRoot 'src\MRC.Cli\MRC.Cli.csproj') @publishCommon
 if ($LASTEXITCODE -ne 0) { throw 'CLI publish failed.' }
@@ -71,7 +82,9 @@ Copy-Item -LiteralPath (Join-Path $repoRoot 'scripts\install.ps1') -Destination 
 $manifest = [ordered]@{
     product = 'Main Runner Control'
     version = $version
-    channel = 'stable'
+    channel = $channel
+    releaseStage = $releaseStage
+    finalTarget = $finalTarget
     runtime = $Runtime
     targetMachine = 'DOONCHYSCOMPUTI'
     runnerRoot = 'D:\Git_Runners_Main'
@@ -91,5 +104,8 @@ Remove-Item -LiteralPath $stagingRoot -Recurse -Force
 
 Write-Host "Source authority version: $authorityVersion"
 Write-Host "Packaged version: $version"
+Write-Host "Release stage: $releaseStage"
+Write-Host "Channel: $channel"
+Write-Host "Final target: $finalTarget"
 Write-Host "Candidate package: $zipPath"
 Write-Host "Checksum authority: $checksumPath"

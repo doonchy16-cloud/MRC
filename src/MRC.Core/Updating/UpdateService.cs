@@ -11,16 +11,19 @@ public sealed class UpdateService
     private readonly IUpdateReleaseSource _releaseSource;
     private readonly string _installRoot;
     private readonly IUpdateActivationVerifier _activationVerifier;
+    private readonly IProgress<UpdateProgress>? _progress;
 
     public UpdateService(
         IUpdateReleaseSource releaseSource,
         string installRoot,
-        IUpdateActivationVerifier? activationVerifier = null)
+        IUpdateActivationVerifier? activationVerifier = null,
+        IProgress<UpdateProgress>? progress = null)
     {
         _releaseSource = releaseSource ?? throw new ArgumentNullException(nameof(releaseSource));
         if (string.IsNullOrWhiteSpace(installRoot)) throw new ArgumentException("Install root is required.", nameof(installRoot));
         _installRoot = Path.GetFullPath(installRoot);
         _activationVerifier = activationVerifier ?? new PayloadActivationVerifier();
+        _progress = progress;
     }
 
     public async Task<UpdateResult> RunAsync(CancellationToken cancellationToken = default)
@@ -28,14 +31,15 @@ public sealed class UpdateService
         var currentFile = UnderInstallRoot("current.version");
         if (!File.Exists(currentFile))
         {
-            return new UpdateResult(UpdateOutcome.Failed, $"MRC installation is incomplete: {currentFile} is missing.");
+            return Fail($"MRC installation is incomplete: {currentFile} is missing.");
         }
 
         if (!Version.TryParse((await File.ReadAllTextAsync(currentFile, cancellationToken)).Trim(), out var currentVersion))
         {
-            return new UpdateResult(UpdateOutcome.Failed, "MRC current.version does not contain a valid version.");
+            return Fail("MRC current.version does not contain a valid version.");
         }
 
+        Report(UpdateProgressStage.Resolve, "Resolving authorized MRC releases from GitHub.", 5);
         UpdateRelease release;
         try
         {
@@ -43,11 +47,13 @@ public sealed class UpdateService
         }
         catch (Exception ex)
         {
-            return new UpdateResult(UpdateOutcome.Failed, $"Release resolution failed: {ex.Message}", currentVersion, currentVersion);
+            return Fail($"Release resolution failed: {ex.Message}", currentVersion, currentVersion);
         }
 
+        Report(UpdateProgressStage.Compare, $"Installed {currentVersion} -> available {release.Version}.", 10);
         if (release.Version <= currentVersion)
         {
+            Report(UpdateProgressStage.Complete, $"MRC {currentVersion} is already current.", 100);
             return new UpdateResult(UpdateOutcome.UpToDate, $"MRC {currentVersion} is already current.", currentVersion, currentVersion);
         }
 
@@ -56,13 +62,13 @@ public sealed class UpdateService
         var checksumAsset = release.Assets.SingleOrDefault(asset => string.Equals(asset.Name, "SHA256SUMS.txt", StringComparison.Ordinal));
         if (packageAsset is null || checksumAsset is null)
         {
-            return new UpdateResult(
-                UpdateOutcome.Failed,
+            return Fail(
                 $"Release {release.TagName} does not contain required assets {packageName} and SHA256SUMS.txt.",
                 currentVersion,
                 currentVersion);
         }
 
+        Report(UpdateProgressStage.Download, $"Downloading {packageName} and SHA256SUMS.txt.", 20);
         byte[] packageBytes;
         byte[] checksumBytes;
         try
@@ -72,20 +78,21 @@ public sealed class UpdateService
         }
         catch (Exception ex)
         {
-            return new UpdateResult(UpdateOutcome.Failed, $"Release download failed: {ex.Message}", currentVersion, currentVersion);
+            return Fail($"Release download failed: {ex.Message}", currentVersion, currentVersion);
         }
 
+        Report(UpdateProgressStage.Sha256Verify, "Verifying package SHA-256 against release checksum authority.", 35);
         var checksumText = Encoding.UTF8.GetString(checksumBytes);
         var expectedHash = FindExpectedHash(checksumText, packageName);
         if (expectedHash is null)
         {
-            return new UpdateResult(UpdateOutcome.Failed, $"SHA256SUMS.txt does not contain a valid SHA-256 entry for {packageName}.", currentVersion, currentVersion);
+            return Fail($"SHA256SUMS.txt does not contain a valid SHA-256 entry for {packageName}.", currentVersion, currentVersion);
         }
 
         var actualHash = Convert.ToHexString(SHA256.HashData(packageBytes)).ToLowerInvariant();
         if (!string.Equals(expectedHash, actualHash, StringComparison.OrdinalIgnoreCase))
         {
-            return new UpdateResult(UpdateOutcome.Failed, $"SHA-256 verification failed for {packageName}.", currentVersion, currentVersion);
+            return Fail($"SHA-256 verification failed for {packageName}.", currentVersion, currentVersion);
         }
 
         var stagingParent = UnderInstallRoot("staging");
@@ -97,6 +104,7 @@ public sealed class UpdateService
 
         try
         {
+            Report(UpdateProgressStage.ManifestValidate, "Extracting safely and validating package manifest authority.", 45);
             Directory.CreateDirectory(extractRoot);
             ExtractSafely(packageBytes, extractRoot);
             ValidateCandidate(extractRoot, release.Version);
@@ -106,11 +114,13 @@ public sealed class UpdateService
                 throw new InvalidOperationException($"Immutable version directory already exists: {versionRoot}");
             }
 
+            Report(UpdateProgressStage.Install, $"Installing immutable candidate payload {release.Version}.", 60);
             var payloadRoot = Path.Combine(extractRoot, "payload");
             Directory.CreateDirectory(Path.GetDirectoryName(versionRoot)!);
             Directory.Move(payloadRoot, versionRoot);
             candidateInstalled = true;
 
+            Report(UpdateProgressStage.Activate, $"Atomically activating MRC {release.Version}.", 72);
             var previousFile = UnderInstallRoot("previous.version");
             AtomicWrite(previousFile, currentVersion.ToString());
             AtomicWrite(currentFile, release.Version.ToString());
@@ -122,12 +132,15 @@ public sealed class UpdateService
                 throw new InvalidOperationException("Atomic activation pointer verification failed.");
             }
 
+            Report(UpdateProgressStage.ActivationVerify, "Verifying activated executable payload and version identity.", 84);
             var verification = await _activationVerifier.VerifyAsync(versionRoot, release.Version, cancellationToken);
             if (!verification.Success)
             {
                 throw new InvalidOperationException($"Activated candidate verification failed: {verification.Message}");
             }
 
+            Report(UpdateProgressStage.RollbackRetention, $"Rollback retained: {currentVersion}.", 94);
+            Report(UpdateProgressStage.Complete, $"MRC updated {currentVersion} -> {release.Version}.", 100);
             return new UpdateResult(
                 UpdateOutcome.Updated,
                 $"MRC updated from {currentVersion} to {release.Version}. Previous version retained for rollback.",
@@ -138,8 +151,15 @@ public sealed class UpdateService
         {
             if (activeSwitched)
             {
-                try { AtomicWrite(currentFile, currentVersion.ToString()); }
-                catch { }
+                try
+                {
+                    AtomicWrite(currentFile, currentVersion.ToString());
+                    Report(UpdateProgressStage.RollbackRetention, $"Activation failed; restored {currentVersion}.", 94);
+                }
+                catch
+                {
+                    Report(UpdateProgressStage.RollbackRetention, "Activation failed and rollback pointer restoration also failed.", 94);
+                }
             }
 
             if (candidateInstalled)
@@ -148,7 +168,7 @@ public sealed class UpdateService
                 catch { }
             }
 
-            return new UpdateResult(UpdateOutcome.Failed, $"Update candidate was not activated: {ex.Message}", currentVersion, currentVersion);
+            return Fail($"Update candidate was not activated: {ex.Message}", currentVersion, currentVersion);
         }
         finally
         {
@@ -156,6 +176,15 @@ public sealed class UpdateService
             catch { }
         }
     }
+
+    private UpdateResult Fail(string message, Version? previous = null, Version? current = null)
+    {
+        Report(UpdateProgressStage.Complete, message, 100);
+        return new UpdateResult(UpdateOutcome.Failed, message, previous, current);
+    }
+
+    private void Report(UpdateProgressStage stage, string message, int? percent = null) =>
+        _progress?.Report(new UpdateProgress(stage, message, percent));
 
     private string UnderInstallRoot(params string[] segments)
     {
@@ -219,7 +248,9 @@ public sealed class UpdateService
         var root = document.RootElement;
         RequireManifest(root, "product", MrcConstants.ProductName);
         RequireManifest(root, "version", expectedVersion.ToString());
-        RequireManifest(root, "channel", MrcConstants.ReleaseChannel);
+        RequireManifest(root, "channel", ReleaseAuthority.ChannelFor(expectedVersion));
+        RequireManifest(root, "releaseStage", ReleaseAuthority.StageFor(expectedVersion).ToString());
+        RequireManifest(root, "finalTarget", ReleaseAuthority.FinalTargetVersion.ToString());
         RequireManifest(root, "runtime", "win-x64");
         RequireManifest(root, "targetMachine", MrcConstants.TargetMachineName);
         RequireManifest(root, "runnerRoot", MrcConstants.RunnerRoot);
