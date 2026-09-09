@@ -16,7 +16,7 @@ internal static class Program
             ("GUI project builds", BuildGui),
             ("version aliases report canonical identity", VersionAliases),
             ("help aliases report canonical command surface", HelpAliases),
-            ("doctor and update are reserved for PASS 4", ReservedPass4Commands),
+            ("doctor is live while update remains reserved until implemented", Pass4CommandProgression),
             ("unknown CLI flags fail clearly", UnknownFlagFails),
             ("environment fence authorizes only Main-PC exact-root evidence", EnvironmentFenceIsFailClosed),
             ("runner control stays isolated from CLI GUI and install layers", RunnerControlLayering),
@@ -91,14 +91,23 @@ internal static class Program
         }
     }
 
-    private static void ReservedPass4Commands()
+    private static void Pass4CommandProgression()
     {
         EnsureCliBuilt();
-        foreach (var alias in new[] { "-doctor", "--doctor", "-update", "--update" })
+        foreach (var alias in new[] { "-doctor", "--doctor" })
         {
             var result = Run(CliExe(), alias);
-            Require(result.ExitCode == 4, $"{alias} must return reserved exit code 4 before PASS 4, got {result.ExitCode}.");
-            Require(result.Output.Contains("PASS 4", StringComparison.OrdinalIgnoreCase), $"{alias} did not explain its PASS 4 reservation.");
+            Require(result.ExitCode is 0 or 1, $"{alias} must execute live diagnostics with exit code 0 or 1, got {result.ExitCode}.\n{result.Output}");
+            Require(result.Output.Contains("MRC Doctor", StringComparison.Ordinal), $"{alias} omitted Doctor heading.");
+            Require(result.Output.Contains("Machine identity:", StringComparison.Ordinal), $"{alias} omitted machine identity diagnostic.");
+            Require(result.Output.Contains("Release reachability:", StringComparison.Ordinal), $"{alias} omitted release reachability diagnostic.");
+        }
+
+        foreach (var alias in new[] { "-update", "--update" })
+        {
+            var result = Run(CliExe(), alias);
+            Require(result.ExitCode == 4, $"{alias} must remain reserved until the update implementation lands, got {result.ExitCode}.");
+            Require(result.Output.Contains("PASS 4", StringComparison.OrdinalIgnoreCase), $"{alias} did not explain its current PASS 4 reservation.");
         }
     }
 
