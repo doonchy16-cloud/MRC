@@ -20,8 +20,12 @@ if (-not (Test-Path -LiteralPath $runnerRoot -PathType Container)) {
 
 $manifestPath = Join-Path $PackageRoot 'manifest.json'
 $payloadPath = Join-Path $PackageRoot 'payload'
+$iconSourcePath = Join-Path $PackageRoot 'MRC.ico'
 if (-not (Test-Path -LiteralPath $manifestPath -PathType Leaf)) {
     throw "Package manifest is missing: $manifestPath"
+}
+if (-not (Test-Path -LiteralPath $iconSourcePath -PathType Leaf)) {
+    throw "Package icon is missing: $iconSourcePath"
 }
 
 $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
@@ -42,6 +46,7 @@ $versionRoot = Join-Path $versionsRoot $version
 $binRoot = Join-Path $InstallRoot 'bin'
 $configRoot = Join-Path $InstallRoot 'config'
 $currentFile = Join-Path $InstallRoot 'current.version'
+$iconPath = Join-Path $InstallRoot 'MRC.ico'
 
 New-Item -ItemType Directory -Force -Path $versionsRoot, $binRoot, $configRoot | Out-Null
 
@@ -58,6 +63,8 @@ if (-not (Test-Path -LiteralPath $versionRoot -PathType Container)) {
         }
     }
 }
+
+Copy-Item -LiteralPath $iconSourcePath -Destination $iconPath -Force
 
 $currentTemp = "$currentFile.tmp-$([Guid]::NewGuid().ToString('N'))"
 Set-Content -LiteralPath $currentTemp -Value $version -Encoding ascii -NoNewline
@@ -83,6 +90,18 @@ exit /b %ERRORLEVEL%
 '@
 Set-Content -LiteralPath $launcherPath -Value $launcher -Encoding ascii
 
+$programsRoot = [Environment]::GetFolderPath([Environment+SpecialFolder]::Programs)
+if (-not [string]::IsNullOrWhiteSpace($programsRoot)) {
+    $shortcutPath = Join-Path $programsRoot 'Main Runner Control.lnk'
+    $shell = New-Object -ComObject WScript.Shell
+    $shortcut = $shell.CreateShortcut($shortcutPath)
+    $shortcut.TargetPath = $launcherPath
+    $shortcut.WorkingDirectory = $InstallRoot
+    $shortcut.IconLocation = "$iconPath,0"
+    $shortcut.Description = 'Main Runner Control'
+    $shortcut.Save()
+}
+
 $userPath = [Environment]::GetEnvironmentVariable('Path', 'User')
 $pathParts = @($userPath -split ';' | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
 $alreadyPresent = $pathParts | Where-Object { $_.TrimEnd('\\') -ieq $binRoot.TrimEnd('\\') }
@@ -94,4 +113,5 @@ if (-not $alreadyPresent) {
 Write-Host "MRC $version installed for the current user."
 Write-Host "Install root: $InstallRoot"
 Write-Host "PATH command: MRC"
+Write-Host 'Start Menu shortcut: Main Runner Control'
 Write-Host 'Open a new terminal before invoking MRC from PATH.'
