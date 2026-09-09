@@ -1,8 +1,8 @@
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
-$version = '0.0.9'
-$targetMachine = 'Main-PC'
+$version = '0.0.10'
+$targetMachine = 'DOONCHYSCOMPUTI'
 $runnerRoot = 'D:\Git_Runners_Main'
 $packageFile = "MRC-v$version-win-x64.zip"
 $zipUrl = "https://github.com/doonchy16-cloud/MRC/releases/download/v$version/MRC-v$version-win-x64.zip"
