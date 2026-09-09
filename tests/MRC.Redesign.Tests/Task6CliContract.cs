@@ -15,6 +15,9 @@ internal static class Task6CliContract
 
         VerifySemanticPalette();
         Console.WriteLine("PASS  Task6C1 semantic CLI palette");
+
+        VerifyRedirectSafeRenderer();
+        Console.WriteLine("PASS  Task6C2 redirect-safe CLI renderer");
     }
 
     private static async Task VerifyBareLaunchFeedback()
@@ -94,6 +97,41 @@ internal static class Task6CliContract
             Require(actual is ConsoleColor color && color == pair.Value,
                 $"CliPalette maps {pair.Key} to {actual ?? "<null>"}; expected {pair.Value}.");
         }
+    }
+
+    private static void VerifyRedirectSafeRenderer()
+    {
+        var assembly = typeof(CliDispatcher).Assembly;
+        var rendererType = assembly.GetType("MRC.Cli.CliRenderer");
+        Require(rendererType is not null, "CliRenderer is missing.");
+
+        var constructor = rendererType!.GetConstructor(new[] { typeof(TextWriter) });
+        Require(constructor is not null, "CliRenderer(TextWriter) constructor is missing.");
+
+        var writer = new StringWriter();
+        var renderer = constructor!.Invoke(new object[] { writer });
+        var colorEnabled = rendererType.GetProperty("ColorEnabled", BindingFlags.Public | BindingFlags.Instance);
+        Require(colorEnabled is not null, "CliRenderer.ColorEnabled is missing.");
+        Require(colorEnabled!.GetValue(renderer) is false,
+            "CliRenderer incorrectly enables terminal colors for a redirected StringWriter.");
+
+        var writeLine = rendererType.GetMethod(
+            "WriteLineAsync",
+            BindingFlags.Public | BindingFlags.Instance,
+            binder: null,
+            types: new[] { typeof(string), typeof(CliTone) },
+            modifiers: null);
+        Require(writeLine is not null, "CliRenderer.WriteLineAsync(string, CliTone) is missing.");
+
+        var task = writeLine!.Invoke(renderer, new object[] { "renderer-probe", CliTone.Heading }) as Task;
+        Require(task is not null, "CliRenderer.WriteLineAsync did not return a Task.");
+        task!.GetAwaiter().GetResult();
+
+        var text = writer.ToString();
+        Require(text.Contains("renderer-probe", StringComparison.Ordinal),
+            "CliRenderer did not write redirected text.");
+        Require(!text.Contains("\u001b[", StringComparison.Ordinal),
+            "CliRenderer leaked ANSI escape sequences into redirected text.");
     }
 
     private static void Require(bool condition, string message)
