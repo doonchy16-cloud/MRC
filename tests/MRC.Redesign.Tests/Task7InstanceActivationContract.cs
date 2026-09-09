@@ -9,11 +9,11 @@ internal static class Task7InstanceActivationContract
     [ModuleInitializer]
     internal static void Run()
     {
-        VerifyActivationProtocol().GetAwaiter().GetResult();
+        VerifyActivationProtocol();
         Console.WriteLine("PASS  Task7 existing-GUI activation protocol");
     }
 
-    private static async Task VerifyActivationProtocol()
+    private static void VerifyActivationProtocol()
     {
         var coreAssembly = typeof(MrcConstants).Assembly;
         var protocolType = coreAssembly.GetType("MRC.Core.InstanceControl.InstanceActivationProtocol");
@@ -43,22 +43,44 @@ internal static class Task7InstanceActivationContract
             PipeDirection.In,
             1,
             PipeTransmissionMode.Byte,
-            PipeOptions.Asynchronous);
+            PipeOptions.None);
 
-        var receiveTask = Task.Run(async () =>
+        string? received = null;
+        Exception? serverError = null;
+        var serverThread = new Thread(() =>
         {
-            await server.WaitForConnectionAsync();
-            using var reader = new StreamReader(server);
-            return await reader.ReadLineAsync();
-        });
+            try
+            {
+                server.WaitForConnection();
+                using var reader = new StreamReader(server, leaveOpen: true);
+                received = reader.ReadLine();
+            }
+            catch (Exception ex)
+            {
+                serverError = ex;
+            }
+        })
+        {
+            IsBackground = true,
+            Name = "MRC Task7 activation test server"
+        };
+        serverThread.Start();
 
         var activator = ctor!.Invoke(new object[] { pipeName });
         var activationResult = activate!.Invoke(activator, new object[] { TimeSpan.FromSeconds(2) });
         Require(activationResult is not null, "GuiInstanceActivator returned null.");
-        var success = activationResult!.GetType().GetProperty("Success")?.GetValue(activationResult) as bool?;
-        Require(success == true, "GuiInstanceActivator did not report successful activation with a listening pipe.");
+        var successValue = activationResult!.GetType().GetProperty("Success")?.GetValue(activationResult);
+        Require(successValue is bool success && success,
+            "GuiInstanceActivator did not report successful activation with a listening pipe.");
 
-        var received = await receiveTask.WaitAsync(TimeSpan.FromSeconds(3));
+        var serverCompleted = serverThread.Join(TimeSpan.FromSeconds(3));
+        if (!serverCompleted)
+        {
+            server.Dispose();
+            Require(false, "Activation server did not receive a message within 3 seconds.");
+        }
+
+        Require(serverError is null, $"Activation server failed: {serverError?.Message}");
         Require(string.Equals(received, "ACTIVATE", StringComparison.Ordinal),
             $"Activation server received '{received ?? "<null>"}', expected ACTIVATE.");
 
