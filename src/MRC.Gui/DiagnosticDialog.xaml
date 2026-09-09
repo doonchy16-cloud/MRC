@@ -1,0 +1,117 @@
+<Window x:Class="MRC.Gui.DiagnosticDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="MRC // Runner Diagnostic"
+        Width="720"
+        Height="430"
+        MinWidth="620"
+        MinHeight="360"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="CanResize"
+        ShowInTaskbar="False"
+        Background="#0B0F14"
+        Foreground="#F4F7FA"
+        FontFamily="Cascadia Mono, Consolas">
+    <Window.Resources>
+        <SolidColorBrush x:Key="PanelBrush" Color="#0E141B" />
+        <SolidColorBrush x:Key="RaisedBrush" Color="#121B24" />
+        <SolidColorBrush x:Key="BorderBrush" Color="#25313D" />
+        <SolidColorBrush x:Key="LabelBrush" Color="#F4F7FA" />
+        <SolidColorBrush x:Key="SecondaryBrush" Color="#AAB6C3" />
+        <SolidColorBrush x:Key="MutedBrush" Color="#667381" />
+        <SolidColorBrush x:Key="CyanBrush" Color="#35D9FF" />
+        <SolidColorBrush x:Key="ErrorBrush" Color="#FF8A3D" />
+
+        <ControlTemplate x:Key="TerminalButtonTemplate" TargetType="Button">
+            <Border x:Name="Chrome"
+                    Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="1"
+                    Padding="{TemplateBinding Padding}">
+                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Border>
+            <ControlTemplate.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter TargetName="Chrome" Property="Background" Value="#14202A" />
+                    <Setter TargetName="Chrome" Property="BorderBrush" Value="{StaticResource CyanBrush}" />
+                </Trigger>
+            </ControlTemplate.Triggers>
+        </ControlTemplate>
+    </Window.Resources>
+
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" BorderBrush="{StaticResource ErrorBrush}" BorderThickness="0,0,0,1" Padding="0,0,0,10" Margin="0,0,0,12">
+            <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                <TextBlock Text="!" Foreground="{StaticResource ErrorBrush}" FontSize="18" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,10,0" />
+                <StackPanel Grid.Column="1">
+                    <TextBlock Text="MRC // RUNNER DIAGNOSTIC" Foreground="{StaticResource LabelBrush}" FontSize="15" FontWeight="Bold" />
+                    <TextBlock Text="read-only runtime evidence // no control action is performed here" Foreground="{StaticResource MutedBrush}" FontSize="9" Margin="0,3,0,0" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="1" Margin="0,0,0,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="110" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0" Text="RUNNER" Foreground="{StaticResource MutedBrush}" FontSize="9" Margin="0,2,10,6" />
+            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding RunnerName}" Foreground="{StaticResource CyanBrush}" FontSize="10" FontWeight="Bold" Margin="0,2,0,6" />
+
+            <TextBlock Grid.Row="1" Text="REPOSITORY" Foreground="{StaticResource MutedBrush}" FontSize="9" Margin="0,2,10,6" />
+            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding RepositoryName}" Foreground="{StaticResource SecondaryBrush}" FontSize="10" Margin="0,2,0,6" />
+
+            <TextBlock Grid.Row="2" Text="PATH" Foreground="{StaticResource MutedBrush}" FontSize="9" Margin="0,2,10,6" />
+            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding DirectoryPath}" Foreground="{StaticResource SecondaryBrush}" FontSize="10" TextWrapping="Wrap" Margin="0,2,0,6" />
+
+            <TextBlock Grid.Row="3" Text="STATE" Foreground="{StaticResource MutedBrush}" FontSize="9" Margin="0,2,10,0" />
+            <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding StateText}" Foreground="{StaticResource ErrorBrush}" FontSize="10" FontWeight="Bold" Margin="0,2,0,0" />
+        </Grid>
+
+        <Border Grid.Row="2" Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Padding="12">
+            <Grid>
+                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+                <TextBlock Text="RUNTIME EVIDENCE" Foreground="{StaticResource MutedBrush}" FontSize="9" FontWeight="Bold" Margin="0,0,0,8" />
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <TextBlock x:Name="DiagnosticText"
+                               Text="{Binding Error, TargetNullValue=No additional runtime diagnostic was captured.}"
+                               Foreground="{StaticResource LabelBrush}"
+                               FontSize="10"
+                               TextWrapping="Wrap"
+                               LineHeight="17" />
+                </ScrollViewer>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="3" Margin="0,12,0,0">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+            <TextBlock Text="> evidence displayed // unknown processes remain uncontrollable" Foreground="{StaticResource MutedBrush}" FontSize="9" VerticalAlignment="Center" />
+            <Button Grid.Column="1"
+                    Content="[ CLOSE ]"
+                    IsCancel="True"
+                    Foreground="{StaticResource CyanBrush}"
+                    Background="Transparent"
+                    BorderBrush="{StaticResource BorderBrush}"
+                    Padding="10,5"
+                    FontFamily="Cascadia Mono, Consolas"
+                    FontSize="9"
+                    Cursor="Hand"
+                    Template="{StaticResource TerminalButtonTemplate}" />
+        </Grid>
+    </Grid>
+</Window>
