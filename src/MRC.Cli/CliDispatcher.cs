@@ -150,19 +150,10 @@ public sealed class CliDispatcher
 
     private static async Task WriteDoctorAsync(TextWriter output, DoctorReport report)
     {
-        await output.WriteLineAsync("MRC Doctor");
-        await output.WriteLineAsync($"Version: {BuildInfo.Version} • Channel: {MrcConstants.ReleaseChannel}");
-        await output.WriteLineAsync();
-        foreach (var check in report.Checks)
+        var renderer = new CliRenderer(output);
+        foreach (var line in CliPresentation.DoctorLines(report))
         {
-            var status = check.Status switch
-            {
-                DoctorCheckStatus.Pass => "PASS",
-                DoctorCheckStatus.Warning => "WARN",
-                DoctorCheckStatus.Fail => "FAIL",
-                _ => "UNKNOWN"
-            };
-            await output.WriteLineAsync($"{check.Name}: [{status}] {check.Message}");
+            await renderer.WriteLineAsync(line.Text, line.Tone);
         }
     }
 
