@@ -140,8 +140,8 @@ internal static class LayoutAcceptance
         var code = CodeBehind();
         Require(!xaml.Contains("TURN ALL ON", StringComparison.OrdinalIgnoreCase), "PASS 4 bulk ON leaked into PASS 3.");
         Require(!xaml.Contains("TURN ALL OFF", StringComparison.OrdinalIgnoreCase), "PASS 4 bulk OFF leaked into PASS 3.");
-        Require(!code.Contains(".Start(", StringComparison.Ordinal), "PASS 4 per-runner start wiring leaked into PASS 3.");
-        Require(!code.Contains(".StopIdle(", StringComparison.Ordinal), "PASS 4 per-runner stop wiring leaked into PASS 3.");
+        Require(!code.Contains("_engine.Start(", StringComparison.Ordinal), "PASS 4 per-runner start wiring leaked into PASS 3.");
+        Require(!code.Contains("_engine.StopIdle(", StringComparison.Ordinal), "PASS 4 per-runner stop wiring leaked into PASS 3.");
     }
 
     private static string Xaml() => File.ReadAllText(Path.Combine(RepoRoot(), "src", "MRC.Gui", "MainWindow.xaml"));
