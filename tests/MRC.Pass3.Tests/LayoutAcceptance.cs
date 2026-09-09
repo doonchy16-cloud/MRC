@@ -7,19 +7,19 @@ internal static class LayoutAcceptance
         var tests = new (string Name, Action Body)[]
         {
             ("window geometry matches locked authority", WindowGeometry),
-            ("locked palette is present exactly", LockedPalette),
-            ("canonical dashboard regions and controls exist", CanonicalRegions),
-            ("runner table is dense and ellipsizes long identity text", DenseRunnerTable),
-            ("state is represented by stripe glyph text and semantic color", MultiChannelState),
+            ("terminal palette and typography are present", TerminalPalette),
+            ("canonical terminal regions and controls exist", CanonicalRegions),
+            ("runner table is compact and ellipsizes long identity text", DenseRunnerTable),
+            ("state uses glyph text and semantic color", MultiChannelState),
             ("refresh and animation use exactly two shared UI timers", TimerArchitecture),
             ("runner rows bind to stable presentation collections", StableBinding),
             ("search filters and state text remain keyboard-readable", AccessibilitySignals),
-            ("narrow layout keeps boundary diagnostics without clipped toolbar copy", NarrowLayoutDiagnosticPolish),
-            ("PASS 4 controls preserve the verified PASS 3 safety architecture", Pass4IntegrationFence)
+            ("narrow layout keeps diagnostics and system findings available", NarrowLayoutDiagnosticPolish),
+            ("PASS 4 controls preserve the verified safety architecture", Pass4IntegrationFence)
         };
 
         var failures = 0;
-        Console.WriteLine($"MRC PASS 3 dashboard-shell harness — {tests.Length} tests");
+        Console.WriteLine($"MRC PASS 3 terminal-shell harness — {tests.Length} tests");
         foreach (var test in tests)
         {
             try
@@ -36,8 +36,8 @@ internal static class LayoutAcceptance
         }
 
         Console.WriteLine(failures == 0
-            ? $"PASS  all {tests.Length} PASS 3 dashboard-shell tests"
-            : $"FAIL  {failures} of {tests.Length} PASS 3 dashboard-shell tests");
+            ? $"PASS  all {tests.Length} PASS 3 terminal-shell tests"
+            : $"FAIL  {failures} of {tests.Length} PASS 3 terminal-shell tests");
         Console.WriteLine();
         return failures;
     }
@@ -51,19 +51,23 @@ internal static class LayoutAcceptance
         Require(xaml.Contains("MinHeight=\"560\"", StringComparison.Ordinal), "Minimum height must be 560.");
     }
 
-    private static void LockedPalette()
+    private static void TerminalPalette()
     {
         var xaml = Xaml();
         foreach (var color in new[]
         {
-            "#0B0F14", "#111821", "#18212B", "#263342",
+            "#0B0F14", "#0E141B", "#121B24", "#25313D",
             "#F4F7FA", "#AAB6C3", "#667381", "#35D9FF", "#6BE6FF", "#74A9D8", "#C792EA",
-            "#39E58C", "#FFD166", "#FF5C6C", "#FF8A3D", "#4CA7FF", "#B48CFF",
-            "#16222D", "#17344A"
+            "#39E58C", "#FFD166", "#FF5C6C", "#FF8A3D", "#4CA7FF", "#B48CFF"
         })
         {
-            Require(xaml.Contains(color, StringComparison.OrdinalIgnoreCase), $"Locked palette color {color} is missing.");
+            Require(xaml.Contains(color, StringComparison.OrdinalIgnoreCase), $"Terminal palette color {color} is missing.");
         }
+        Require(xaml.Contains("Cascadia Mono", StringComparison.OrdinalIgnoreCase)
+                && xaml.Contains("Consolas", StringComparison.OrdinalIgnoreCase),
+            "Terminal monospace font stack is missing.");
+        Require(!xaml.Contains("FontFamily=\"Segoe UI\"", StringComparison.OrdinalIgnoreCase),
+            "Legacy dashboard typography is still present.");
     }
 
     private static void CanonicalRegions()
@@ -71,36 +75,41 @@ internal static class LayoutAcceptance
         var xaml = Xaml();
         foreach (var marker in new[]
         {
-            "MAIN RUNNER CONTROL", "Machine", "Runner root",
-            "TOTAL", "IDLE", "BUSY", "OFF", "ERROR",
-            "Search runners", "ALL", "STATUS", "RUNNER NAME", "REPOSITORY", "STATE", "CONTROL",
+            "MAIN RUNNER CONTROL", "HOST", "ROOT", "AUTHORIZED",
+            "TOTAL", "IDLE", "BUSY", "OFF", "ERROR", "TRANS",
+            "InlineStatusStrip", "RunnerTableSurface", "SystemFindingsPanel", "TerminalStatusFooter",
+            "Search runners", "ALL", "STAT", "RUNNER", "REPOSITORY", "STATE", "CONTROL",
             "RefreshStatusValue"
         })
         {
-            Require(xaml.Contains(marker, StringComparison.OrdinalIgnoreCase), $"Canonical UI marker '{marker}' is missing.");
+            Require(xaml.Contains(marker, StringComparison.OrdinalIgnoreCase), $"Canonical terminal UI marker '{marker}' is missing.");
         }
     }
 
     private static void DenseRunnerTable()
     {
         var xaml = Xaml();
-        Require(xaml.Contains("Height=\"42\"", StringComparison.Ordinal), "Runner row height must target 42 px.");
+        Require(xaml.Contains("<Setter Property=\"Height\" Value=\"32\"", StringComparison.Ordinal),
+            "Runner row height must be the approved compact 32 px.");
+        Require(!xaml.Contains("<Setter Property=\"Height\" Value=\"42\"", StringComparison.Ordinal),
+            "Superseded 42 px runner rows remain.");
         Require(xaml.Contains("TextTrimming=\"CharacterEllipsis\"", StringComparison.Ordinal), "Long identity text must ellipsize.");
-        foreach (var width in new[] { "Width=\"55\"", "Width=\"250\"", "Width=\"100\"", "Width=\"110\"" })
+        foreach (var width in new[] { "Width=\"48\"", "Width=\"235\"", "Width=\"95\"", "Width=\"108\"" })
         {
-            Require(xaml.Contains(width, StringComparison.Ordinal), $"Canonical table width marker {width} is missing.");
+            Require(xaml.Contains(width, StringComparison.Ordinal), $"Approved terminal table width marker {width} is missing.");
         }
     }
 
     private static void MultiChannelState()
     {
         var xaml = Xaml();
-        Require(xaml.Contains("StateStripe", StringComparison.Ordinal), "State-colored stripe is missing.");
-        Require(xaml.Contains("Glyph", StringComparison.Ordinal), "State glyph binding is missing.");
-        Require(xaml.Contains("StateText", StringComparison.Ordinal), "State text binding is missing.");
-        foreach (var state in new[] { "IDLE", "BUSY", "OFF", "ERROR", "STARTING", "STOPPING" })
+        Require(xaml.Contains("{Binding Glyph}", StringComparison.Ordinal), "State glyph binding is missing.");
+        Require(xaml.Contains("{Binding StateText}", StringComparison.Ordinal), "State text binding is missing.");
+        Require(xaml.Contains("Opacity=\"{Binding AnimationIntensity}\"", StringComparison.Ordinal),
+            "Shared-clock animation intensity is not rendered on the state glyph.");
+        foreach (var brush in new[] { "IdleBrush", "BusyBrush", "OffBrush", "ErrorBrush", "StartingBrush", "StoppingBrush" })
         {
-            Require(xaml.Contains(state, StringComparison.Ordinal), $"Visual handling for {state} is missing.");
+            Require(xaml.Contains(brush, StringComparison.Ordinal), $"Semantic state color {brush} is missing.");
         }
     }
 
@@ -111,6 +120,7 @@ internal static class LayoutAcceptance
         Require(code.Contains("_refreshTimer", StringComparison.Ordinal), "Shared refresh timer is missing.");
         Require(code.Contains("_animationTimer", StringComparison.Ordinal), "Shared animation timer is missing.");
         Require(code.Contains("TimeSpan.FromSeconds(3)", StringComparison.Ordinal), "Refresh cadence must be approximately three seconds.");
+        Require(code.Contains("TimeSpan.FromMilliseconds(55)", StringComparison.Ordinal), "Shared animation tick must remain 55 ms.");
         Require(Count(code, "new DispatcherTimer") == 2, "MainWindow must create exactly one refresh timer and one shared animation timer.");
         Require(!rows.Contains("DispatcherTimer", StringComparison.Ordinal), "Runner rows must never allocate timers.");
     }
@@ -139,12 +149,14 @@ internal static class LayoutAcceptance
     {
         var xaml = Xaml();
         var code = CodeBehind();
-        Require(!xaml.Contains("x:Name=\"DetailsValue\"", StringComparison.Ordinal),
-            "Inline diagnostics remain in the crowded search/filter toolbar and can visibly truncate at minimum width.");
         Require(code.Contains("AutomationProperties.SetHelpText(BoundaryValue", StringComparison.Ordinal),
             "Full boundary diagnostics must remain available as accessible help text on the authorization badge.");
         Require(code.Contains("BoundaryValue.ToolTip", StringComparison.Ordinal),
             "Full boundary diagnostics must remain available by hover on the authorization badge.");
+        Require(xaml.Contains("SystemFindingsSummary", StringComparison.Ordinal),
+            "External/system findings are not available in the compact layout.");
+        Require(xaml.Contains("TextTrimming=\"CharacterEllipsis\"", StringComparison.Ordinal),
+            "Compact layout does not protect long text at minimum width.");
     }
 
     private static void Pass4IntegrationFence()
