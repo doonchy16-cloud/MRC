@@ -16,7 +16,7 @@ internal static class Program
             ("GUI project builds", BuildGui),
             ("version aliases report canonical identity", VersionAliases),
             ("help aliases report canonical command surface", HelpAliases),
-            ("doctor is live while update remains reserved until implemented", Pass4CommandProgression),
+            ("doctor and update are live PASS 4 commands", Pass4CommandsLive),
             ("unknown CLI flags fail clearly", UnknownFlagFails),
             ("environment fence authorizes only Main-PC exact-root evidence", EnvironmentFenceIsFailClosed),
             ("runner control stays isolated from CLI GUI and install layers", RunnerControlLayering),
@@ -91,7 +91,7 @@ internal static class Program
         }
     }
 
-    private static void Pass4CommandProgression()
+    private static void Pass4CommandsLive()
     {
         EnsureCliBuilt();
         foreach (var alias in new[] { "-doctor", "--doctor" })
@@ -106,8 +106,9 @@ internal static class Program
         foreach (var alias in new[] { "-update", "--update" })
         {
             var result = Run(CliExe(), alias);
-            Require(result.ExitCode == 4, $"{alias} must remain reserved until the update implementation lands, got {result.ExitCode}.");
-            Require(result.Output.Contains("PASS 4", StringComparison.OrdinalIgnoreCase), $"{alias} did not explain its current PASS 4 reservation.");
+            Require(result.ExitCode is 0 or 1, $"{alias} must execute the live update path with exit code 0 or 1, got {result.ExitCode}.\n{result.Output}");
+            Require(result.Output.Contains("MRC Update", StringComparison.Ordinal), $"{alias} omitted Update heading.");
+            Require(!result.Output.Contains("reserved", StringComparison.OrdinalIgnoreCase), $"{alias} still reports the update command as reserved.");
         }
     }
 
