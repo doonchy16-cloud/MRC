@@ -104,15 +104,11 @@ public sealed class CliDispatcher
     private static async Task WriteVersionAsync(TextWriter output)
     {
         var installLocation = AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-        var release = ReleaseAuthority.Current;
-        var stage = release.Stage == ReleaseStage.PreCertification ? "PRE-CERTIFICATION" : "FINAL";
-        await output.WriteLineAsync(MrcConstants.ProductName);
-        await output.WriteLineAsync($"Version: {release.Version}");
-        await output.WriteLineAsync($"Channel: {release.Channel}");
-        await output.WriteLineAsync($"Stage: {stage}");
-        await output.WriteLineAsync($"Final target: {release.FinalTarget}");
-        await output.WriteLineAsync($"Install location: {installLocation}");
-        await output.WriteLineAsync($"Runner root: {MrcConstants.RunnerRoot}");
+        var renderer = new CliRenderer(output);
+        foreach (var line in CliPresentation.VersionLines(installLocation))
+        {
+            await renderer.WriteLineAsync(line.Text, line.Tone);
+        }
     }
 
     private static async Task WriteDoctorAsync(TextWriter output, DoctorReport report)
