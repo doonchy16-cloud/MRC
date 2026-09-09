@@ -7,10 +7,20 @@ namespace MRC.Cli;
 public sealed class CliDispatcher
 {
     private readonly IGuiLauncher _guiLauncher;
+    private readonly Func<DoctorRunOptions, CancellationToken, Task<DoctorReport>> _doctorRunner;
 
     public CliDispatcher(IGuiLauncher guiLauncher)
+        : this(guiLauncher, static (options, cancellationToken) =>
+            new DoctorService().RunAsync(options, cancellationToken))
     {
-        _guiLauncher = guiLauncher;
+    }
+
+    public CliDispatcher(
+        IGuiLauncher guiLauncher,
+        Func<DoctorRunOptions, CancellationToken, Task<DoctorReport>> doctorRunner)
+    {
+        _guiLauncher = guiLauncher ?? throw new ArgumentNullException(nameof(guiLauncher));
+        _doctorRunner = doctorRunner ?? throw new ArgumentNullException(nameof(doctorRunner));
     }
 
     public async Task<int> ExecuteAsync(string[] args, TextWriter output, TextWriter error)
@@ -56,7 +66,9 @@ public sealed class CliDispatcher
             case "-doctor":
             case "--doctor":
             {
-                var report = await new DoctorService().RunAsync();
+                var report = await _doctorRunner(
+                    new DoctorRunOptions(ApplyAutomaticRepairs: true),
+                    CancellationToken.None);
                 await WriteDoctorAsync(output, report);
                 return report.ExitCode;
             }
