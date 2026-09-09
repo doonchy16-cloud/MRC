@@ -1,50 +1,351 @@
 <Window x:Class="MRC.Gui.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:runtime="clr-namespace:MRC.Core.Runtime;assembly=MRC.Core"
         Title="Main Runner Control"
-        Width="760"
-        Height="420"
-        MinWidth="640"
-        MinHeight="360"
+        Width="1180"
+        Height="760"
+        MinWidth="900"
+        MinHeight="560"
         WindowStartupLocation="CenterScreen"
         Background="#0B0F14"
-        Foreground="#F4F7FA">
-    <Grid Margin="28">
-        <Border Background="#111821" BorderBrush="#263342" BorderThickness="1" CornerRadius="8" Padding="24">
+        Foreground="#F4F7FA"
+        FontFamily="Segoe UI">
+    <Window.Resources>
+        <SolidColorBrush x:Key="BackgroundBrush" Color="#0B0F14" />
+        <SolidColorBrush x:Key="PanelBrush" Color="#111821" />
+        <SolidColorBrush x:Key="RaisedBrush" Color="#18212B" />
+        <SolidColorBrush x:Key="BorderBrush" Color="#263342" />
+        <SolidColorBrush x:Key="LabelBrush" Color="#F4F7FA" />
+        <SolidColorBrush x:Key="SecondaryBrush" Color="#AAB6C3" />
+        <SolidColorBrush x:Key="MutedBrush" Color="#667381" />
+        <SolidColorBrush x:Key="RunnerBrush" Color="#35D9FF" />
+        <SolidColorBrush x:Key="RepositoryBrush" Color="#6BE6FF" />
+        <SolidColorBrush x:Key="MetadataBrush" Color="#74A9D8" />
+        <SolidColorBrush x:Key="CountBrush" Color="#C792EA" />
+        <SolidColorBrush x:Key="IdleBrush" Color="#39E58C" />
+        <SolidColorBrush x:Key="BusyBrush" Color="#FFD166" />
+        <SolidColorBrush x:Key="OffBrush" Color="#FF5C6C" />
+        <SolidColorBrush x:Key="ErrorBrush" Color="#FF8A3D" />
+        <SolidColorBrush x:Key="StartingBrush" Color="#4CA7FF" />
+        <SolidColorBrush x:Key="StoppingBrush" Color="#B48CFF" />
+        <SolidColorBrush x:Key="HoverBrush" Color="#16222D" />
+        <SolidColorBrush x:Key="SelectedBrush" Color="#17344A" />
+
+        <Style x:Key="FilterButtonStyle" TargetType="Button">
+            <Setter Property="Foreground" Value="{StaticResource SecondaryBrush}" />
+            <Setter Property="Background" Value="{StaticResource RaisedBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="12,6" />
+            <Setter Property="Margin" Value="0,0,6,0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{StaticResource HoverBrush}" />
+                    <Setter Property="BorderBrush" Value="{StaticResource RunnerBrush}" />
+                    <Setter Property="Foreground" Value="{StaticResource LabelBrush}" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="RowItemStyle" TargetType="ListViewItem">
+            <Setter Property="Height" Value="42" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Stretch" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Focusable" Value="True" />
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{StaticResource HoverBrush}" />
+                </Trigger>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="{StaticResource SelectedBrush}" />
+                    <Setter Property="BorderBrush" Value="{StaticResource RunnerBrush}" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="StateForegroundStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource SecondaryBrush}" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding State}" Value="{x:Static runtime:RunnerState.IDLE}">
+                    <Setter Property="Foreground" Value="{StaticResource IdleBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding State}" Value="{x:Static runtime:RunnerState.BUSY}">
+                    <Setter Property="Foreground" Value="{StaticResource BusyBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding State}" Value="{x:Static runtime:RunnerState.OFF}">
+                    <Setter Property="Foreground" Value="{StaticResource OffBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding State}" Value="{x:Static runtime:RunnerState.ERROR}">
+                    <Setter Property="Foreground" Value="{StaticResource ErrorBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding State}" Value="{x:Static runtime:RunnerState.STARTING}">
+                    <Setter Property="Foreground" Value="{StaticResource StartingBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding State}" Value="{x:Static runtime:RunnerState.STOPPING}">
+                    <Setter Property="Foreground" Value="{StaticResource StoppingBrush}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="StateStripeStyle" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource MutedBrush}" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding State}" Value="{x:Static runtime:RunnerState.IDLE}">
+                    <Setter Property="Background" Value="{StaticResource IdleBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding State}" Value="{x:Static runtime:RunnerState.BUSY}">
+                    <Setter Property="Background" Value="{StaticResource BusyBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding State}" Value="{x:Static runtime:RunnerState.OFF}">
+                    <Setter Property="Background" Value="{StaticResource OffBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding State}" Value="{x:Static runtime:RunnerState.ERROR}">
+                    <Setter Property="Background" Value="{StaticResource ErrorBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding State}" Value="{x:Static runtime:RunnerState.STARTING}">
+                    <Setter Property="Background" Value="{StaticResource StartingBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding State}" Value="{x:Static runtime:RunnerState.STOPPING}">
+                    <Setter Property="Background" Value="{StaticResource StoppingBrush}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="StateBorderStyle" TargetType="Border">
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding State}" Value="{x:Static runtime:RunnerState.IDLE}">
+                    <Setter Property="BorderBrush" Value="{StaticResource IdleBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding State}" Value="{x:Static runtime:RunnerState.BUSY}">
+                    <Setter Property="BorderBrush" Value="{StaticResource BusyBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding State}" Value="{x:Static runtime:RunnerState.OFF}">
+                    <Setter Property="BorderBrush" Value="{StaticResource OffBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding State}" Value="{x:Static runtime:RunnerState.ERROR}">
+                    <Setter Property="BorderBrush" Value="{StaticResource ErrorBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding State}" Value="{x:Static runtime:RunnerState.STARTING}">
+                    <Setter Property="BorderBrush" Value="{StaticResource StartingBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding State}" Value="{x:Static runtime:RunnerState.STOPPING}">
+                    <Setter Property="BorderBrush" Value="{StaticResource StoppingBrush}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
+    <Grid x:Name="RootSurface" Background="{StaticResource BackgroundBrush}" Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Margin="0,0,0,14">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
             <StackPanel>
-                <TextBlock Text="MAIN RUNNER CONTROL" FontSize="24" FontWeight="SemiBold" Foreground="#F4F7FA" />
-                <TextBlock Text="PASS 1 FOUNDATION" Margin="0,4,0,24" FontSize="12" Foreground="#74A9D8" />
+                <TextBlock Text="MAIN RUNNER CONTROL" FontSize="25" FontWeight="SemiBold" Foreground="{StaticResource LabelBrush}" />
+                <StackPanel Orientation="Horizontal" Margin="0,7,0,0">
+                    <TextBlock Text="Machine" Foreground="{StaticResource MutedBrush}" FontSize="11" />
+                    <TextBlock x:Name="MachineValue" Margin="7,0,18,0" Foreground="{StaticResource RunnerBrush}" FontSize="11" FontWeight="SemiBold" />
+                    <TextBlock Text="Runner root" Foreground="{StaticResource MutedBrush}" FontSize="11" />
+                    <TextBlock x:Name="RootValue" Margin="7,0,0,0" Foreground="{StaticResource MetadataBrush}" FontSize="11" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+            </StackPanel>
+            <Border Grid.Column="1" Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="12,7" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal">
+                    <Ellipse x:Name="BoundaryDot" Width="8" Height="8" Fill="{StaticResource ErrorBrush}" Margin="0,0,8,0" VerticalAlignment="Center" />
+                    <TextBlock x:Name="BoundaryValue" Text="CHECKING" Foreground="{StaticResource SecondaryBrush}" FontSize="11" FontWeight="SemiBold" />
+                </StackPanel>
+            </Border>
+        </Grid>
 
+        <Grid Grid.Row="1" Margin="0,0,0,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Border Grid.Column="0" Margin="0,0,7,0" Padding="12,9" Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6">
+                <StackPanel><TextBlock Text="TOTAL" Foreground="{StaticResource MutedBrush}" FontSize="10" /><TextBlock Text="{Binding TotalCount}" Foreground="{StaticResource CountBrush}" FontSize="20" FontWeight="SemiBold" /></StackPanel>
+            </Border>
+            <Border Grid.Column="1" Margin="0,0,7,0" Padding="12,9" Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource IdleBrush}" BorderThickness="1" CornerRadius="6">
+                <StackPanel><TextBlock Text="IDLE" Foreground="{StaticResource MutedBrush}" FontSize="10" /><TextBlock Text="{Binding IdleCount}" Foreground="{StaticResource IdleBrush}" FontSize="20" FontWeight="SemiBold" /></StackPanel>
+            </Border>
+            <Border Grid.Column="2" Margin="0,0,7,0" Padding="12,9" Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource BusyBrush}" BorderThickness="1" CornerRadius="6">
+                <StackPanel><TextBlock Text="BUSY" Foreground="{StaticResource MutedBrush}" FontSize="10" /><TextBlock Text="{Binding BusyCount}" Foreground="{StaticResource BusyBrush}" FontSize="20" FontWeight="SemiBold" /></StackPanel>
+            </Border>
+            <Border Grid.Column="3" Margin="0,0,7,0" Padding="12,9" Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource OffBrush}" BorderThickness="1" CornerRadius="6">
+                <StackPanel><TextBlock Text="OFF" Foreground="{StaticResource MutedBrush}" FontSize="10" /><TextBlock Text="{Binding OffCount}" Foreground="{StaticResource OffBrush}" FontSize="20" FontWeight="SemiBold" /></StackPanel>
+            </Border>
+            <Border Grid.Column="4" Margin="0,0,7,0" Padding="12,9" Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource ErrorBrush}" BorderThickness="1" CornerRadius="6">
+                <StackPanel><TextBlock Text="ERROR" Foreground="{StaticResource MutedBrush}" FontSize="10" /><TextBlock Text="{Binding ErrorCount}" Foreground="{StaticResource ErrorBrush}" FontSize="20" FontWeight="SemiBold" /></StackPanel>
+            </Border>
+            <Border Grid.Column="5" Padding="12,9" Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource StartingBrush}" BorderThickness="1" CornerRadius="6">
+                <StackPanel><TextBlock Text="TRANSITION" Foreground="{StaticResource MutedBrush}" FontSize="10" /><TextBlock Text="{Binding TransitionCount}" Foreground="{StaticResource StartingBrush}" FontSize="20" FontWeight="SemiBold" /></StackPanel>
+            </Border>
+        </Grid>
+
+        <Grid Grid.Row="2" Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="330" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Border Background="{StaticResource RaisedBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="10,0" Height="36">
                 <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="150" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-
-                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Machine" Margin="0,0,12,12" Foreground="#AAB6C3" />
-                    <TextBlock x:Name="MachineValue" Grid.Row="0" Grid.Column="1" Margin="0,0,0,12" Foreground="#35D9FF" />
-
-                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Runner root" Margin="0,0,12,12" Foreground="#AAB6C3" />
-                    <TextBlock x:Name="RootValue" Grid.Row="1" Grid.Column="1" Margin="0,0,0,12" Foreground="#74A9D8" />
-
-                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Boundary" Margin="0,0,12,0" Foreground="#AAB6C3" />
-                    <TextBlock x:Name="BoundaryValue" Grid.Row="2" Grid.Column="1" FontWeight="SemiBold" />
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                    <TextBlock Text="⌕" Foreground="{StaticResource MetadataBrush}" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0" />
+                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                        <TextBlock Text="Search runners" Foreground="{StaticResource MutedBrush}" FontSize="10" VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <TextBox x:Name="SearchBox"
+                                 AutomationProperties.Name="Search runners by runner name repository or folder"
+                                 TextChanged="SearchBox_OnTextChanged"
+                                 Background="Transparent"
+                                 BorderThickness="0"
+                                 Foreground="{StaticResource LabelBrush}"
+                                 CaretBrush="{StaticResource RunnerBrush}"
+                                 VerticalContentAlignment="Center"
+                                 FontSize="12"
+                                 MinWidth="160" />
+                    </StackPanel>
                 </Grid>
+            </Border>
 
-                <Border Margin="0,24,0,0" Padding="14" Background="#18212B" BorderBrush="#263342" BorderThickness="1" CornerRadius="5">
-                    <TextBlock x:Name="DetailsValue" TextWrapping="Wrap" Foreground="#AAB6C3" />
+            <StackPanel x:Name="FilterPanel" Grid.Column="1" Orientation="Horizontal" Margin="12,0,0,0" VerticalAlignment="Center">
+                <Button Content="ALL" Tag="ALL" AutomationProperties.Name="Show all runners" Style="{StaticResource FilterButtonStyle}" Click="FilterButton_OnClick" />
+                <Button Content="IDLE" Tag="IDLE" AutomationProperties.Name="Show idle runners" Style="{StaticResource FilterButtonStyle}" Click="FilterButton_OnClick" />
+                <Button Content="BUSY" Tag="BUSY" AutomationProperties.Name="Show busy runners" Style="{StaticResource FilterButtonStyle}" Click="FilterButton_OnClick" />
+                <Button Content="OFF" Tag="OFF" AutomationProperties.Name="Show off runners" Style="{StaticResource FilterButtonStyle}" Click="FilterButton_OnClick" />
+                <Button Content="ERROR" Tag="ERROR" AutomationProperties.Name="Show error runners" Style="{StaticResource FilterButtonStyle}" Click="FilterButton_OnClick" />
+            </StackPanel>
+
+            <TextBlock Grid.Column="2" x:Name="DetailsValue" Margin="12,0" Foreground="{StaticResource MutedBrush}" FontSize="10" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+
+            <Button Grid.Column="3"
+                    x:Name="ManualRefreshButton"
+                    AutomationProperties.Name="Refresh runner states now"
+                    Content="↻  REFRESH"
+                    Click="ManualRefreshButton_OnClick"
+                    Style="{StaticResource FilterButtonStyle}"
+                    Margin="0" />
+        </Grid>
+
+        <Border Grid.Row="3" Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="7" ClipToBounds="True">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="34" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Border Background="{StaticResource RaisedBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1">
+                    <Grid Margin="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="55" />
+                            <ColumnDefinition Width="250" />
+                            <ColumnDefinition Width="*" MinWidth="220" />
+                            <ColumnDefinition Width="100" />
+                            <ColumnDefinition Width="110" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="STATUS" Foreground="{StaticResource MutedBrush}" FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                        <TextBlock Grid.Column="1" Text="RUNNER NAME" Foreground="{StaticResource MutedBrush}" FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="2" Text="REPOSITORY" Foreground="{StaticResource MutedBrush}" FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="3" Text="STATE" Foreground="{StaticResource MutedBrush}" FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="4" Text="CONTROL" Foreground="{StaticResource MutedBrush}" FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                    </Grid>
                 </Border>
 
-                <TextBlock Margin="0,18,0,0"
-                           Text="Runner discovery and controls are intentionally not implemented in PASS 1."
-                           Foreground="#667381"
-                           FontSize="12" />
-            </StackPanel>
+                <ListView Grid.Row="1"
+                          x:Name="RunnerList"
+                          AutomationProperties.Name="Runner status table"
+                          ItemsSource="{Binding VisibleRows}"
+                          ItemContainerStyle="{StaticResource RowItemStyle}"
+                          Background="Transparent"
+                          BorderThickness="0"
+                          Foreground="{StaticResource LabelBrush}"
+                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                          ScrollViewer.VerticalScrollBarVisibility="Auto"
+                          VirtualizingPanel.IsVirtualizing="True"
+                          VirtualizingPanel.VirtualizationMode="Recycling">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Height="42" ToolTip="{Binding DirectoryPath}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="55" />
+                                    <ColumnDefinition Width="250" />
+                                    <ColumnDefinition Width="*" MinWidth="220" />
+                                    <ColumnDefinition Width="100" />
+                                    <ColumnDefinition Width="110" />
+                                </Grid.ColumnDefinitions>
+
+                                <Grid Grid.Column="0">
+                                    <Border x:Name="StateStripe" Style="{StaticResource StateStripeStyle}" Width="4" HorizontalAlignment="Left" />
+                                    <TextBlock Text="{Binding Glyph}" Style="{StaticResource StateForegroundStyle}" FontFamily="Consolas" FontSize="15" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Grid>
+
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding RunnerName}"
+                                           AutomationProperties.Name="{Binding RunnerName}"
+                                           Foreground="{StaticResource RunnerBrush}"
+                                           TextTrimming="CharacterEllipsis"
+                                           VerticalAlignment="Center"
+                                           FontSize="12"
+                                           FontWeight="SemiBold"
+                                           Margin="0,0,14,0" />
+
+                                <TextBlock Grid.Column="2"
+                                           Text="{Binding RepositoryName}"
+                                           Foreground="{StaticResource RepositoryBrush}"
+                                           TextTrimming="CharacterEllipsis"
+                                           VerticalAlignment="Center"
+                                           FontSize="12"
+                                           Margin="0,0,14,0" />
+
+                                <TextBlock Grid.Column="3"
+                                           Text="{Binding StateText}"
+                                           AutomationProperties.Name="{Binding StateText}"
+                                           Style="{StaticResource StateForegroundStyle}"
+                                           VerticalAlignment="Center"
+                                           FontSize="11"
+                                           FontWeight="SemiBold" />
+
+                                <Border Grid.Column="4" Style="{StaticResource StateBorderStyle}" Background="{StaticResource RaisedBrush}" BorderThickness="1" CornerRadius="4" Padding="8,4" Margin="10,7" HorizontalAlignment="Stretch">
+                                    <TextBlock Text="{Binding ControlText}" Style="{StaticResource StateForegroundStyle}" FontSize="10" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Border>
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </Grid>
         </Border>
+
+        <Grid Grid.Row="4" Margin="2,10,2,0">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+            <StackPanel Orientation="Horizontal">
+                <Ellipse Width="6" Height="6" Fill="{StaticResource MetadataBrush}" VerticalAlignment="Center" Margin="0,0,7,0" />
+                <TextBlock x:Name="RefreshStatusValue" Text="Initializing runner state engine…" Foreground="{StaticResource SecondaryBrush}" FontSize="10" VerticalAlignment="Center" />
+            </StackPanel>
+            <TextBlock Grid.Column="1" Text="State truth: MRC.Core  •  UI refresh ~3s  •  controls activate in PASS 4" Foreground="{StaticResource MutedBrush}" FontSize="10" VerticalAlignment="Center" />
+        </Grid>
     </Grid>
 </Window>
