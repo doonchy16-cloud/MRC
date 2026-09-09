@@ -8,19 +8,35 @@ public sealed class CliDispatcher
 {
     private readonly IGuiLauncher _guiLauncher;
     private readonly Func<DoctorRunOptions, CancellationToken, Task<DoctorReport>> _doctorRunner;
+    private readonly Func<IProgress<UpdateProgress>, CancellationToken, Task<UpdateResult>> _updateRunner;
+    private readonly Func<EnvironmentFenceResult> _fenceEvaluator;
 
     public CliDispatcher(IGuiLauncher guiLauncher)
-        : this(guiLauncher, static (options, cancellationToken) =>
-            new DoctorService().RunAsync(options, cancellationToken))
+        : this(
+            guiLauncher,
+            static (options, cancellationToken) => new DoctorService().RunAsync(options, cancellationToken),
+            RunDefaultUpdateAsync,
+            EnvironmentFence.EvaluateCurrent)
     {
     }
 
     public CliDispatcher(
         IGuiLauncher guiLauncher,
         Func<DoctorRunOptions, CancellationToken, Task<DoctorReport>> doctorRunner)
+        : this(guiLauncher, doctorRunner, RunDefaultUpdateAsync, EnvironmentFence.EvaluateCurrent)
+    {
+    }
+
+    public CliDispatcher(
+        IGuiLauncher guiLauncher,
+        Func<DoctorRunOptions, CancellationToken, Task<DoctorReport>> doctorRunner,
+        Func<IProgress<UpdateProgress>, CancellationToken, Task<UpdateResult>> updateRunner,
+        Func<EnvironmentFenceResult> fenceEvaluator)
     {
         _guiLauncher = guiLauncher ?? throw new ArgumentNullException(nameof(guiLauncher));
         _doctorRunner = doctorRunner ?? throw new ArgumentNullException(nameof(doctorRunner));
+        _updateRunner = updateRunner ?? throw new ArgumentNullException(nameof(updateRunner));
+        _fenceEvaluator = fenceEvaluator ?? throw new ArgumentNullException(nameof(fenceEvaluator));
     }
 
     public async Task<int> ExecuteAsync(string[] args, TextWriter output, TextWriter error)
@@ -108,34 +124,59 @@ public sealed class CliDispatcher
         }
     }
 
-    private static async Task<int> RunUpdateAsync(TextWriter output, TextWriter error)
+    private async Task<int> RunUpdateAsync(TextWriter output, TextWriter error)
     {
-        await output.WriteLineAsync("MRC Update");
-        var fence = EnvironmentFence.EvaluateCurrent();
+        var outputRenderer = new CliRenderer(output);
+        var errorRenderer = new CliRenderer(error);
+        await outputRenderer.WriteLineAsync("MRC Update", CliTone.Heading);
+
+        var fence = _fenceEvaluator();
         if (!fence.IsAuthorized)
         {
-            await error.WriteLineAsync($"CONTROL BLOCKED • {fence.Code} • {fence.Message}");
+            await errorRenderer.WriteLineAsync(
+                $"CONTROL BLOCKED • {fence.Code} • {fence.Message}",
+                CliTone.Error);
             return 1;
         }
 
-        var installRoot = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "MRC");
-
         try
         {
-            using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
-            var source = new GitHubReleaseSource(client);
-            var updater = new UpdateService(source, installRoot, new ExecutableVersionVerifier());
-            var result = await updater.RunAsync();
-            await output.WriteLineAsync(result.Message);
+            var progress = new ImmediateProgress<UpdateProgress>(updateProgress =>
+            {
+                var line = CliPresentation.UpdateProgressLine(updateProgress);
+                outputRenderer.WriteLineAsync(line.Text, line.Tone).GetAwaiter().GetResult();
+            });
+
+            var result = await _updateRunner(progress, CancellationToken.None);
+            await outputRenderer.WriteLineAsync(
+                result.Message,
+                result.Outcome switch
+                {
+                    UpdateOutcome.Updated => CliTone.Success,
+                    UpdateOutcome.UpToDate => CliTone.Success,
+                    UpdateOutcome.Failed => CliTone.Error,
+                    _ => CliTone.Normal
+                });
             return result.Outcome == UpdateOutcome.Failed ? 1 : 0;
         }
         catch (Exception ex)
         {
-            await error.WriteLineAsync($"Update failed safely: {ex.Message}");
+            await errorRenderer.WriteLineAsync($"Update failed safely: {ex.Message}", CliTone.Error);
             return 1;
         }
+    }
+
+    private static async Task<UpdateResult> RunDefaultUpdateAsync(
+        IProgress<UpdateProgress> progress,
+        CancellationToken cancellationToken)
+    {
+        var installRoot = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "MRC");
+        using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
+        var source = new GitHubReleaseSource(client);
+        var updater = new UpdateService(source, installRoot, new ExecutableVersionVerifier(), progress);
+        return await updater.RunAsync(cancellationToken);
     }
 
     private static async Task WriteVersionAsync(TextWriter output)
@@ -175,5 +216,17 @@ public sealed class CliDispatcher
     {
         await error.WriteLineAsync($"Unknown option: {option}");
         await error.WriteLineAsync("Run 'MRC -help' for the supported command surface.");
+    }
+
+    private sealed class ImmediateProgress<T> : IProgress<T>
+    {
+        private readonly Action<T> _handler;
+
+        public ImmediateProgress(Action<T> handler)
+        {
+            _handler = handler ?? throw new ArgumentNullException(nameof(handler));
+        }
+
+        public void Report(T value) => _handler(value);
     }
 }
