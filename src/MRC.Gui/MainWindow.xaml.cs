@@ -230,6 +230,22 @@ public partial class MainWindow : Window
         if (_previewMode || _operations is null || _operationInProgress) return;
         if (sender is not Button { CommandParameter: RunnerRowViewModel row }) return;
 
+        if (row.State == RunnerState.ERROR)
+        {
+            var diagnostic = string.IsNullOrWhiteSpace(row.Error)
+                ? "No additional runtime diagnostic was captured."
+                : row.Error;
+            MessageBox.Show(
+                this,
+                $"Runner: {row.RunnerName}\nRepository: {row.RepositoryName}\nPath: {row.DirectoryPath}\n\n{diagnostic}",
+                "Runner diagnostic details",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+            return;
+        }
+
+        if (row.State is not RunnerState.OFF and not RunnerState.IDLE) return;
+
         RunnerControlResult result;
         BeginOperation($"{row.RunnerName} • applying verified control…");
         try
@@ -238,13 +254,9 @@ public partial class MainWindow : Window
             {
                 result = await Task.Run(() => _operations.Start(row.Runner));
             }
-            else if (row.State == RunnerState.IDLE)
-            {
-                result = await Task.Run(() => _operations.StopIdle(row.Runner));
-            }
             else
             {
-                return;
+                result = await Task.Run(() => _operations.StopIdle(row.Runner));
             }
         }
         catch (Exception ex)
