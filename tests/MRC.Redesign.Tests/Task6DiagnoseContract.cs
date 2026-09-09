@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using MRC.Cli;
 using MRC.Core;
 
 internal static class Task6DiagnoseContract
@@ -9,6 +10,9 @@ internal static class Task6DiagnoseContract
     {
         VerifyManagedRunnerForensics();
         Console.WriteLine("PASS  Task6D1 managed-runner forensic evidence");
+
+        VerifyDiagnoseCommandSurface().GetAwaiter().GetResult();
+        Console.WriteLine("PASS  Task6D2A diagnose CLI command surface");
     }
 
     private static void VerifyManagedRunnerForensics()
@@ -34,8 +38,38 @@ internal static class Task6DiagnoseContract
         }
     }
 
+    private static async Task VerifyDiagnoseCommandSurface()
+    {
+        var output = new StringWriter();
+        var error = new StringWriter();
+        var dispatcher = new CliDispatcher(new SuccessfulLauncher());
+
+        var exitCode = await dispatcher.ExecuteAsync(new[] { "-diagnose" }, output, error);
+        var text = output.ToString();
+        var errorText = error.ToString();
+
+        Require(exitCode != 2, "MRC -diagnose is still treated as an unknown option.");
+        Require(!errorText.Contains("Unknown option", StringComparison.OrdinalIgnoreCase),
+            $"MRC -diagnose still reports an unknown option: {errorText}");
+        Require(text.Contains("MRC Diagnose", StringComparison.OrdinalIgnoreCase),
+            $"MRC -diagnose does not identify the diagnostic report: {text}");
+        Require(text.Contains("Machine:", StringComparison.OrdinalIgnoreCase),
+            $"MRC -diagnose omits machine identity: {text}");
+        Require(text.Contains("User:", StringComparison.OrdinalIgnoreCase),
+            $"MRC -diagnose omits user identity: {text}");
+        Require(text.Contains("Session:", StringComparison.OrdinalIgnoreCase),
+            $"MRC -diagnose omits session identity: {text}");
+        Require(text.Contains("Elevated:", StringComparison.OrdinalIgnoreCase),
+            $"MRC -diagnose omits elevation state: {text}");
+    }
+
     private static void Require(bool condition, string message)
     {
         if (!condition) throw new InvalidOperationException(message);
+    }
+
+    private sealed class SuccessfulLauncher : IGuiLauncher
+    {
+        public GuiLaunchResult Launch() => new(true, "MRC GUI launch requested.");
     }
 }
