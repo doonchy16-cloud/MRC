@@ -195,6 +195,7 @@
                 <DataTrigger Binding="{Binding State}" Value="{x:Static runtime:RunnerState.ERROR}">
                     <Setter Property="Foreground" Value="{StaticResource ErrorBrush}" />
                     <Setter Property="BorderBrush" Value="{StaticResource ErrorBrush}" />
+                    <Setter Property="IsEnabled" Value="True" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding State}" Value="{x:Static runtime:RunnerState.STARTING}">
                     <Setter Property="Foreground" Value="{StaticResource StartingBrush}" />
