@@ -26,11 +26,18 @@ public sealed class RunnerEngine
         _processProvider = new WindowsProcessSnapshotProvider();
         _transitions = new RunnerTransitionTracker();
         var launcher = new WindowsRunnerLauncher();
-        var terminator = new WindowsRunnerProcessTerminator(
+        var pathReader = new WindowsProcessPathReader();
+        var killer = new WindowsProcessTreeKiller();
+        var terminator = new WindowsRunnerProcessTerminator(_processProvider, pathReader, killer);
+        var forceTerminator = new WindowsRunnerForceProcessTerminator(_processProvider, pathReader, killer);
+        _control = new RunnerControlService(
+            _root,
             _processProvider,
-            new WindowsProcessPathReader(),
-            new WindowsProcessTreeKiller());
-        _control = new RunnerControlService(_root, _processProvider, launcher, terminator, _transitions, _clock);
+            launcher,
+            terminator,
+            forceTerminator,
+            _transitions,
+            _clock);
     }
 
     internal RunnerEngine(
@@ -45,6 +52,28 @@ public sealed class RunnerEngine
         _processProvider = processProvider;
         _transitions = new RunnerTransitionTracker();
         _control = new RunnerControlService(_root, _processProvider, launcher, terminator, _transitions, _clock);
+    }
+
+    internal RunnerEngine(
+        string root,
+        IProcessSnapshotProvider processProvider,
+        IRunnerLauncher launcher,
+        IRunnerProcessTerminator terminator,
+        IRunnerForceProcessTerminator forceTerminator,
+        Func<DateTimeOffset> clock)
+    {
+        _root = RunnerPath.Normalize(root);
+        _clock = clock;
+        _processProvider = processProvider;
+        _transitions = new RunnerTransitionTracker();
+        _control = new RunnerControlService(
+            _root,
+            _processProvider,
+            launcher,
+            terminator,
+            forceTerminator,
+            _transitions,
+            _clock);
     }
 
     public IReadOnlyList<RunnerSnapshot> Refresh()
@@ -118,6 +147,9 @@ public sealed class RunnerEngine
     public RunnerControlResult Start(RunnerDescriptor runner) => _control.Start(runner);
 
     public RunnerControlResult StopIdle(RunnerDescriptor runner) => _control.StopIdle(runner);
+
+    public RunnerControlResult ForceStopBusy(RunnerDescriptor runner, bool confirmed) =>
+        _control.ForceStopBusy(runner, confirmed);
 
     private static string? ErrorFor(
         RunnerDescriptor runner,
