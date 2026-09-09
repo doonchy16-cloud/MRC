@@ -20,34 +20,34 @@ var tests = new (string Name, Action Body)[]
             1,
             "_work",
             null);
-
-        var listener = new ProcessSnapshot(
-            44536,
-            32108,
-            "Runner.Listener",
-            @"D:\Git_Runners_Main\BBAP_runner\bin\Runner.Listener.exe");
-
-        var externalUninspectable = new ProcessSnapshot(
-            31716,
-            50276,
-            "Runner.Listener",
-            null,
-            "Access is denied. | Access is denied.");
-
+        var listener = new ProcessSnapshot(44536, 32108, "Runner.Listener", @"D:\Git_Runners_Main\BBAP_runner\bin\Runner.Listener.exe");
+        var externalUninspectable = new ProcessSnapshot(31716, 50276, "Runner.Listener", null, "Access is denied. | Access is denied.");
+        var inventory = new ProcessInventory(new[] { listener, externalUninspectable }, true, null);
+        var association = RunnerProcessAssociator.Associate(runner, inventory);
+        Require(string.IsNullOrWhiteSpace(association.Error), $"An unrelated uninspectable runner poisoned BBAP ownership: {association.Error}");
+        Require(association.Listener?.ProcessId == 44536, "The exact BBAP listener was not associated.");
+        var state = RunnerStateEvaluator.Evaluate(runner, association, null, DateTimeOffset.UtcNow);
+        Require(state == RunnerState.IDLE, $"Expected BBAP to be IDLE with one listener and zero workers, got {state}.");
+    }),
+    ("apparently OFF runner remains fail-closed when runner ownership is uninspectable", () =>
+    {
+        var runner = new RunnerDescriptor(
+            @"D:\Git_Runners_Main\Example",
+            "ExampleRunner",
+            "https://github.com/example/repo",
+            "repo",
+            2,
+            "_work",
+            null);
         var inventory = new ProcessInventory(
-            new[] { listener, externalUninspectable },
+            new[] { new ProcessSnapshot(4242, 100, "Runner.Listener", null, "Access is denied.") },
             true,
             null);
-
         var association = RunnerProcessAssociator.Associate(runner, inventory);
-        Require(string.IsNullOrWhiteSpace(association.Error),
-            $"An unrelated uninspectable runner poisoned BBAP ownership: {association.Error}");
-        Require(association.Listener?.ProcessId == 44536,
-            "The exact BBAP listener was not associated.");
-
+        Require(!string.IsNullOrWhiteSpace(association.Error),
+            "A runner with no exact listener must not be declared OFF while unresolved runner-process ownership exists.");
         var state = RunnerStateEvaluator.Evaluate(runner, association, null, DateTimeOffset.UtcNow);
-        Require(state == RunnerState.IDLE,
-            $"Expected BBAP to be IDLE with one listener and zero workers, got {state}.");
+        Require(state == RunnerState.ERROR, $"Expected fail-closed ERROR, got {state}.");
     }),
     ("runtime exposes managed external unattributed ownership classes", () =>
     {
@@ -56,9 +56,7 @@ var tests = new (string Name, Action Body)[]
         Require(ownershipType is not null, "RunnerProcessOwnershipKind is missing.");
         Require(ownershipType!.IsEnum, "RunnerProcessOwnershipKind must be an enum.");
         var names = Enum.GetNames(ownershipType);
-        Require(names.SequenceEqual(new[] { "Managed", "External", "Unattributed" }),
-            $"Ownership classes are wrong: {string.Join(", ", names)}");
-
+        Require(names.SequenceEqual(new[] { "Managed", "External", "Unattributed" }), $"Ownership classes are wrong: {string.Join(", ", names)}");
         var observedType = core.GetType("MRC.Core.Runtime.RunnerObservedProcess");
         Require(observedType is not null, "RunnerObservedProcess model is missing.");
         Require(observedType!.GetProperty("ProcessId") is not null, "RunnerObservedProcess.ProcessId is missing.");
@@ -70,15 +68,13 @@ var tests = new (string Name, Action Body)[]
     {
         var sessionProperty = typeof(ProcessSnapshot).GetProperty("SessionId");
         Require(sessionProperty is not null, "ProcessSnapshot.SessionId is missing.");
-        Require(sessionProperty!.PropertyType == typeof(int?),
-            $"ProcessSnapshot.SessionId must be nullable int, got {sessionProperty.PropertyType}.");
+        Require(sessionProperty!.PropertyType == typeof(int?), $"ProcessSnapshot.SessionId must be nullable int, got {sessionProperty.PropertyType}.");
     }),
     ("runner engine exposes managed snapshots plus separate system findings", () =>
     {
         var method = typeof(RunnerEngine).GetMethod("RefreshReport");
         Require(method is not null, "RunnerEngine.RefreshReport() is missing.");
         Require(method!.GetParameters().Length == 0, "RunnerEngine.RefreshReport() must not require arguments.");
-
         var reportType = typeof(RunnerEngine).Assembly.GetType("MRC.Core.Runtime.RunnerRuntimeReport");
         Require(reportType is not null, "RunnerRuntimeReport is missing.");
         Require(reportType!.GetProperty("ManagedRunners") is not null, "RunnerRuntimeReport.ManagedRunners is missing.");
