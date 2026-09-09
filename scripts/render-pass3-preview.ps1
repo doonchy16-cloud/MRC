@@ -1,70 +1,76 @@
 [CmdletBinding()]
-param(
-    [string]$OutputPath
-)
+param()
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
 $repoRoot = Split-Path $PSScriptRoot -Parent
-if ([string]::IsNullOrWhiteSpace($OutputPath)) {
-    $OutputPath = Join-Path $repoRoot 'artifacts\pass3\MRC-PASS3-1180x760.png'
-}
-else {
-    $OutputPath = [System.IO.Path]::GetFullPath($OutputPath)
-}
-
-$expectedWidth = 1180
-$expectedHeight = 760
 $project = Join-Path $repoRoot 'tools\MRC.Pass3.Preview\MRC.Pass3.Preview.csproj'
-$outputDir = Split-Path $OutputPath -Parent
+$outputDir = Join-Path $repoRoot 'artifacts\pass3'
 New-Item -ItemType Directory -Force -Path $outputDir | Out-Null
-Remove-Item -LiteralPath $OutputPath -Force -ErrorAction SilentlyContinue
-
-Push-Location $repoRoot
-try {
-    & dotnet run --project $project -c Release -- $OutputPath
-    if ($LASTEXITCODE -ne 0) {
-        throw "PASS 3 preview renderer failed with exit code $LASTEXITCODE."
-    }
-}
-finally {
-    Pop-Location
-}
-
-if (-not (Test-Path -LiteralPath $OutputPath -PathType Leaf)) {
-    throw "PASS 3 PNG was not created: $OutputPath"
-}
-
-$file = Get-Item -LiteralPath $OutputPath
-if ($file.Length -lt 4096) {
-    throw "PASS 3 PNG is unexpectedly small ($($file.Length) bytes)."
-}
-
-$signature = [System.IO.File]::ReadAllBytes($OutputPath)[0..7]
-$expectedSignature = [byte[]](137, 80, 78, 71, 13, 10, 26, 10)
-for ($i = 0; $i -lt $expectedSignature.Length; $i++) {
-    if ($signature[$i] -ne $expectedSignature[$i]) {
-        throw "PASS 3 output is not a valid PNG signature."
-    }
-}
 
 Add-Type -AssemblyName PresentationCore
-$stream = [System.IO.File]::OpenRead($OutputPath)
-try {
-    $decoder = [System.Windows.Media.Imaging.PngBitmapDecoder]::new(
-        $stream,
-        [System.Windows.Media.Imaging.BitmapCreateOptions]::PreservePixelFormat,
-        [System.Windows.Media.Imaging.BitmapCacheOption]::OnLoad)
-    $frame = $decoder.Frames[0]
-    if ($frame.PixelWidth -ne $expectedWidth -or $frame.PixelHeight -ne $expectedHeight) {
-        throw "PASS 3 PNG dimensions are $($frame.PixelWidth)x$($frame.PixelHeight), expected ${expectedWidth}x${expectedHeight}."
+
+function Invoke-Pass3Preview {
+    param(
+        [Parameter(Mandatory)][string]$FileName,
+        [Parameter(Mandatory)][int]$Width,
+        [Parameter(Mandatory)][int]$Height
+    )
+
+    $outputPath = Join-Path $outputDir $FileName
+    Remove-Item -LiteralPath $outputPath -Force -ErrorAction SilentlyContinue
+
+    Push-Location $repoRoot
+    try {
+        & dotnet run --project $project -c Release -- $outputPath $Width $Height
+        if ($LASTEXITCODE -ne 0) {
+            throw "PASS 3 preview renderer failed with exit code $LASTEXITCODE for ${Width}x${Height}."
+        }
     }
-}
-finally {
-    $stream.Dispose()
+    finally {
+        Pop-Location
+    }
+
+    if (-not (Test-Path -LiteralPath $outputPath -PathType Leaf)) {
+        throw "PASS 3 PNG was not created: $outputPath"
+    }
+
+    $file = Get-Item -LiteralPath $outputPath
+    if ($file.Length -lt 4096) {
+        throw "PASS 3 PNG is unexpectedly small ($($file.Length) bytes): $outputPath"
+    }
+
+    $bytes = [System.IO.File]::ReadAllBytes($outputPath)
+    if ($bytes.Length -lt 8) {
+        throw "PASS 3 PNG is too small to contain a valid PNG signature: $outputPath"
+    }
+    $expectedSignature = [byte[]](137, 80, 78, 71, 13, 10, 26, 10)
+    for ($i = 0; $i -lt $expectedSignature.Length; $i++) {
+        if ($bytes[$i] -ne $expectedSignature[$i]) {
+            throw "PASS 3 output is not a valid PNG signature: $outputPath"
+        }
+    }
+
+    $stream = [System.IO.File]::OpenRead($outputPath)
+    try {
+        $decoder = [System.Windows.Media.Imaging.PngBitmapDecoder]::new(
+            $stream,
+            [System.Windows.Media.Imaging.BitmapCreateOptions]::PreservePixelFormat,
+            [System.Windows.Media.Imaging.BitmapCacheOption]::OnLoad)
+        $frame = $decoder.Frames[0]
+        if ($frame.PixelWidth -ne $Width -or $frame.PixelHeight -ne $Height) {
+            throw "PASS 3 PNG dimensions are $($frame.PixelWidth)x$($frame.PixelHeight), expected ${Width}x${Height}: $outputPath"
+        }
+    }
+    finally {
+        $stream.Dispose()
+    }
+
+    Write-Host "PASS 3 PNG verified: $outputPath"
+    Write-Host "PNG dimensions: ${Width}x${Height}"
+    Write-Host "PNG bytes: $($file.Length)"
 }
 
-Write-Host "PASS 3 PNG verified: $OutputPath"
-Write-Host "PNG dimensions: ${expectedWidth}x${expectedHeight}"
-Write-Host "PNG bytes: $($file.Length)"
+Invoke-Pass3Preview -FileName 'MRC-PASS3-1180x760.png' -Width 1180 -Height 760
+Invoke-Pass3Preview -FileName 'MRC-PASS3-900x560.png' -Width 900 -Height 560
