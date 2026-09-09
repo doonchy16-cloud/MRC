@@ -20,7 +20,13 @@ public sealed record DiagnoseRunnerFinding(
     string? Error,
     string ExpectedListenerPath,
     int? ListenerProcessId,
-    IReadOnlyList<int> WorkerProcessIds);
+    IReadOnlyList<int> WorkerProcessIds,
+    int? ListenerParentProcessId = null,
+    int? ListenerSessionId = null,
+    string? ListenerProcessName = null,
+    string? ListenerExecutablePath = null,
+    string OwnershipProof = "Ownership proof unavailable.",
+    string? InspectionError = null);
 
 public sealed record DiagnoseProcessFinding(
     int ProcessId,
