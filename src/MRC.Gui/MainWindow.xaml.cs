@@ -232,15 +232,8 @@ public partial class MainWindow : Window
 
         if (row.State == RunnerState.ERROR)
         {
-            var diagnostic = string.IsNullOrWhiteSpace(row.Error)
-                ? "No additional runtime diagnostic was captured."
-                : row.Error;
-            MessageBox.Show(
-                this,
-                $"Runner: {row.RunnerName}\nRepository: {row.RepositoryName}\nPath: {row.DirectoryPath}\n\n{diagnostic}",
-                "Runner diagnostic details",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
+            var dialog = new DiagnosticDialog(row) { Owner = this };
+            dialog.ShowDialog();
             return;
         }
 
