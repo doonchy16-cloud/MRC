@@ -28,16 +28,5 @@ if (-not (Test-Path -LiteralPath $outputDirectory -PathType Container)) {
     New-Item -ItemType Directory -Force -Path $outputDirectory | Out-Null
 }
 
-$write = $true
-if (Test-Path -LiteralPath $OutputPath -PathType Leaf) {
-    $existing = [IO.File]::ReadAllBytes($OutputPath)
-    if ($existing.Length -eq $bytes.Length) {
-        $write = -not [Linq.Enumerable]::SequenceEqual([byte[]]$existing, [byte[]]$bytes)
-    }
-}
-
-if ($write) {
-    [IO.File]::WriteAllBytes($OutputPath, $bytes)
-}
-
+[IO.File]::WriteAllBytes($OutputPath, $bytes)
 Write-Host "MRC icon materialized: $OutputPath"
