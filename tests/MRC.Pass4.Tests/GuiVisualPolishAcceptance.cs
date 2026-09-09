@@ -6,8 +6,8 @@ internal static class GuiVisualPolishAcceptance
     {
         var tests = new (string Name, Action Body)[]
         {
-            ("disabled operation buttons preserve dark custom chrome", DisabledButtonsPreserveDarkChrome),
-            ("runner scrollbar uses an explicit dark custom template", RunnerScrollbarUsesDarkTemplate)
+            ("disabled operation buttons preserve terminal custom chrome", DisabledButtonsPreserveTerminalChrome),
+            ("runner scrollbar stays narrow and dark", RunnerScrollbarUsesTerminalStyle)
         };
 
         var failures = 0;
@@ -34,30 +34,34 @@ internal static class GuiVisualPolishAcceptance
         return failures;
     }
 
-    private static void DisabledButtonsPreserveDarkChrome()
+    private static void DisabledButtonsPreserveTerminalChrome()
     {
         var xaml = Xaml();
-        Require(xaml.Contains("x:Key=\"DarkButtonTemplate\"", StringComparison.Ordinal),
-            "No custom dark button template exists; disabled WPF buttons render bright system chrome.");
+        Require(xaml.Contains("x:Key=\"TerminalButtonTemplate\"", StringComparison.Ordinal),
+            "Terminal custom button template is missing.");
         Require(xaml.Contains("Background=\"{TemplateBinding Background}\"", StringComparison.Ordinal),
-            "Dark button template does not preserve the style background.");
+            "Terminal button template does not preserve the style background.");
         Require(xaml.Contains("Property=\"IsEnabled\" Value=\"False\"", StringComparison.Ordinal),
-            "Dark button template does not explicitly handle disabled state.");
-        Require(Count(xaml, "Template\" Value=\"{StaticResource DarkButtonTemplate}\"") >= 2,
-            "Both filter/bulk and row-control button families must use the dark template.");
+            "Terminal button template does not explicitly handle disabled state.");
+        Require(Count(xaml, "{StaticResource TerminalButtonTemplate}") >= 2,
+            "Bulk/filter and row-control button families must share the terminal template.");
+        Require(xaml.Contains("CornerRadius=\"0\"", StringComparison.Ordinal),
+            "Terminal controls must preserve the approved flat, non-card chrome.");
     }
 
-    private static void RunnerScrollbarUsesDarkTemplate()
+    private static void RunnerScrollbarUsesTerminalStyle()
     {
         var xaml = Xaml();
-        Require(xaml.Contains("x:Key=\"DarkScrollBarStyle\"", StringComparison.Ordinal),
-            "Runner scrollbar still uses raw Windows system chrome.");
-        Require(xaml.Contains("x:Name=\"PART_Track\"", StringComparison.Ordinal),
-            "Dark scrollbar template does not provide the required WPF track part.");
-        Require(xaml.Contains("x:Key=\"DarkScrollThumbTemplate\"", StringComparison.Ordinal),
-            "Dark scrollbar thumb template is missing.");
-        Require(xaml.Contains("Style=\"{StaticResource DarkScrollBarStyle}\"", StringComparison.Ordinal),
-            "Runner ListView does not explicitly apply the dark scrollbar style.");
+        Require(xaml.Contains("<Style TargetType=\"{x:Type ScrollBar}\">", StringComparison.Ordinal),
+            "Runner scrollbar does not have an explicit terminal style.");
+        Require(xaml.Contains("<Setter Property=\"Width\" Value=\"8\"", StringComparison.Ordinal),
+            "Terminal scrollbar must remain narrow at 8 px.");
+        Require(xaml.Contains("<Setter Property=\"Background\" Value=\"{StaticResource BackgroundBrush}\"", StringComparison.Ordinal),
+            "Terminal scrollbar background is not bound to the near-black shell.");
+        Require(xaml.Contains("<Setter Property=\"Foreground\" Value=\"{StaticResource MutedBrush}\"", StringComparison.Ordinal),
+            "Terminal scrollbar foreground is not bound to the muted operational palette.");
+        Require(xaml.Contains("ScrollViewer.VerticalScrollBarVisibility=\"Auto\"", StringComparison.Ordinal),
+            "Runner table is not explicitly using the styled vertical scrollbar path.");
     }
 
     private static string Xaml() => File.ReadAllText(Path.Combine(RepoRoot(), "src", "MRC.Gui", "MainWindow.xaml"));
