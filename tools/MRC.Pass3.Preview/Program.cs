@@ -10,28 +10,38 @@ namespace MRC.Pass3.Preview;
 
 internal static class Program
 {
-    private const int PreviewWidth = 1180;
-    private const int PreviewHeight = 760;
+    private const int DefaultPreviewWidth = 1180;
+    private const int DefaultPreviewHeight = 760;
+    private const int MinimumPreviewWidth = 900;
+    private const int MinimumPreviewHeight = 560;
 
     [STAThread]
     private static int Main(string[] args)
     {
         try
         {
+            var previewWidth = args.Length > 1 ? ParseDimension(args[1], "width") : DefaultPreviewWidth;
+            var previewHeight = args.Length > 2 ? ParseDimension(args[2], "height") : DefaultPreviewHeight;
+            if (previewWidth < MinimumPreviewWidth || previewHeight < MinimumPreviewHeight)
+            {
+                throw new ArgumentOutOfRangeException(nameof(args),
+                    $"PASS 3 preview geometry must be at least {MinimumPreviewWidth}x{MinimumPreviewHeight}.");
+            }
+
             var outputPath = Path.GetFullPath(args.Length > 0
                 ? args[0]
-                : Path.Combine("artifacts", "pass3", "MRC-PASS3-1180x760.png"));
+                : Path.Combine("artifacts", "pass3", $"MRC-PASS3-{previewWidth}x{previewHeight}.png"));
             Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
 
             var application = new Application { ShutdownMode = ShutdownMode.OnExplicitShutdown };
             var window = new MainWindow
             {
-                Width = PreviewWidth,
-                Height = PreviewHeight,
-                MinWidth = PreviewWidth,
-                MinHeight = PreviewHeight,
-                MaxWidth = PreviewWidth,
-                MaxHeight = PreviewHeight,
+                Width = previewWidth,
+                Height = previewHeight,
+                MinWidth = previewWidth,
+                MinHeight = previewHeight,
+                MaxWidth = previewWidth,
+                MaxHeight = previewHeight,
                 ResizeMode = ResizeMode.NoResize,
                 WindowStyle = WindowStyle.None,
                 ShowInTaskbar = false,
@@ -42,13 +52,13 @@ internal static class Program
 
             window.ConfigurePreview(BuildPreviewSnapshots());
             window.Show();
-            window.Measure(new Size(PreviewWidth, PreviewHeight));
-            window.Arrange(new Rect(0, 0, PreviewWidth, PreviewHeight));
+            window.Measure(new Size(previewWidth, previewHeight));
+            window.Arrange(new Rect(0, 0, previewWidth, previewHeight));
             window.UpdateLayout();
 
             var bitmap = new RenderTargetBitmap(
-                PreviewWidth,
-                PreviewHeight,
+                previewWidth,
+                previewHeight,
                 96,
                 96,
                 PixelFormats.Pbgra32);
@@ -65,7 +75,7 @@ internal static class Program
             application.Shutdown();
 
             Console.WriteLine($"PASS 3 preview rendered: {outputPath}");
-            Console.WriteLine($"Dimensions: {PreviewWidth}x{PreviewHeight}");
+            Console.WriteLine($"Dimensions: {previewWidth}x{previewHeight}");
             return 0;
         }
         catch (Exception ex)
@@ -73,6 +83,15 @@ internal static class Program
             Console.Error.WriteLine(ex);
             return 1;
         }
+    }
+
+    private static int ParseDimension(string raw, string name)
+    {
+        if (!int.TryParse(raw, out var value) || value <= 0)
+        {
+            throw new ArgumentException($"Invalid preview {name}: '{raw}'.", name);
+        }
+        return value;
     }
 
     private static IReadOnlyList<RunnerSnapshot> BuildPreviewSnapshots() =>
