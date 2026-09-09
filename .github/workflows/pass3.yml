@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   verify:
-    name: PASS 1 + PASS 2 + PASS 3
+    name: PASS 3 + PASS 1 + PASS 2
     runs-on: windows-latest
     timeout-minutes: 25
     steps:
@@ -22,6 +22,10 @@ jobs:
         with:
           global-json-file: global.json
 
+      - name: Verify PASS 3 UI
+        shell: pwsh
+        run: ./scripts/verify-pass3.ps1
+
       - name: Verify PASS 1 regressions
         shell: pwsh
         run: ./scripts/verify-pass1.ps1
@@ -29,7 +33,3 @@ jobs:
       - name: Verify PASS 2 engine
         shell: pwsh
         run: ./scripts/verify-pass2.ps1
-
-      - name: Verify PASS 3 UI
-        shell: pwsh
-        run: ./scripts/verify-pass3.ps1
