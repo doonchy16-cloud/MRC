@@ -14,6 +14,7 @@ internal static class LayoutAcceptance
             ("refresh and animation use exactly two shared UI timers", TimerArchitecture),
             ("runner rows bind to stable presentation collections", StableBinding),
             ("search filters and state text remain keyboard-readable", AccessibilitySignals),
+            ("narrow layout keeps boundary diagnostics without clipped toolbar copy", NarrowLayoutDiagnosticPolish),
             ("PASS 4 operations are not smuggled into PASS 3", Pass4ScopeFence)
         };
 
@@ -132,6 +133,18 @@ internal static class LayoutAcceptance
         {
             Require(xaml.Contains($"Tag=\"{filter}\"", StringComparison.Ordinal), $"Filter {filter} must be directly selectable.");
         }
+    }
+
+    private static void NarrowLayoutDiagnosticPolish()
+    {
+        var xaml = Xaml();
+        var code = CodeBehind();
+        Require(!xaml.Contains("x:Name=\"DetailsValue\"", StringComparison.Ordinal),
+            "Inline diagnostics remain in the crowded search/filter toolbar and can visibly truncate at minimum width.");
+        Require(code.Contains("AutomationProperties.SetHelpText(BoundaryValue", StringComparison.Ordinal),
+            "Full boundary diagnostics must remain available as accessible help text on the authorization badge.");
+        Require(code.Contains("BoundaryValue.ToolTip", StringComparison.Ordinal),
+            "Full boundary diagnostics must remain available by hover on the authorization badge.");
     }
 
     private static void Pass4ScopeFence()
