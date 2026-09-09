@@ -50,7 +50,7 @@ internal static class Program
                 Top = -20000
             };
 
-            window.ConfigurePreview(BuildPreviewSnapshots());
+            window.ConfigurePreview(BuildPreviewReport());
             window.Show();
             window.Measure(new Size(previewWidth, previewHeight));
             window.Arrange(new Rect(0, 0, previewWidth, previewHeight));
@@ -94,19 +94,34 @@ internal static class Program
         return value;
     }
 
+    private static RunnerRuntimeReport BuildPreviewReport() =>
+        new(
+            BuildPreviewSnapshots(),
+            new[]
+            {
+                new RunnerSystemFinding(
+                    RunnerSystemFindingKind.External,
+                    31716,
+                    50276,
+                    0,
+                    "Runner.Listener",
+                    null,
+                    "EXTERNAL Lotto_MainPC_Runner // Session 0 // Windows service outside D:\\Git_Runners_Main // not controllable by MRC.")
+            });
+
     private static IReadOnlyList<RunnerSnapshot> BuildPreviewSnapshots() =>
     [
-        Snap(@"D:\GitHub_Runners\alpha-idle", "Alpha Builder", "Project Atlas", RunnerState.IDLE),
-        Snap(@"D:\GitHub_Runners\beta-busy", "Beta Compile", "Project Atlas", RunnerState.BUSY),
-        Snap(@"D:\GitHub_Runners\gamma-off", "Gamma Release", "Project Borealis", RunnerState.OFF),
-        Snap(@"D:\GitHub_Runners\delta-error", "Delta QA", "Project Borealis", RunnerState.ERROR, "Listener process evidence is inconsistent."),
-        Snap(@"D:\GitHub_Runners\epsilon-starting", "Epsilon Docs", "Project Cirrus", RunnerState.STARTING),
-        Snap(@"D:\GitHub_Runners\zeta-stopping", "Zeta Packaging", "Project Cirrus", RunnerState.STOPPING),
-        Snap(@"D:\GitHub_Runners\eta-idle", "Eta Research", "Project Drift", RunnerState.IDLE),
-        Snap(@"D:\GitHub_Runners\theta-busy", "Theta Integration", "Project Drift", RunnerState.BUSY),
-        Snap(@"D:\GitHub_Runners\iota-off", "Iota Backup", "Project Ember", RunnerState.OFF),
+        Snap(@"D:\Git_Runners_Main\alpha-idle", "Alpha Builder", "Project Atlas", RunnerState.IDLE),
+        Snap(@"D:\Git_Runners_Main\beta-busy", "Beta Compile", "Project Atlas", RunnerState.BUSY),
+        Snap(@"D:\Git_Runners_Main\gamma-off", "Gamma Release", "Project Borealis", RunnerState.OFF),
+        Snap(@"D:\Git_Runners_Main\delta-error", "Delta QA", "Project Borealis", RunnerState.ERROR, "Listener process evidence is inconsistent."),
+        Snap(@"D:\Git_Runners_Main\epsilon-starting", "Epsilon Docs", "Project Cirrus", RunnerState.STARTING),
+        Snap(@"D:\Git_Runners_Main\zeta-stopping", "Zeta Packaging", "Project Cirrus", RunnerState.STOPPING),
+        Snap(@"D:\Git_Runners_Main\eta-idle", "Eta Research", "Project Drift", RunnerState.IDLE),
+        Snap(@"D:\Git_Runners_Main\theta-busy", "Theta Integration", "Project Drift", RunnerState.BUSY),
+        Snap(@"D:\Git_Runners_Main\iota-off", "Iota Backup", "Project Ember", RunnerState.OFF),
         Snap(
-            @"D:\GitHub_Runners\VERY-LONG-RUNNER-FOLDER-NAME-FOR-ELLIPSIS-VALIDATION-0123456789",
+            @"D:\Git_Runners_Main\VERY-LONG-RUNNER-FOLDER-NAME-FOR-ELLIPSIS-VALIDATION-0123456789",
             "VERY-LONG-RUNNER-NAME-FOR-ELLIPSIS-VALIDATION-ALPHA-0123456789",
             "VERY-LONG-REPOSITORY-NAME-FOR-ELLIPSIS-VALIDATION-OMEGA-0123456789",
             RunnerState.BUSY)
