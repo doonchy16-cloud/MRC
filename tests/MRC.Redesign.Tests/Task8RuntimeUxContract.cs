@@ -71,6 +71,19 @@ internal static class Task8RuntimeUxContract
                 && summary.Contains("SESSION 0", StringComparison.OrdinalIgnoreCase)
                 && summary.Contains("not controllable", StringComparison.OrdinalIgnoreCase),
             $"System findings summary is incomplete or misleading: '{summary ?? "<null>"}'.");
+
+        var repoRoot = Directory.GetCurrentDirectory();
+        var mainWindowPath = Path.Combine(repoRoot, "src", "MRC.Gui", "MainWindow.xaml.cs");
+        var mainWindowSource = File.ReadAllText(mainWindowPath);
+        Require(mainWindowSource.Contains("RefreshReport()", StringComparison.Ordinal)
+                && mainWindowSource.Contains("ApplyRuntimeReport(report)", StringComparison.Ordinal),
+            "GUI refresh path is not consuming RunnerEngine.RefreshReport() through the dedicated dashboard model.");
+
+        var mainWindowXamlPath = Path.Combine(repoRoot, "src", "MRC.Gui", "MainWindow.xaml");
+        var mainWindowXaml = File.ReadAllText(mainWindowXamlPath);
+        Require(mainWindowXaml.Contains("{Binding SystemFindingsSummary}", StringComparison.Ordinal)
+                && mainWindowXaml.Contains("HasSystemFindings", StringComparison.Ordinal),
+            "System findings strip is not bound to the dedicated findings model.");
     }
 
     private static void VerifyCustomDiagnosticDialogContract()
