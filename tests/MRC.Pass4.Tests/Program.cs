@@ -10,6 +10,8 @@ internal static class Program
         failures += GuiOperationsAcceptance.Run();
         Console.WriteLine();
         failures += GuiVisualPolishAcceptance.Run();
+        Console.WriteLine();
+        failures += DoctorAcceptance.Run();
         return failures == 0 ? 0 : 1;
     }
 }
