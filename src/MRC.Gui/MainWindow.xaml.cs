@@ -126,8 +126,8 @@ public partial class MainWindow : Window
         {
             RefreshStatusValue.Text = "Refreshing runner state…";
             RefreshStatusValue.Foreground = BrushFromHex("#AAB6C3");
-            var snapshots = await Task.Run(() => _engine.Refresh());
-            _dashboard.ApplySnapshots(snapshots);
+            var report = await Task.Run(() => _engine.RefreshReport());
+            _dashboard.ApplyRuntimeReport(report);
             _animationClock.Tick(DateTimeOffset.UtcNow, _dashboard.Rows);
             RefreshStatusValue.Text = $"Updated {DateTime.Now:HH:mm:ss} • {_dashboard.TotalCount} runners • stable repository/name order";
             RefreshStatusValue.Foreground = BrushFromHex("#AAB6C3");
