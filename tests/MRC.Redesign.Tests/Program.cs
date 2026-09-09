@@ -1,3 +1,4 @@
+using MRC.Core;
 using MRC.Core.Runners;
 using MRC.Core.Runtime;
 
@@ -47,6 +48,41 @@ var tests = new (string Name, Action Body)[]
         var state = RunnerStateEvaluator.Evaluate(runner, association, null, DateTimeOffset.UtcNow);
         Require(state == RunnerState.IDLE,
             $"Expected BBAP to be IDLE with one listener and zero workers, got {state}.");
+    }),
+    ("runtime exposes managed external unattributed ownership classes", () =>
+    {
+        var core = typeof(RunnerEngine).Assembly;
+        var ownershipType = core.GetType("MRC.Core.Runtime.RunnerProcessOwnershipKind");
+        Require(ownershipType is not null, "RunnerProcessOwnershipKind is missing.");
+        Require(ownershipType!.IsEnum, "RunnerProcessOwnershipKind must be an enum.");
+        var names = Enum.GetNames(ownershipType);
+        Require(names.SequenceEqual(new[] { "Managed", "External", "Unattributed" }),
+            $"Ownership classes are wrong: {string.Join(", ", names)}");
+
+        var observedType = core.GetType("MRC.Core.Runtime.RunnerObservedProcess");
+        Require(observedType is not null, "RunnerObservedProcess model is missing.");
+        Require(observedType!.GetProperty("ProcessId") is not null, "RunnerObservedProcess.ProcessId is missing.");
+        Require(observedType.GetProperty("Ownership") is not null, "RunnerObservedProcess.Ownership is missing.");
+        Require(observedType.GetProperty("ManagedRunnerPath") is not null, "RunnerObservedProcess.ManagedRunnerPath is missing.");
+        Require(observedType.GetProperty("Reason") is not null, "RunnerObservedProcess.Reason is missing.");
+    }),
+    ("runtime snapshot preserves Windows session id", () =>
+    {
+        var sessionProperty = typeof(ProcessSnapshot).GetProperty("SessionId");
+        Require(sessionProperty is not null, "ProcessSnapshot.SessionId is missing.");
+        Require(sessionProperty!.PropertyType == typeof(int?),
+            $"ProcessSnapshot.SessionId must be nullable int, got {sessionProperty.PropertyType}.");
+    }),
+    ("runner engine exposes managed snapshots plus separate system findings", () =>
+    {
+        var method = typeof(RunnerEngine).GetMethod("RefreshReport");
+        Require(method is not null, "RunnerEngine.RefreshReport() is missing.");
+        Require(method!.GetParameters().Length == 0, "RunnerEngine.RefreshReport() must not require arguments.");
+
+        var reportType = typeof(RunnerEngine).Assembly.GetType("MRC.Core.Runtime.RunnerRuntimeReport");
+        Require(reportType is not null, "RunnerRuntimeReport is missing.");
+        Require(reportType!.GetProperty("ManagedRunners") is not null, "RunnerRuntimeReport.ManagedRunners is missing.");
+        Require(reportType.GetProperty("SystemFindings") is not null, "RunnerRuntimeReport.SystemFindings is missing.");
     })
 };
 
