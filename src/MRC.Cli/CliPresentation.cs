@@ -2,6 +2,7 @@ using MRC.Core;
 using MRC.Core.Diagnostics;
 using MRC.Core.Runners;
 using MRC.Core.Runtime;
+using MRC.Core.Updating;
 
 namespace MRC.Cli;
 
@@ -25,6 +26,20 @@ public static class CliPresentation
             new CliLine($"Install location: {installLocation}", CliTone.Path),
             new CliLine($"Runner root: {MrcConstants.RunnerRoot}", CliTone.Path)
         };
+    }
+
+    public static CliLine UpdateProgressLine(UpdateProgress progress)
+    {
+        ArgumentNullException.ThrowIfNull(progress);
+        var percent = progress.Percent is int value ? $"[{value,3}%] " : string.Empty;
+        var tone = progress.Stage switch
+        {
+            UpdateProgressStage.Compare => CliTone.Metadata,
+            UpdateProgressStage.RollbackRetention => CliTone.Warning,
+            UpdateProgressStage.Complete => LooksLikeFailure(progress.Message) ? CliTone.Error : CliTone.Success,
+            _ => CliTone.Heading
+        };
+        return new CliLine($"{percent}{progress.Stage} • {progress.Message}", tone);
     }
 
     public static IReadOnlyList<CliLine> DoctorLines(DoctorReport report)
@@ -193,6 +208,18 @@ public static class CliPresentation
         }
 
         return lines;
+    }
+
+    private static bool LooksLikeFailure(string message)
+    {
+        if (string.IsNullOrWhiteSpace(message)) return false;
+        var value = message.ToLowerInvariant();
+        return value.Contains("failed", StringComparison.Ordinal)
+            || value.Contains("failure", StringComparison.Ordinal)
+            || value.Contains("missing", StringComparison.Ordinal)
+            || value.Contains("incomplete", StringComparison.Ordinal)
+            || value.Contains("not activated", StringComparison.Ordinal)
+            || value.Contains("invalid", StringComparison.Ordinal);
     }
 
     private static string Value(int? value) => value?.ToString() ?? "<unknown>";
