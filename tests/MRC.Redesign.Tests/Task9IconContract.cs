@@ -9,7 +9,7 @@ internal static class Task9IconContract
         var base64Path = Path.Combine(root, "src", "MRC.Gui", "Assets", "MRC.ico.b64");
         var generatorPath = Path.Combine(root, "scripts", "materialize-icon.ps1");
         var projectPath = Path.Combine(root, "src", "MRC.Gui", "MRC.Gui.csproj");
-        var windowPath = Path.Combine(root, "src", "MRC.Gui", "MainWindow.xaml");
+        var mainWindowCodePath = Path.Combine(root, "src", "MRC.Gui", "MainWindow.xaml.cs");
         var dialogPath = Path.Combine(root, "src", "MRC.Gui", "DiagnosticDialog.xaml");
         var packagePath = Path.Combine(root, "scripts", "package.ps1");
         var installPath = Path.Combine(root, "scripts", "install.ps1");
@@ -34,9 +34,13 @@ internal static class Task9IconContract
         Require(project.Contains("Resource Include=\"Assets\\MRC.ico\"", StringComparison.Ordinal),
             "MRC.ico is not embedded as a WPF resource.");
 
-        var window = File.ReadAllText(windowPath);
-        Require(window.Contains("Icon=\"Assets/MRC.ico\"", StringComparison.Ordinal),
-            "MainWindow does not explicitly use the MRC icon for titlebar/taskbar/Alt-Tab identity.");
+        var mainWindowCode = File.ReadAllText(mainWindowCodePath);
+        Require(mainWindowCode.Contains("Icon =", StringComparison.Ordinal)
+                && mainWindowCode.Contains("Assets/MRC.ico", StringComparison.Ordinal)
+                && (mainWindowCode.Contains("BitmapFrame", StringComparison.Ordinal)
+                    || mainWindowCode.Contains("BitmapImage", StringComparison.Ordinal)),
+            "MainWindow does not assign the embedded MRC icon to Window.Icon for titlebar/taskbar/Alt-Tab identity.");
+
         var dialog = File.ReadAllText(dialogPath);
         Require(dialog.Contains("Icon=\"Assets/MRC.ico\"", StringComparison.Ordinal),
             "DiagnosticDialog does not inherit the MRC icon identity.");
