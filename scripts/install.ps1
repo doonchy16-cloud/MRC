@@ -7,7 +7,7 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
-$targetMachine = 'Main-PC'
+$targetMachine = 'DOONCHYSCOMPUTI'
 $runnerRoot = 'D:\Git_Runners_Main'
 
 if ($env:COMPUTERNAME -ine $targetMachine) {
