@@ -4,7 +4,10 @@ namespace MRC.Gui.Presentation;
 
 public sealed class RunnerAnimationClock
 {
-    private static readonly string[] Frames = ["/", "-", "\\", "|"];
+    private static readonly string[] IdleFrames = ["·", "•", "●", "•"];
+    private static readonly string[] BusyFrames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
+    private static readonly string[] StartingFrames = ["▏", "▎", "▍", "▌", "▋", "▊", "▉", "█"];
+    private static readonly string[] StoppingFrames = ["█", "▉", "▊", "▋", "▌", "▍", "▎", "▏"];
     private readonly Dictionary<RunnerRowViewModel, FrameState> _states = new();
 
     public void Tick(DateTimeOffset now, IEnumerable<RunnerRowViewModel> rows)
@@ -32,10 +35,11 @@ public sealed class RunnerAnimationClock
                     continue;
             }
 
+            var frames = FramesFor(row.State);
             var interval = IntervalFor(row.State);
             if (!_states.TryGetValue(row, out var state) || state.RuntimeState != row.State || now < state.LastAdvance)
             {
-                row.Glyph = Frames[0];
+                row.Glyph = frames[0];
                 _states[row] = new FrameState(row.State, 0, now);
                 continue;
             }
@@ -44,8 +48,8 @@ public sealed class RunnerAnimationClock
             var steps = (int)Math.Floor(elapsedMs / interval.TotalMilliseconds);
             if (steps <= 0) continue;
 
-            var nextIndex = (state.FrameIndex + steps) % Frames.Length;
-            row.Glyph = Frames[nextIndex];
+            var nextIndex = (state.FrameIndex + steps) % frames.Count;
+            row.Glyph = frames[nextIndex];
             _states[row] = state with
             {
                 FrameIndex = nextIndex,
@@ -62,6 +66,15 @@ public sealed class RunnerAnimationClock
         RunnerState.STOPPING => TimeSpan.FromMilliseconds(250),
         RunnerState.OFF or RunnerState.ERROR => Timeout.InfiniteTimeSpan,
         _ => throw new ArgumentOutOfRangeException(nameof(state), state, "Unknown runner state.")
+    };
+
+    private static IReadOnlyList<string> FramesFor(RunnerState state) => state switch
+    {
+        RunnerState.IDLE => IdleFrames,
+        RunnerState.BUSY => BusyFrames,
+        RunnerState.STARTING => StartingFrames,
+        RunnerState.STOPPING => StoppingFrames,
+        _ => throw new ArgumentOutOfRangeException(nameof(state), state, "Static states do not have animation frames.")
     };
 
     private sealed record FrameState(RunnerState RuntimeState, int FrameIndex, DateTimeOffset LastAdvance);
