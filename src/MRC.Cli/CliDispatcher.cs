@@ -163,7 +163,7 @@ public sealed class CliDispatcher
         await output.WriteLineAsync("  MRC -v | -version | --version");
         await output.WriteLineAsync("                              Show installed version information");
         await output.WriteLineAsync("  MRC -h | -help | --help    Show this help");
-        await output.WriteLineAsync("  MRC -doctor | --doctor     Run read-only diagnostics");
+        await output.WriteLineAsync("  MRC -doctor | --doctor     Find issues and apply verified automatic low-risk repairs");
         await output.WriteLineAsync("  MRC -diagnose | --diagnose Run deep read-only runner/process diagnostics");
         await output.WriteLineAsync("  MRC -update | --update     Resolve, verify, and atomically activate an allowed release");
     }
