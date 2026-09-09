@@ -19,13 +19,13 @@ internal static class Program
             ("doctor and update are reserved for PASS 4", ReservedPass4Commands),
             ("unknown CLI flags fail clearly", UnknownFlagFails),
             ("environment fence authorizes only Main-PC exact-root evidence", EnvironmentFenceIsFailClosed),
-            ("PASS 1 source contains no runner control implementation", NoRunnerControlInPass1),
+            ("runner control stays isolated from CLI GUI and install layers", RunnerControlLayering),
             ("installer follows user-scoped PATH architecture", InstallerArchitecture),
             ("packaging creates the candidate zip and checksum skeleton", PackagingSkeleton)
         };
 
         var failures = 0;
-        Console.WriteLine($"MRC PASS 1 test harness — {tests.Length} tests");
+        Console.WriteLine($"MRC PASS 1 regression harness — {tests.Length} tests");
 
         foreach (var test in tests)
         {
@@ -44,8 +44,8 @@ internal static class Program
 
         Console.WriteLine();
         Console.WriteLine(failures == 0
-            ? $"PASS  all {tests.Length} PASS 1 tests"
-            : $"FAIL  {failures} of {tests.Length} PASS 1 tests");
+            ? $"PASS  all {tests.Length} PASS 1 regression tests"
+            : $"FAIL  {failures} of {tests.Length} PASS 1 regression tests");
 
         return failures == 0 ? 0 : 1;
     }
@@ -97,7 +97,7 @@ internal static class Program
         foreach (var alias in new[] { "-doctor", "--doctor", "-update", "--update" })
         {
             var result = Run(CliExe(), alias);
-            Require(result.ExitCode == 4, $"{alias} must return reserved exit code 4 during PASS 1, got {result.ExitCode}.");
+            Require(result.ExitCode == 4, $"{alias} must return reserved exit code 4 before PASS 4, got {result.ExitCode}.");
             Require(result.Output.Contains("PASS 4", StringComparison.OrdinalIgnoreCase), $"{alias} did not explain its PASS 4 reservation.");
         }
     }
@@ -136,10 +136,15 @@ internal static class Program
         return (bool)(property.GetValue(result) ?? false);
     }
 
-    private static void NoRunnerControlInPass1()
+    private static void RunnerControlLayering()
     {
         var forbidden = new[] { "Runner.Listener.exe", "Runner.Worker.exe", "run.cmd", "Kill(", "entireProcessTree" };
-        var roots = new[] { Path.Combine(RepoRoot, "src"), Path.Combine(RepoRoot, "scripts") };
+        var roots = new[]
+        {
+            Path.Combine(RepoRoot, "src", "MRC.Cli"),
+            Path.Combine(RepoRoot, "src", "MRC.Gui"),
+            Path.Combine(RepoRoot, "scripts")
+        };
 
         foreach (var root in roots.Where(Directory.Exists))
         {
@@ -151,7 +156,8 @@ internal static class Program
                 var text = File.ReadAllText(file);
                 foreach (var marker in forbidden)
                 {
-                    Require(!text.Contains(marker, StringComparison.OrdinalIgnoreCase), $"PASS 1 forbidden runner-control marker '{marker}' found in {Path.GetRelativePath(RepoRoot, file)}.");
+                    Require(!text.Contains(marker, StringComparison.OrdinalIgnoreCase),
+                        $"Runner-control primitive '{marker}' leaked outside MRC.Core into {Path.GetRelativePath(RepoRoot, file)}.");
                 }
             }
         }
