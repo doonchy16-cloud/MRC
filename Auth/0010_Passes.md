@@ -70,6 +70,16 @@ Required outcomes:
 - atomic activation;
 - retained previous version/rollback foundation.
 
+## Owner-Authorized Pre-Certification Installation Build
+After PASS 4 is fully verified and before PASS 5 certification, the owner may publish `v0.0.9` as an installable GitHub prerelease solely to enable normal installation on Main-PC and collection of real PASS 5 runtime evidence.
+
+Rules:
+- the final source/product target remains `v0.1.0`;
+- the `v0.0.9` package, executable identity, manifest, ZIP filename, checksum authority, tag, and GitHub prerelease must agree on version `0.0.9`;
+- publishing `v0.0.9` does not constitute PASS 5 certification;
+- `v0.0.9` must be clearly labeled pre-certification/prerelease;
+- PASS 5 remains responsible for real Main-PC validation and the final `v0.1.0` release gate.
+
 ## PASS 5 — Certification + Release
 Validate real behavior and cut the release.
 
