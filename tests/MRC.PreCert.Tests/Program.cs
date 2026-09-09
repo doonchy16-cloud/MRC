@@ -18,11 +18,14 @@ var tests = new (string Name, Action Body)[]
         var oldLabel = EnvironmentFence.Evaluate("Main-PC", @"D:\Git_Runners_Main", true);
         Require(!oldLabel.IsAuthorized, "Friendly label Main-PC must not be accepted as the Windows computer identity.");
     }),
-    ("package installer uses actual Windows identity", () =>
+    ("package installer and manifest use actual Windows identity", () =>
     {
-        var text = File.ReadAllText(Path.Combine(repoRoot, "scripts", "install.ps1"));
-        Require(text.Contains("$targetMachine = 'DOONCHYSCOMPUTI'", StringComparison.Ordinal),
+        var install = File.ReadAllText(Path.Combine(repoRoot, "scripts", "install.ps1"));
+        Require(install.Contains("$targetMachine = 'DOONCHYSCOMPUTI'", StringComparison.Ordinal),
             "scripts/install.ps1 is not pinned to DOONCHYSCOMPUTI.");
+        var package = File.ReadAllText(Path.Combine(repoRoot, "scripts", "package.ps1"));
+        Require(package.Contains("targetMachine = 'DOONCHYSCOMPUTI'", StringComparison.Ordinal),
+            "scripts/package.ps1 still writes the wrong manifest machine identity.");
     }),
     ("bootstrap targets v0.0.10 on actual Windows identity", () =>
     {
