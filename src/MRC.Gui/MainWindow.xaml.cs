@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using MRC.Core;
 using MRC.Core.Control;
@@ -25,6 +26,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        Icon = BitmapFrame.Create(new Uri("pack://application:,,,/Assets/MRC.ico", UriKind.Absolute));
         DataContext = _dashboard;
 
         _refreshTimer.Interval = TimeSpan.FromSeconds(3);
