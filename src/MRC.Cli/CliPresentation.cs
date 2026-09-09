@@ -110,12 +110,12 @@ public static class CliPresentation
 
     private static CliTone ToneFor(RunnerState state) => state switch
     {
-        RunnerState.Idle => CliTone.Success,
-        RunnerState.Busy => CliTone.Warning,
-        RunnerState.Error => CliTone.Error,
-        RunnerState.Starting => CliTone.Heading,
-        RunnerState.Stopping => CliTone.Metadata,
-        RunnerState.Off => CliTone.Secondary,
+        RunnerState.IDLE => CliTone.Success,
+        RunnerState.BUSY => CliTone.Warning,
+        RunnerState.ERROR => CliTone.Error,
+        RunnerState.STARTING => CliTone.Heading,
+        RunnerState.STOPPING => CliTone.Metadata,
+        RunnerState.OFF => CliTone.Secondary,
         _ => CliTone.Normal
     };
 }
