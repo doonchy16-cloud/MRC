@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
 using MRC.Core;
+using MRC.Core.Control;
 using MRC.Core.Runtime;
 using MRC.Gui.Presentation;
 
@@ -16,7 +17,9 @@ public partial class MainWindow : Window
     private readonly DispatcherTimer _refreshTimer = new DispatcherTimer();
     private readonly DispatcherTimer _animationTimer = new DispatcherTimer();
     private RunnerEngine? _engine;
+    private RunnerOperationsService? _operations;
     private bool _refreshInProgress;
+    private bool _operationInProgress;
     private bool _previewMode;
 
     public MainWindow()
@@ -44,8 +47,10 @@ public partial class MainWindow : Window
         BoundaryValue.Text = "AUTHORIZED";
         BoundaryValue.Foreground = BrushFromHex("#39E58C");
         BoundaryDot.Fill = BrushFromHex("#39E58C");
-        SetBoundaryDetails("Deterministic PASS 3 visual preview data.");
-        RefreshStatusValue.Text = $"Preview snapshot • {_dashboard.TotalCount} runners • rendered without runtime control";
+        SetBoundaryDetails("Deterministic PASS 4 visual preview data — controls shown but runtime operation disabled.");
+        RefreshStatusValue.Text = $"PASS 4 preview • {_dashboard.TotalCount} runners • operations disabled in render mode";
+        OperationsPanel.IsEnabled = false;
+        RunnerList.IsHitTestVisible = false;
         _animationClock.Tick(DateTimeOffset.UtcNow, _dashboard.Rows);
     }
 
@@ -61,6 +66,9 @@ public partial class MainWindow : Window
             try
             {
                 _engine = new RunnerEngine();
+                _operations = new RunnerOperationsService(_engine);
+                OperationsPanel.IsEnabled = true;
+                RunnerList.IsHitTestVisible = true;
                 await RefreshDashboardAsync();
                 _refreshTimer.Start();
                 _animationTimer.Start();
@@ -68,6 +76,9 @@ public partial class MainWindow : Window
             catch (Exception ex)
             {
                 _engine = null;
+                _operations = null;
+                OperationsPanel.IsEnabled = false;
+                RunnerList.IsHitTestVisible = false;
                 RefreshStatusValue.Text = $"Engine unavailable • {ex.Message}";
                 RefreshStatusValue.Foreground = BrushFromHex("#FF8A3D");
             }
@@ -75,6 +86,8 @@ public partial class MainWindow : Window
         else
         {
             _dashboard.ApplySnapshots(Array.Empty<RunnerSnapshot>());
+            OperationsPanel.IsEnabled = false;
+            RunnerList.IsHitTestVisible = false;
             RefreshStatusValue.Text = $"CONTROL BLOCKED • {fence.Code}";
             RefreshStatusValue.Foreground = BrushFromHex("#FF8A3D");
         }
@@ -106,7 +119,7 @@ public partial class MainWindow : Window
 
     private async Task RefreshDashboardAsync()
     {
-        if (_engine is null || _refreshInProgress || _previewMode) return;
+        if (_engine is null || _refreshInProgress || _previewMode || _operationInProgress) return;
 
         _refreshInProgress = true;
         try
@@ -151,6 +164,199 @@ public partial class MainWindow : Window
     private async void ManualRefreshButton_OnClick(object sender, RoutedEventArgs e)
     {
         await RefreshDashboardAsync();
+    }
+
+    private async void TurnAllOnButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (_previewMode || _operations is null || _operationInProgress) return;
+
+        RunnerBulkOperationResult result;
+        BeginOperation("TURN ALL ON • starting verified OFF runners…");
+        try
+        {
+            result = await _operations.TurnAllOnAsync();
+        }
+        catch (Exception ex)
+        {
+            RenderOperationException("TURN ALL ON", ex);
+            return;
+        }
+        finally
+        {
+            EndOperation();
+        }
+
+        await RefreshDashboardAsync();
+        RenderBulkResult("TURN ALL ON", result);
+    }
+
+    private async void TurnAllOffButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (_previewMode || _operations is null || _operationInProgress) return;
+
+        var idleCount = _dashboard.Rows.Count(row => row.State == RunnerState.IDLE);
+        var busyCount = _dashboard.Rows.Count(row => row.State == RunnerState.BUSY);
+        var confirmation = MessageBox.Show(
+            this,
+            $"Stop {idleCount} IDLE runner(s)?\n\n{busyCount} BUSY runner(s) will remain running.\n\nTURN ALL OFF never force-stops BUSY runners.",
+            "Confirm TURN ALL OFF",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning,
+            MessageBoxResult.No);
+        if (confirmation != MessageBoxResult.Yes) return;
+
+        RunnerBulkOperationResult result;
+        BeginOperation("TURN ALL OFF • stopping verified IDLE runners…");
+        try
+        {
+            result = await Task.Run(() => _operations.TurnAllOff());
+        }
+        catch (Exception ex)
+        {
+            RenderOperationException("TURN ALL OFF", ex);
+            return;
+        }
+        finally
+        {
+            EndOperation();
+        }
+
+        await RefreshDashboardAsync();
+        RenderBulkResult("TURN ALL OFF", result);
+    }
+
+    private async void RunnerPrimaryControl_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (_previewMode || _operations is null || _operationInProgress) return;
+        if (sender is not Button { CommandParameter: RunnerRowViewModel row }) return;
+
+        RunnerControlResult result;
+        BeginOperation($"{row.RunnerName} • applying verified control…");
+        try
+        {
+            if (row.State == RunnerState.OFF)
+            {
+                result = await Task.Run(() => _operations.Start(row.Runner));
+            }
+            else if (row.State == RunnerState.IDLE)
+            {
+                result = await Task.Run(() => _operations.StopIdle(row.Runner));
+            }
+            else
+            {
+                return;
+            }
+        }
+        catch (Exception ex)
+        {
+            RenderOperationException(row.RunnerName, ex);
+            return;
+        }
+        finally
+        {
+            EndOperation();
+        }
+
+        await RefreshDashboardAsync();
+        RenderControlResult(row, result);
+    }
+
+    private async void RunnerMoreControl_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (_previewMode || _operations is null || _operationInProgress) return;
+        if (sender is not Button { CommandParameter: RunnerRowViewModel row }) return;
+        if (row.State != RunnerState.BUSY) return;
+
+        RunnerControlResult preflight;
+        try
+        {
+            preflight = await Task.Run(() => _operations.ForceStopBusy(row.Runner, confirmed: false));
+        }
+        catch (Exception ex)
+        {
+            RenderOperationException(row.RunnerName, ex);
+            return;
+        }
+
+        if (preflight.Outcome != RunnerControlOutcome.ConfirmationRequired)
+        {
+            await RefreshDashboardAsync();
+            RenderControlResult(row, preflight);
+            return;
+        }
+
+        var confirmation = MessageBox.Show(
+            this,
+            $"Force-stop BUSY runner '{row.RunnerName}'?\n\nThis can interrupt an active GitHub Actions job. Any in-progress job may fail immediately.\n\nUse this only when interruption is intentional.",
+            "Force-stop BUSY runner",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning,
+            MessageBoxResult.No);
+        if (confirmation != MessageBoxResult.Yes) return;
+
+        RunnerControlResult result;
+        BeginOperation($"{row.RunnerName} • force-stop requested…");
+        try
+        {
+            result = await Task.Run(() => _operations.ForceStopBusy(row.Runner, confirmed: true));
+        }
+        catch (Exception ex)
+        {
+            RenderOperationException(row.RunnerName, ex);
+            return;
+        }
+        finally
+        {
+            EndOperation();
+        }
+
+        await RefreshDashboardAsync();
+        RenderControlResult(row, result);
+    }
+
+    private void BeginOperation(string message)
+    {
+        _operationInProgress = true;
+        _refreshTimer.Stop();
+        OperationsPanel.IsEnabled = false;
+        RunnerList.IsHitTestVisible = false;
+        ManualRefreshButton.IsEnabled = false;
+        RefreshStatusValue.Text = message;
+        RefreshStatusValue.Foreground = BrushFromHex("#AAB6C3");
+    }
+
+    private void EndOperation()
+    {
+        _operationInProgress = false;
+        var canOperate = !_previewMode && _operations is not null;
+        OperationsPanel.IsEnabled = canOperate;
+        RunnerList.IsHitTestVisible = canOperate;
+        ManualRefreshButton.IsEnabled = true;
+        if (canOperate) _refreshTimer.Start();
+    }
+
+    private void RenderControlResult(RunnerRowViewModel row, RunnerControlResult result)
+    {
+        RefreshStatusValue.Text = $"{row.RunnerName} • {result.Message}";
+        RefreshStatusValue.Foreground = result.Outcome switch
+        {
+            RunnerControlOutcome.Error => BrushFromHex("#FF8A3D"),
+            RunnerControlOutcome.BusyProtected or RunnerControlOutcome.ConfirmationRequired => BrushFromHex("#FFD166"),
+            RunnerControlOutcome.Starting or RunnerControlOutcome.Stopping or RunnerControlOutcome.ForceStopping => BrushFromHex("#39E58C"),
+            _ => BrushFromHex("#AAB6C3")
+        };
+    }
+
+    private void RenderBulkResult(string operation, RunnerBulkOperationResult result)
+    {
+        RefreshStatusValue.Text = $"{operation} • {result.Succeeded}/{result.Attempted} succeeded • {result.BusySkipped} BUSY skipped • {result.Errors} errors • {result.Skipped} total skipped";
+        RefreshStatusValue.Foreground = result.Errors > 0 ? BrushFromHex("#FF8A3D") : BrushFromHex("#39E58C");
+    }
+
+    private void RenderOperationException(string operation, Exception ex)
+    {
+        RefreshStatusValue.Text = $"{operation} error • {ex.Message}";
+        RefreshStatusValue.Foreground = BrushFromHex("#FF8A3D");
     }
 
     private static Brush BrushFromHex(string value) =>
