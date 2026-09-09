@@ -1,0 +1,32 @@
+name: Pre-cert v0.0.10 Minimal Verification
+
+on:
+  push:
+    branches: [ precert-v0.0.10 ]
+    paths:
+      - src/MRC.Core/MrcConstants.cs
+      - src/MRC.Core/EnvironmentFence.cs
+      - scripts/install.ps1
+      - install-mrc.ps1
+      - tests/MRC.PreCert.Tests/**
+      - .github/workflows/precert-v0.0.10-minimal.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify machine identity and bootstrap only
+    runs-on: windows-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Setup .NET from global.json
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+      - name: Run minimal pre-cert tests only
+        shell: pwsh
+        run: dotnet run --project tests/MRC.PreCert.Tests/MRC.PreCert.Tests.csproj -c Release
