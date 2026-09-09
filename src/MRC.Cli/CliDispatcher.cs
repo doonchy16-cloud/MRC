@@ -1,5 +1,6 @@
 using MRC.Core;
 using MRC.Core.Diagnostics;
+using MRC.Core.Updating;
 
 namespace MRC.Cli;
 
@@ -61,12 +62,41 @@ public sealed class CliDispatcher
 
             case "-update":
             case "--update":
-                await error.WriteLineAsync("MRC update is reserved for PASS 4 — Operations + Updating.");
-                return 4;
+                return await RunUpdateAsync(output, error);
 
             default:
                 await WriteUnknownAsync(error, args[0]);
                 return 2;
+        }
+    }
+
+    private static async Task<int> RunUpdateAsync(TextWriter output, TextWriter error)
+    {
+        await output.WriteLineAsync("MRC Update");
+        var fence = EnvironmentFence.EvaluateCurrent();
+        if (!fence.IsAuthorized)
+        {
+            await error.WriteLineAsync($"CONTROL BLOCKED • {fence.Code} • {fence.Message}");
+            return 1;
+        }
+
+        var installRoot = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "MRC");
+
+        try
+        {
+            using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
+            var source = new GitHubReleaseSource(client);
+            var updater = new UpdateService(source, installRoot, new ExecutableVersionVerifier());
+            var result = await updater.RunAsync();
+            await output.WriteLineAsync(result.Message);
+            return result.Outcome == UpdateOutcome.Failed ? 1 : 0;
+        }
+        catch (Exception ex)
+        {
+            await error.WriteLineAsync($"Update failed safely: {ex.Message}");
+            return 1;
         }
     }
 
@@ -108,7 +138,7 @@ public sealed class CliDispatcher
         await output.WriteLineAsync("                              Show installed version information");
         await output.WriteLineAsync("  MRC -h | -help | --help    Show this help");
         await output.WriteLineAsync("  MRC -doctor | --doctor     Run read-only diagnostics");
-        await output.WriteLineAsync("  MRC -update | --update     Update MRC (implemented in PASS 4)");
+        await output.WriteLineAsync("  MRC -update | --update     Resolve, verify, and atomically activate an allowed release");
     }
 
     private static async Task WriteUnknownAsync(TextWriter error, string option)
