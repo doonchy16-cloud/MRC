@@ -261,10 +261,20 @@
         </Border>
 
         <!-- external/unattributed findings never contaminate managed rows -->
-        <Border x:Name="SystemFindingsPanel" Grid.Row="4" Visibility="Collapsed" BorderBrush="{StaticResource BusyBrush}" BorderThickness="0,1,0,0" Background="#0D1319" Padding="4,6" Margin="0,5,0,0">
+        <Border x:Name="SystemFindingsPanel" Grid.Row="4" BorderBrush="{StaticResource BusyBrush}" BorderThickness="0,1,0,0" Background="#0D1319" Padding="4,6" Margin="0,5,0,0">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding HasSystemFindings}" Value="True">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
             <StackPanel Orientation="Horizontal">
                 <TextBlock Text="⚠ SYSTEM // " Foreground="{StaticResource BusyBrush}" FontSize="9" FontWeight="Bold" />
-                <TextBlock x:Name="SystemFindingsValue" Text="external or unattributed runner-process evidence detected; control remains blocked for those processes" Foreground="{StaticResource SecondaryBrush}" FontSize="9" TextTrimming="CharacterEllipsis" />
+                <TextBlock x:Name="SystemFindingsValue" Text="{Binding SystemFindingsSummary}" ToolTip="{Binding SystemFindingsSummary}" Foreground="{StaticResource SecondaryBrush}" FontSize="9" TextTrimming="CharacterEllipsis" />
             </StackPanel>
         </Border>
 
