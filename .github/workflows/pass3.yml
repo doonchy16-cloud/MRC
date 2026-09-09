@@ -34,7 +34,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: MRC-PASS3-visual-preview
-          path: artifacts/pass3/MRC-PASS3-1180x760.png
+          path: artifacts/pass3/MRC-PASS3-*.png
           if-no-files-found: error
           retention-days: 7
 
