@@ -253,7 +253,7 @@
                 <Grid.RowDefinitions><RowDefinition Height="34" /><RowDefinition Height="*" /></Grid.RowDefinitions>
                 <Border Background="{StaticResource RaisedBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1">
                     <Grid>
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="55" /><ColumnDefinition Width="245" /><ColumnDefinition Width="*" MinWidth="220" /><ColumnDefinition Width="100" /><ColumnDefinition Width="125" /></Grid.ColumnDefinitions>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="55" /><ColumnDefinition Width="250" /><ColumnDefinition Width="*" MinWidth="220" /><ColumnDefinition Width="100" /><ColumnDefinition Width="110" /></Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" Text="STATUS" Foreground="{StaticResource MutedBrush}" FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center" HorizontalAlignment="Center" />
                         <TextBlock Grid.Column="1" Text="RUNNER NAME" Foreground="{StaticResource MutedBrush}" FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center" />
                         <TextBlock Grid.Column="2" Text="REPOSITORY" Foreground="{StaticResource MutedBrush}" FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center" />
@@ -265,7 +265,7 @@
                     <ListView.ItemTemplate>
                         <DataTemplate>
                             <Grid Height="42" ToolTip="{Binding DirectoryPath}">
-                                <Grid.ColumnDefinitions><ColumnDefinition Width="55" /><ColumnDefinition Width="245" /><ColumnDefinition Width="*" MinWidth="220" /><ColumnDefinition Width="100" /><ColumnDefinition Width="125" /></Grid.ColumnDefinitions>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="55" /><ColumnDefinition Width="250" /><ColumnDefinition Width="*" MinWidth="220" /><ColumnDefinition Width="100" /><ColumnDefinition Width="110" /></Grid.ColumnDefinitions>
                                 <Grid Grid.Column="0"><Border x:Name="StateStripe" Style="{StaticResource StateStripeStyle}" Width="4" HorizontalAlignment="Left" /><TextBlock Text="{Binding Glyph}" Style="{StaticResource StateForegroundStyle}" FontFamily="Consolas" FontSize="15" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" /></Grid>
                                 <TextBlock Grid.Column="1" Text="{Binding RunnerName}" AutomationProperties.Name="{Binding RunnerName}" Foreground="{StaticResource RunnerBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" FontSize="12" FontWeight="SemiBold" Margin="0,0,14,0" />
                                 <TextBlock Grid.Column="2" Text="{Binding RepositoryName}" Foreground="{StaticResource RepositoryBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" FontSize="12" Margin="0,0,14,0" />
