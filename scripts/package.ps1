@@ -73,7 +73,7 @@ $manifest = [ordered]@{
     version = $version
     channel = 'stable'
     runtime = $Runtime
-    targetMachine = 'Main-PC'
+    targetMachine = 'DOONCHYSCOMPUTI'
     runnerRoot = 'D:\Git_Runners_Main'
     canonicalCommand = 'MRC'
 }
