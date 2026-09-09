@@ -244,7 +244,7 @@
                         <DataTemplate>
                             <Grid Height="32" ToolTip="{Binding DirectoryPath}">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="48" /><ColumnDefinition Width="235" /><ColumnDefinition Width="*" MinWidth="180" /><ColumnDefinition Width="95" /><ColumnDefinition Width="108" /></Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="{Binding Glyph}" Style="{StaticResource StateForegroundStyle}" FontSize="14" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="0" Text="{Binding Glyph}" Opacity="{Binding AnimationIntensity}" Style="{StaticResource StateForegroundStyle}" FontSize="14" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                 <TextBlock Grid.Column="1" Text="{Binding RunnerName}" AutomationProperties.Name="{Binding RunnerName}" Foreground="{StaticResource RunnerBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" FontSize="10" FontWeight="SemiBold" Margin="0,0,10,0" />
                                 <TextBlock Grid.Column="2" Text="{Binding RepositoryName}" Foreground="{StaticResource RepositoryBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" FontSize="10" Margin="0,0,10,0" />
                                 <TextBlock Grid.Column="3" Text="{Binding StateText}" AutomationProperties.Name="{Binding StateText}" Style="{StaticResource StateForegroundStyle}" VerticalAlignment="Center" FontSize="9" FontWeight="Bold" />
