@@ -56,7 +56,8 @@ jobs:
           if ([string]$manifest.runnerRoot -ne 'D:\Git_Runners_Main') { throw "Manifest runnerRoot is $($manifest.runnerRoot)." }
 
           $installText = Get-Content -LiteralPath (Join-Path $extract 'install.ps1') -Raw
-          if ($installText -notmatch "\$targetMachine\s*=\s*'DOONCHYSCOMPUTI'") { throw 'Packaged install.ps1 has the wrong machine identity.' }
+          $requiredInstallerIdentity = '$targetMachine = ''DOONCHYSCOMPUTI'''
+          if (-not $installText.Contains($requiredInstallerIdentity, [StringComparison]::Ordinal)) { throw 'Packaged install.ps1 has the wrong machine identity.' }
 
           $versionOutput = & (Join-Path $extract 'payload\MRC.exe') --version 2>&1 | Out-String
           if ($LASTEXITCODE -ne 0) { throw "Packaged MRC.exe --version failed: $versionOutput" }
