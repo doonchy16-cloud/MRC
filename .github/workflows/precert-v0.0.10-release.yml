@@ -1,0 +1,80 @@
+name: Pre-cert v0.0.10 Release
+
+on:
+  push:
+    branches: [ precert-v0.0.10 ]
+    paths:
+      - .release/v0.0.10.trigger
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Verify, package, and publish v0.0.10
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup .NET from global.json
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Run minimal pre-cert tests only
+        shell: pwsh
+        run: dotnet run --project tests/MRC.PreCert.Tests/MRC.PreCert.Tests.csproj -c Release
+
+      - name: Build v0.0.10 installable package
+        shell: pwsh
+        run: ./scripts/package.ps1 -Configuration Release -VersionOverride '0.0.10'
+
+      - name: Verify v0.0.10 package identity and hash
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $zip = Join-Path $PWD 'artifacts\MRC-v0.0.10-win-x64.zip'
+          $sums = Join-Path $PWD 'artifacts\SHA256SUMS.txt'
+          if (-not (Test-Path -LiteralPath $zip -PathType Leaf)) { throw "Missing package: $zip" }
+          if (-not (Test-Path -LiteralPath $sums -PathType Leaf)) { throw "Missing checksum authority: $sums" }
+
+          $line = Get-Content -LiteralPath $sums | Where-Object { $_ -match 'MRC-v0\.0\.10-win-x64\.zip$' } | Select-Object -First 1
+          if ([string]::IsNullOrWhiteSpace($line)) { throw 'SHA256SUMS.txt does not name the v0.0.10 package.' }
+          $expected = ([regex]::Match($line, '^([A-Fa-f0-9]{64})')).Groups[1].Value.ToLowerInvariant()
+          $actual = (Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($actual -ne $expected) { throw "Package SHA-256 mismatch. Expected $expected, got $actual." }
+
+          $extract = Join-Path $env:RUNNER_TEMP 'mrc-v0.0.10-verify'
+          if (Test-Path -LiteralPath $extract) { Remove-Item -LiteralPath $extract -Recurse -Force }
+          Expand-Archive -LiteralPath $zip -DestinationPath $extract -Force
+
+          $manifest = Get-Content -LiteralPath (Join-Path $extract 'manifest.json') -Raw | ConvertFrom-Json
+          if ([string]$manifest.version -ne '0.0.10') { throw "Manifest version is $($manifest.version), expected 0.0.10." }
+          if ([string]$manifest.targetMachine -ne 'DOONCHYSCOMPUTI') { throw "Manifest targetMachine is $($manifest.targetMachine), expected DOONCHYSCOMPUTI." }
+          if ([string]$manifest.runnerRoot -ne 'D:\Git_Runners_Main') { throw "Manifest runnerRoot is $($manifest.runnerRoot)." }
+
+          $installText = Get-Content -LiteralPath (Join-Path $extract 'install.ps1') -Raw
+          if ($installText -notmatch "\$targetMachine\s*=\s*'DOONCHYSCOMPUTI'") { throw 'Packaged install.ps1 has the wrong machine identity.' }
+
+          $versionOutput = & (Join-Path $extract 'payload\MRC.exe') --version 2>&1 | Out-String
+          if ($LASTEXITCODE -ne 0) { throw "Packaged MRC.exe --version failed: $versionOutput" }
+          if ($versionOutput -notmatch 'Version:\s*0\.0\.10') { throw "Packaged executable does not report 0.0.10: $versionOutput" }
+
+          Write-Host "Verified SHA-256: $actual"
+          Write-Host 'Verified manifest target: DOONCHYSCOMPUTI'
+          Write-Host 'Verified executable version: 0.0.10'
+
+      - name: Create v0.0.10 GitHub prerelease
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create v0.0.10 `
+            artifacts/MRC-v0.0.10-win-x64.zip `
+            artifacts/SHA256SUMS.txt `
+            --target "$env:GITHUB_SHA" `
+            --prerelease `
+            --title "MRC v0.0.10 — Main-PC Certification Build" `
+            --notes "Corrected pre-certification build for the real Windows computer identity DOONCHYSCOMPUTI. PASS 1–4 were not rerun for this correction; only the dedicated machine-fence/bootstrap/package-identity gate was executed. This remains a pre-certification build for real Main-PC testing, not the final v0.1.0 release."
