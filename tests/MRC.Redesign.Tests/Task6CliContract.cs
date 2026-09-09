@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using MRC.Cli;
 
@@ -11,6 +12,9 @@ internal static class Task6CliContract
 
         VerifyVersionTruth().GetAwaiter().GetResult();
         Console.WriteLine("PASS  Task6B truthful version output");
+
+        VerifySemanticPalette();
+        Console.WriteLine("PASS  Task6C1 semantic CLI palette");
     }
 
     private static async Task VerifyBareLaunchFeedback()
@@ -51,6 +55,45 @@ internal static class Task6CliContract
             $"Version output does not preserve final target v0.1.0: {text}");
         Require(!text.Contains("\u001b[", StringComparison.Ordinal),
             "Redirected --version output contains ANSI escape sequences.");
+    }
+
+    private static void VerifySemanticPalette()
+    {
+        var assembly = typeof(CliDispatcher).Assembly;
+        var toneType = assembly.GetType("MRC.Cli.CliTone");
+        Require(toneType is not null && toneType.IsEnum, "CliTone is missing.");
+
+        var expectedNames = new[]
+        {
+            "Normal", "Heading", "Success", "Warning", "Error", "Path", "Metadata", "Secondary"
+        };
+        Require(Enum.GetNames(toneType!).SequenceEqual(expectedNames),
+            $"CliTone values are wrong: {string.Join(", ", Enum.GetNames(toneType!))}.");
+
+        var palette = assembly.GetType("MRC.Cli.CliPalette");
+        Require(palette is not null, "CliPalette is missing.");
+        var colorFor = palette!.GetMethod("ColorFor", BindingFlags.Public | BindingFlags.Static);
+        Require(colorFor is not null, "CliPalette.ColorFor is missing.");
+
+        var expected = new Dictionary<string, ConsoleColor>(StringComparer.Ordinal)
+        {
+            ["Normal"] = ConsoleColor.White,
+            ["Heading"] = ConsoleColor.Cyan,
+            ["Success"] = ConsoleColor.Green,
+            ["Warning"] = ConsoleColor.Yellow,
+            ["Error"] = ConsoleColor.Red,
+            ["Path"] = ConsoleColor.Cyan,
+            ["Metadata"] = ConsoleColor.Magenta,
+            ["Secondary"] = ConsoleColor.DarkGray
+        };
+
+        foreach (var pair in expected)
+        {
+            var tone = Enum.Parse(toneType!, pair.Key);
+            var actual = colorFor!.Invoke(null, new[] { tone });
+            Require(actual is ConsoleColor color && color == pair.Value,
+                $"CliPalette maps {pair.Key} to {actual ?? "<null>"}; expected {pair.Value}.");
+        }
     }
 
     private static void Require(bool condition, string message)
