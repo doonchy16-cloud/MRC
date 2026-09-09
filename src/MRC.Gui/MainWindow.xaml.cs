@@ -42,15 +42,21 @@ public partial class MainWindow : Window
     public void ConfigurePreview(IReadOnlyList<RunnerSnapshot> snapshots)
     {
         ArgumentNullException.ThrowIfNull(snapshots);
+        ConfigurePreview(new RunnerRuntimeReport(snapshots, Array.Empty<RunnerSystemFinding>()));
+    }
+
+    public void ConfigurePreview(RunnerRuntimeReport report)
+    {
+        ArgumentNullException.ThrowIfNull(report);
         _previewMode = true;
-        _dashboard.ApplySnapshots(snapshots);
+        _dashboard.ApplyRuntimeReport(report);
         MachineValue.Text = "MAIN-PC";
         RootValue.Text = MrcConstants.RunnerRoot;
         BoundaryValue.Text = "AUTHORIZED";
         BoundaryValue.Foreground = BrushFromHex("#39E58C");
         BoundaryDot.Fill = BrushFromHex("#39E58C");
-        SetBoundaryDetails("Deterministic PASS 4 visual preview data — controls shown but runtime operation disabled.");
-        RefreshStatusValue.Text = $"PASS 4 preview • {_dashboard.TotalCount} runners • operations disabled in render mode";
+        SetBoundaryDetails("Deterministic v0.0.12 visual preview data — controls shown but runtime operation disabled.");
+        RefreshStatusValue.Text = $"v0.0.12 preview • {_dashboard.TotalCount} runners • operations disabled in render mode";
         OperationsPanel.IsEnabled = false;
         RunnerList.IsHitTestVisible = false;
         _animationClock.Tick(DateTimeOffset.UtcNow, _dashboard.Rows);
