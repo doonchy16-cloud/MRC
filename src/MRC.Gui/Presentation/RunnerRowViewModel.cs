@@ -31,6 +31,15 @@ public sealed class RunnerRowViewModel : INotifyPropertyChanged
     public RunnerState State => _state;
     public string StateText => _state.ToString();
     public string? Error => _error;
+    public string ControlText => _state switch
+    {
+        RunnerState.OFF => "ON",
+        RunnerState.IDLE => "OFF",
+        RunnerState.BUSY => "BUSY",
+        RunnerState.STARTING or RunnerState.STOPPING => "WAIT",
+        RunnerState.ERROR => "DETAILS",
+        _ => "—"
+    };
 
     public string Glyph
     {
@@ -65,6 +74,7 @@ public sealed class RunnerRowViewModel : INotifyPropertyChanged
             Glyph = StaticGlyph(_state);
             OnPropertyChanged(nameof(State));
             OnPropertyChanged(nameof(StateText));
+            OnPropertyChanged(nameof(ControlText));
         }
         if (errorChanged) OnPropertyChanged(nameof(Error));
     }
