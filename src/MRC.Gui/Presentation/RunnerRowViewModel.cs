@@ -12,6 +12,7 @@ public sealed class RunnerRowViewModel : INotifyPropertyChanged
     private RunnerState _state;
     private string? _error;
     private string _glyph;
+    private double _animationIntensity = 1.0;
 
     public RunnerRowViewModel(RunnerSnapshot snapshot)
     {
@@ -52,6 +53,18 @@ public sealed class RunnerRowViewModel : INotifyPropertyChanged
         }
     }
 
+    public double AnimationIntensity
+    {
+        get => _animationIntensity;
+        internal set
+        {
+            var bounded = Math.Clamp(value, 0.55, 1.0);
+            if (Math.Abs(_animationIntensity - bounded) < 0.0001) return;
+            _animationIntensity = bounded;
+            OnPropertyChanged();
+        }
+    }
+
     public void Update(RunnerSnapshot snapshot)
     {
         var identityChanged = _runner != snapshot.Runner;
@@ -72,6 +85,7 @@ public sealed class RunnerRowViewModel : INotifyPropertyChanged
         if (stateChanged)
         {
             Glyph = StaticGlyph(_state);
+            AnimationIntensity = 1.0;
             OnPropertyChanged(nameof(State));
             OnPropertyChanged(nameof(StateText));
             OnPropertyChanged(nameof(ControlText));
