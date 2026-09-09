@@ -18,6 +18,9 @@ internal static class Task6CliContract
 
         VerifyRedirectSafeRenderer();
         Console.WriteLine("PASS  Task6C2 redirect-safe CLI renderer");
+
+        VerifyVersionToneContract();
+        Console.WriteLine("PASS  Task6C3 semantic version presentation");
     }
 
     private static async Task VerifyBareLaunchFeedback()
@@ -132,6 +135,45 @@ internal static class Task6CliContract
             "CliRenderer did not write redirected text.");
         Require(!text.Contains("\u001b[", StringComparison.Ordinal),
             "CliRenderer leaked ANSI escape sequences into redirected text.");
+    }
+
+    private static void VerifyVersionToneContract()
+    {
+        var assembly = typeof(CliDispatcher).Assembly;
+        var presentation = assembly.GetType("MRC.Cli.CliPresentation");
+        Require(presentation is not null, "CliPresentation is missing.");
+
+        var versionLines = presentation!.GetMethod(
+            "VersionLines",
+            BindingFlags.Public | BindingFlags.Static,
+            binder: null,
+            types: new[] { typeof(string) },
+            modifiers: null);
+        Require(versionLines is not null, "CliPresentation.VersionLines(string) is missing.");
+
+        var result = versionLines!.Invoke(null, new object[] { @"C:\MRC\versions\0.0.12" }) as System.Collections.IEnumerable;
+        Require(result is not null, "CliPresentation.VersionLines returned null.");
+
+        var lines = result!.Cast<object>().ToArray();
+        Require(lines.Length >= 7, $"Version presentation is incomplete: {lines.Length} line(s).");
+
+        string Text(object line) => line.GetType().GetProperty("Text")?.GetValue(line)?.ToString() ?? string.Empty;
+        string Tone(object line) => line.GetType().GetProperty("Tone")?.GetValue(line)?.ToString() ?? string.Empty;
+
+        Require(Tone(lines[0]) == "Heading", $"Version heading tone is {Tone(lines[0])}, expected Heading.");
+        foreach (var prefix in new[] { "Version:", "Channel:", "Stage:", "Final target:" })
+        {
+            var line = lines.SingleOrDefault(item => Text(item).StartsWith(prefix, StringComparison.OrdinalIgnoreCase));
+            Require(line is not null, $"Version presentation is missing '{prefix}'.");
+            Require(Tone(line!) == "Metadata", $"'{prefix}' tone is {Tone(line!)}, expected Metadata.");
+        }
+
+        foreach (var prefix in new[] { "Install location:", "Runner root:" })
+        {
+            var line = lines.SingleOrDefault(item => Text(item).StartsWith(prefix, StringComparison.OrdinalIgnoreCase));
+            Require(line is not null, $"Version presentation is missing '{prefix}'.");
+            Require(Tone(line!) == "Path", $"'{prefix}' tone is {Tone(line!)}, expected Path.");
+        }
     }
 
     private static void Require(bool condition, string message)
