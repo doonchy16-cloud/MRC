@@ -8,8 +8,9 @@ internal static class VisualPreviewAcceptance
         {
             ("deterministic WPF preview renderer exists", PreviewRendererExists),
             ("preview renderer covers all runtime states and long identities", PreviewDataCoverage),
-            ("preview script enforces exact 1180x760 PNG output", PreviewScriptContract),
-            ("PASS 3 CI renders and uploads the visual artifact", WorkflowPublishesPreview)
+            ("preview renderer supports default and minimum geometry", ResponsiveRendererContract),
+            ("preview script enforces exact 1180x760 and 900x560 PNG outputs", PreviewScriptContract),
+            ("PASS 3 CI renders and uploads both visual artifacts", WorkflowPublishesPreview)
         };
 
         var failures = 0;
@@ -46,7 +47,7 @@ internal static class VisualPreviewAcceptance
 
     private static void PreviewDataCoverage()
     {
-        var code = File.ReadAllText(Path.Combine(RepoRoot(), "tools", "MRC.Pass3.Preview", "Program.cs"));
+        var code = PreviewCode();
         foreach (var state in new[] { "RunnerState.IDLE", "RunnerState.BUSY", "RunnerState.OFF", "RunnerState.ERROR", "RunnerState.STARTING", "RunnerState.STOPPING" })
         {
             Require(code.Contains(state, StringComparison.Ordinal), $"Preview sample is missing {state}.");
@@ -56,14 +57,28 @@ internal static class VisualPreviewAcceptance
         Require(code.Contains("PngBitmapEncoder", StringComparison.Ordinal), "Preview must encode a real PNG.");
     }
 
+    private static void ResponsiveRendererContract()
+    {
+        var code = PreviewCode();
+        Require(code.Contains("1180", StringComparison.Ordinal) && code.Contains("760", StringComparison.Ordinal),
+            "Renderer must preserve the locked default geometry.");
+        Require(code.Contains("900", StringComparison.Ordinal) && code.Contains("560", StringComparison.Ordinal),
+            "Renderer must preserve the locked minimum geometry.");
+        Require(code.Contains("args.Length > 1", StringComparison.Ordinal) && code.Contains("args.Length > 2", StringComparison.Ordinal),
+            "Renderer must accept explicit width and height so responsive layouts are rendered, not inferred.");
+    }
+
     private static void PreviewScriptContract()
     {
         var scriptPath = Path.Combine(RepoRoot(), "scripts", "render-pass3-preview.ps1");
         Require(File.Exists(scriptPath), "PASS 3 preview script is missing.");
         var script = File.ReadAllText(scriptPath);
-        Require(script.Contains("MRC-PASS3-1180x760.png", StringComparison.Ordinal), "Canonical preview filename is missing.");
+        Require(script.Contains("MRC-PASS3-1180x760.png", StringComparison.Ordinal), "Canonical default preview filename is missing.");
+        Require(script.Contains("MRC-PASS3-900x560.png", StringComparison.Ordinal), "Canonical minimum-size preview filename is missing.");
         Require(script.Contains("1180", StringComparison.Ordinal) && script.Contains("760", StringComparison.Ordinal),
             "Preview script must enforce 1180x760 dimensions.");
+        Require(script.Contains("900", StringComparison.Ordinal) && script.Contains("560", StringComparison.Ordinal),
+            "Preview script must enforce 900x560 dimensions.");
         Require(script.Contains("PNG", StringComparison.OrdinalIgnoreCase), "Preview script must validate PNG output.");
     }
 
@@ -73,8 +88,10 @@ internal static class VisualPreviewAcceptance
         Require(workflow.Contains("Render PASS 3 preview", StringComparison.Ordinal), "PASS 3 workflow does not render the preview.");
         Require(workflow.Contains("Upload PASS 3 preview", StringComparison.Ordinal), "PASS 3 workflow does not upload the preview.");
         Require(workflow.Contains("actions/upload-artifact@v4", StringComparison.Ordinal), "PASS 3 preview artifact uploader is missing.");
-        Require(workflow.Contains("artifacts/pass3/MRC-PASS3-1180x760.png", StringComparison.Ordinal), "PASS 3 workflow does not publish the canonical PNG path.");
+        Require(workflow.Contains("artifacts/pass3/MRC-PASS3-*.png", StringComparison.Ordinal), "PASS 3 workflow must publish both canonical PNG previews.");
     }
+
+    private static string PreviewCode() => File.ReadAllText(Path.Combine(RepoRoot(), "tools", "MRC.Pass3.Preview", "Program.cs"));
 
     private static string RepoRoot()
     {
