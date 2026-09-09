@@ -61,6 +61,10 @@ public sealed class CliDispatcher
                 return report.ExitCode;
             }
 
+            case "-diagnose":
+            case "--diagnose":
+                return await RunDiagnoseAsync(output, error);
+
             case "-update":
             case "--update":
                 return await RunUpdateAsync(output, error);
@@ -68,6 +72,27 @@ public sealed class CliDispatcher
             default:
                 await WriteUnknownAsync(error, args[0]);
                 return 2;
+        }
+    }
+
+    private static async Task<int> RunDiagnoseAsync(TextWriter output, TextWriter error)
+    {
+        try
+        {
+            var report = new DiagnoseService().Run();
+            var renderer = new CliRenderer(output);
+            foreach (var line in CliPresentation.DiagnoseLines(report))
+            {
+                await renderer.WriteLineAsync(line.Text, line.Tone);
+            }
+
+            return 0;
+        }
+        catch (Exception ex)
+        {
+            var renderer = new CliRenderer(error);
+            await renderer.WriteLineAsync($"Diagnose failed safely: {ex.Message}", CliTone.Error);
+            return 1;
         }
     }
 
@@ -139,6 +164,7 @@ public sealed class CliDispatcher
         await output.WriteLineAsync("                              Show installed version information");
         await output.WriteLineAsync("  MRC -h | -help | --help    Show this help");
         await output.WriteLineAsync("  MRC -doctor | --doctor     Run read-only diagnostics");
+        await output.WriteLineAsync("  MRC -diagnose | --diagnose Run deep read-only runner/process diagnostics");
         await output.WriteLineAsync("  MRC -update | --update     Resolve, verify, and atomically activate an allowed release");
     }
 
