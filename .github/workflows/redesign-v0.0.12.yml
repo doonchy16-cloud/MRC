@@ -26,6 +26,7 @@ jobs:
         shell: pwsh
         run: ./scripts/verify-redesign.ps1
 
+      # Full PASS4 to PASS1 regression ladder
       - name: Run PASS4 operations and updater regression
         shell: pwsh
         run: ./scripts/verify-pass4.ps1
