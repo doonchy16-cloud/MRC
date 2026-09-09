@@ -1,4 +1,6 @@
 using MRC.Core;
+using MRC.Core.Runners;
+using MRC.Core.Runtime;
 
 static void Require(bool condition, string message)
 {
@@ -45,10 +47,45 @@ var tests = new (string Name, Action Body)[]
         Require(hash >= 0 && compare > hash && extract > compare && install > extract,
             "Bootstrap must verify SHA-256 before extraction and invoke install.ps1 only afterward.");
         Require(text.Contains("Remove-Item -LiteralPath $tempRoot", StringComparison.Ordinal), "Bootstrap does not clean temporary files.");
+    }),
+    ("uninspectable runner process reports actionable diagnostics", () =>
+    {
+        var runner = new RunnerDescriptor(
+            @"D:\Git_Runners_Main\Example",
+            "ExampleRunner",
+            "https://github.com/example/repo",
+            "repo",
+            1,
+            "_work",
+            null);
+        var inventory = new ProcessInventory(
+            new[] { new ProcessSnapshot(4242, 100, "Runner.Listener", null, "Access is denied.") },
+            true,
+            null);
+        var association = RunnerProcessAssociator.Associate(runner, inventory);
+        Require(!string.IsNullOrWhiteSpace(association.Error), "Uninspectable runner process did not produce an ownership error.");
+        Require(association.Error!.Contains("4242", StringComparison.Ordinal), "Runtime error does not identify the failing PID.");
+        Require(association.Error.Contains("Runner.Listener", StringComparison.Ordinal), "Runtime error does not identify the failing process name.");
+        Require(association.Error.Contains("Access is denied.", StringComparison.Ordinal), "Runtime error does not preserve the Windows inspection error.");
+    }),
+    ("ERROR rows expose working DETAILS diagnostics", () =>
+    {
+        var xaml = File.ReadAllText(Path.Combine(repoRoot, "src", "MRC.Gui", "MainWindow.xaml"));
+        var errorTriggerStart = xaml.IndexOf("Value=\"{x:Static runtime:RunnerState.ERROR}\"", StringComparison.Ordinal);
+        Require(errorTriggerStart >= 0, "ERROR state trigger is missing from runner control style.");
+        var errorTriggerEnd = xaml.IndexOf("</DataTrigger>", errorTriggerStart, StringComparison.Ordinal);
+        Require(errorTriggerEnd > errorTriggerStart, "ERROR state trigger is malformed.");
+        var errorTrigger = xaml[errorTriggerStart..errorTriggerEnd];
+        Require(errorTrigger.Contains("Property=\"IsEnabled\" Value=\"True\"", StringComparison.Ordinal),
+            "DETAILS remains disabled for ERROR rows.");
+
+        var code = File.ReadAllText(Path.Combine(repoRoot, "src", "MRC.Gui", "MainWindow.xaml.cs"));
+        Require(code.Contains("row.State == RunnerState.ERROR", StringComparison.Ordinal), "ERROR click path is missing.");
+        Require(code.Contains("row.Error", StringComparison.Ordinal), "ERROR click path does not surface the diagnostic message.");
     })
 };
 
-Console.WriteLine($"MRC pre-cert identity/bootstrap harness — {tests.Length} tests");
+Console.WriteLine($"MRC pre-cert targeted harness — {tests.Length} tests");
 foreach (var test in tests)
 {
     try
@@ -70,5 +107,5 @@ if (failures.Count > 0)
     return 1;
 }
 
-Console.WriteLine($"PASS  all {tests.Length} pre-cert tests");
+Console.WriteLine($"PASS  all {tests.Length} targeted pre-cert tests");
 return 0;
