@@ -3,5 +3,33 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              ShutdownMode="OnMainWindowClose">
     <Application.Resources>
+        <ControlTemplate x:Key="DarkScrollThumbTemplate" TargetType="{x:Type Thumb}">
+            <Border Background="#506170" CornerRadius="2" Margin="1" />
+        </ControlTemplate>
+
+        <Style x:Key="DarkScrollBarStyle" TargetType="{x:Type ScrollBar}">
+            <Setter Property="Width" Value="8" />
+            <Setter Property="Background" Value="#0B0F14" />
+            <Setter Property="Foreground" Value="#506170" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ScrollBar}">
+                        <Grid Background="{TemplateBinding Background}" Width="8">
+                            <Track x:Name="PART_Track" IsDirectionReversed="True" Orientation="Vertical">
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton Command="ScrollBar.PageUpCommand" Opacity="0" Focusable="False" />
+                                </Track.DecreaseRepeatButton>
+                                <Track.Thumb>
+                                    <Thumb Template="{StaticResource DarkScrollThumbTemplate}" MinHeight="24" />
+                                </Track.Thumb>
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton Command="ScrollBar.PageDownCommand" Opacity="0" Focusable="False" />
+                                </Track.IncreaseRepeatButton>
+                            </Track>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Application.Resources>
 </Application>
