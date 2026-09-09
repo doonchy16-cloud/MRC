@@ -117,6 +117,51 @@ var tests = new (string Name, Action Body)[]
 
         Require(core.GetType("MRC.Core.Diagnostics.WindowsServiceInspector") is not null,
             "WindowsServiceInspector is missing; Session-0 service correlation cannot be proven.");
+    }),
+    ("doctor exposes find repair verify final-health contract", () =>
+    {
+        var core = typeof(RunnerEngine).Assembly;
+        var health = core.GetType("MRC.Core.Diagnostics.DoctorHealth");
+        Require(health is not null && health.IsEnum, "DoctorHealth is missing.");
+        Require(Enum.GetNames(health!).SequenceEqual(new[] { "Healthy", "Repaired", "Attention", "Blocked" }),
+            "DoctorHealth values must be Healthy/Repaired/Attention/Blocked.");
+
+        var risk = core.GetType("MRC.Core.Diagnostics.DoctorRepairRisk");
+        Require(risk is not null && risk.IsEnum, "DoctorRepairRisk is missing.");
+        Require(Enum.GetNames(risk!).SequenceEqual(new[] { "Automatic", "ApprovalRequired" }),
+            "DoctorRepairRisk must separate automatic from approval-required repairs.");
+
+        var options = core.GetType("MRC.Core.Diagnostics.DoctorRunOptions");
+        Require(options is not null, "DoctorRunOptions is missing.");
+        Require(options!.GetProperty("ApplyAutomaticRepairs") is not null, "DoctorRunOptions.ApplyAutomaticRepairs is missing.");
+        Require(options.GetProperty("ApprovedRepairIds") is not null, "DoctorRunOptions.ApprovedRepairIds is missing.");
+
+        var report = core.GetType("MRC.Core.Diagnostics.DoctorReport");
+        Require(report is not null, "DoctorReport is missing.");
+        foreach (var property in new[] { "Findings", "Repairs", "VerificationResults", "Health" })
+        {
+            Require(report!.GetProperty(property) is not null, $"DoctorReport.{property} is missing.");
+        }
+    }),
+    ("doctor destructive and runner-affecting repairs are approval gated", () =>
+    {
+        var core = typeof(RunnerEngine).Assembly;
+        var repair = core.GetType("MRC.Core.Diagnostics.DoctorRepairAction");
+        Require(repair is not null, "DoctorRepairAction is missing.");
+        foreach (var property in new[] { "Id", "Description", "Risk", "Attempted", "Succeeded", "VerificationPassed" })
+        {
+            Require(repair!.GetProperty(property) is not null, $"DoctorRepairAction.{property} is missing.");
+        }
+
+        var service = core.GetType("MRC.Core.Diagnostics.DoctorRepairService");
+        Require(service is not null, "DoctorRepairService is missing.");
+        var safety = service!.GetMethod("ClassifyRisk", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+        Require(safety is not null, "DoctorRepairService.ClassifyRisk is missing.");
+        var processRisk = safety!.Invoke(null, new object[] { "process-termination" })?.ToString();
+        var serviceRisk = safety.Invoke(null, new object[] { "service-modification" })?.ToString();
+        var runnerRisk = safety.Invoke(null, new object[] { "runner-configuration" })?.ToString();
+        Require(processRisk == "ApprovalRequired" && serviceRisk == "ApprovalRequired" && runnerRisk == "ApprovalRequired",
+            $"Dangerous Doctor repair risk is wrong: process={processRisk}, service={serviceRisk}, runner={runnerRisk}.");
     })
 };
 
