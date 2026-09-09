@@ -1,0 +1,254 @@
+using System.Diagnostics;
+using System.IO.Compression;
+using System.Reflection;
+
+namespace MRC.Tests;
+
+internal static class Program
+{
+    private static readonly string RepoRoot = FindRepoRoot();
+
+    public static int Main()
+    {
+        var tests = new (string Name, Action Body)[]
+        {
+            ("CLI project builds", BuildCli),
+            ("GUI project builds", BuildGui),
+            ("version aliases report canonical identity", VersionAliases),
+            ("help aliases report canonical command surface", HelpAliases),
+            ("doctor and update are reserved for PASS 4", ReservedPass4Commands),
+            ("unknown CLI flags fail clearly", UnknownFlagFails),
+            ("environment fence authorizes only Main-PC exact-root evidence", EnvironmentFenceIsFailClosed),
+            ("PASS 1 source contains no runner control implementation", NoRunnerControlInPass1),
+            ("installer follows user-scoped PATH architecture", InstallerArchitecture),
+            ("packaging creates the candidate zip and checksum skeleton", PackagingSkeleton)
+        };
+
+        var failures = 0;
+        Console.WriteLine($"MRC PASS 1 test harness — {tests.Length} tests");
+
+        foreach (var test in tests)
+        {
+            try
+            {
+                test.Body();
+                Console.WriteLine($"PASS  {test.Name}");
+            }
+            catch (Exception ex)
+            {
+                failures++;
+                Console.WriteLine($"FAIL  {test.Name}");
+                Console.WriteLine($"      {ex.Message}");
+            }
+        }
+
+        Console.WriteLine();
+        Console.WriteLine(failures == 0
+            ? $"PASS  all {tests.Length} PASS 1 tests"
+            : $"FAIL  {failures} of {tests.Length} PASS 1 tests");
+
+        return failures == 0 ? 0 : 1;
+    }
+
+    private static void BuildCli()
+    {
+        var result = Run("dotnet", "build", Path.Combine(RepoRoot, "src", "MRC.Cli", "MRC.Cli.csproj"), "-c", "Release", "-v", "minimal");
+        Require(result.ExitCode == 0, $"CLI build failed.\n{result.Output}");
+    }
+
+    private static void BuildGui()
+    {
+        var result = Run("dotnet", "build", Path.Combine(RepoRoot, "src", "MRC.Gui", "MRC.Gui.csproj"), "-c", "Release", "-v", "minimal");
+        Require(result.ExitCode == 0, $"GUI build failed.\n{result.Output}");
+    }
+
+    private static void VersionAliases()
+    {
+        EnsureCliBuilt();
+        foreach (var alias in new[] { "-v", "-version", "--version" })
+        {
+            var result = Run(CliExe(), alias);
+            Require(result.ExitCode == 0, $"{alias} exited {result.ExitCode}.\n{result.Output}");
+            Require(result.Output.Contains("Main Runner Control", StringComparison.Ordinal), $"{alias} omitted product name.");
+            Require(result.Output.Contains("Version: 0.1.0", StringComparison.Ordinal), $"{alias} omitted canonical version.");
+            Require(result.Output.Contains("Channel: stable", StringComparison.Ordinal), $"{alias} omitted release channel.");
+            Require(result.Output.Contains(@"Runner root: D:\Git_Runners_Main", StringComparison.Ordinal), $"{alias} omitted runner root.");
+            Require(result.Output.Contains("Install location:", StringComparison.Ordinal), $"{alias} omitted install location.");
+        }
+    }
+
+    private static void HelpAliases()
+    {
+        EnsureCliBuilt();
+        foreach (var alias in new[] { "-h", "-help", "--help" })
+        {
+            var result = Run(CliExe(), alias);
+            Require(result.ExitCode == 0, $"{alias} exited {result.ExitCode}.\n{result.Output}");
+            Require(result.Output.Contains("MRC -v", StringComparison.Ordinal), "Help omitted version command.");
+            Require(result.Output.Contains("MRC -doctor", StringComparison.Ordinal), "Help omitted doctor command.");
+            Require(result.Output.Contains("MRC -update", StringComparison.Ordinal), "Help omitted update command.");
+            Require(!result.Output.Contains("MRC-version", StringComparison.Ordinal), "Help introduced a forbidden separate canonical executable.");
+        }
+    }
+
+    private static void ReservedPass4Commands()
+    {
+        EnsureCliBuilt();
+        foreach (var alias in new[] { "-doctor", "--doctor", "-update", "--update" })
+        {
+            var result = Run(CliExe(), alias);
+            Require(result.ExitCode == 4, $"{alias} must return reserved exit code 4 during PASS 1, got {result.ExitCode}.");
+            Require(result.Output.Contains("PASS 4", StringComparison.OrdinalIgnoreCase), $"{alias} did not explain its PASS 4 reservation.");
+        }
+    }
+
+    private static void UnknownFlagFails()
+    {
+        EnsureCliBuilt();
+        var result = Run(CliExe(), "--definitely-not-an-mrc-flag");
+        Require(result.ExitCode == 2, $"Unknown flag must return exit code 2, got {result.ExitCode}.");
+        Require(result.Output.Contains("Unknown option", StringComparison.OrdinalIgnoreCase), "Unknown flag error was not explicit.");
+    }
+
+    private static void EnvironmentFenceIsFailClosed()
+    {
+        EnsureCliBuilt();
+        var corePath = Path.Combine(RepoRoot, "src", "MRC.Cli", "bin", "Release", "net10.0", "MRC.Core.dll");
+        Require(File.Exists(corePath), $"Core assembly missing: {corePath}");
+
+        var assembly = Assembly.LoadFrom(corePath);
+        var type = assembly.GetType("MRC.Core.EnvironmentFence", throwOnError: true)!;
+        var evaluate = type.GetMethod("Evaluate", BindingFlags.Public | BindingFlags.Static)
+            ?? throw new InvalidOperationException("EnvironmentFence.Evaluate was not found.");
+
+        Require(IsAuthorized(evaluate, "Main-PC", @"D:\Git_Runners_Main", true), "Correct Main-PC + exact existing root was not authorized.");
+        Require(!IsAuthorized(evaluate, "Other-PC", @"D:\Git_Runners_Main", true), "Wrong machine was authorized.");
+        Require(!IsAuthorized(evaluate, "Main-PC", @"D:\Git_Runners_Other", true), "Wrong runner root was authorized.");
+        Require(!IsAuthorized(evaluate, "Main-PC", @"D:\Git_Runners_Main", false), "Missing runner root was authorized.");
+    }
+
+    private static bool IsAuthorized(MethodInfo evaluate, string machine, string root, bool rootExists)
+    {
+        var result = evaluate.Invoke(null, new object[] { machine, root, rootExists })
+            ?? throw new InvalidOperationException("EnvironmentFence.Evaluate returned null.");
+        var property = result.GetType().GetProperty("IsAuthorized")
+            ?? throw new InvalidOperationException("Fence result omitted IsAuthorized.");
+        return (bool)(property.GetValue(result) ?? false);
+    }
+
+    private static void NoRunnerControlInPass1()
+    {
+        var forbidden = new[] { "Runner.Listener.exe", "Runner.Worker.exe", "run.cmd", "Kill(", "entireProcessTree" };
+        var roots = new[] { Path.Combine(RepoRoot, "src"), Path.Combine(RepoRoot, "scripts") };
+
+        foreach (var root in roots.Where(Directory.Exists))
+        {
+            foreach (var file in Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories)
+                         .Where(path => path.EndsWith(".cs", StringComparison.OrdinalIgnoreCase)
+                                     || path.EndsWith(".xaml", StringComparison.OrdinalIgnoreCase)
+                                     || path.EndsWith(".ps1", StringComparison.OrdinalIgnoreCase)))
+            {
+                var text = File.ReadAllText(file);
+                foreach (var marker in forbidden)
+                {
+                    Require(!text.Contains(marker, StringComparison.OrdinalIgnoreCase), $"PASS 1 forbidden runner-control marker '{marker}' found in {Path.GetRelativePath(RepoRoot, file)}.");
+                }
+            }
+        }
+    }
+
+    private static void InstallerArchitecture()
+    {
+        var path = Path.Combine(RepoRoot, "scripts", "install.ps1");
+        Require(File.Exists(path), "scripts/install.ps1 is missing.");
+        var text = File.ReadAllText(path);
+        foreach (var marker in new[] { "$env:LOCALAPPDATA", "Main-PC", @"D:\Git_Runners_Main", "versions", "current.version", "bin", "MRC.cmd", "SetEnvironmentVariable" })
+        {
+            Require(text.Contains(marker, StringComparison.OrdinalIgnoreCase), $"Installer is missing required architecture marker: {marker}");
+        }
+    }
+
+    private static void PackagingSkeleton()
+    {
+        var packageScript = Path.Combine(RepoRoot, "scripts", "package.ps1");
+        Require(File.Exists(packageScript), "scripts/package.ps1 is missing.");
+
+        var result = Run("pwsh", "-NoProfile", "-File", packageScript, "-Configuration", "Release");
+        Require(result.ExitCode == 0, $"Packaging failed.\n{result.Output}");
+
+        var zipPath = Path.Combine(RepoRoot, "artifacts", "MRC-v0.1.0-win-x64.zip");
+        var sumsPath = Path.Combine(RepoRoot, "artifacts", "SHA256SUMS.txt");
+        Require(File.Exists(zipPath), "Candidate ZIP was not produced.");
+        Require(File.Exists(sumsPath), "SHA256SUMS.txt was not produced.");
+
+        using var archive = ZipFile.OpenRead(zipPath);
+        var entries = archive.Entries.Select(entry => entry.FullName.Replace('\\', '/')).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        foreach (var required in new[] { "install.ps1", "manifest.json", "payload/MRC.exe", "payload/MRC.Gui.exe" })
+        {
+            Require(entries.Contains(required), $"Candidate ZIP is missing {required}.");
+        }
+
+        var checksumText = File.ReadAllText(sumsPath);
+        Require(checksumText.Contains("MRC-v0.1.0-win-x64.zip", StringComparison.Ordinal), "Checksum authority does not name the candidate ZIP.");
+    }
+
+    private static void EnsureCliBuilt()
+    {
+        if (!File.Exists(CliExe()))
+        {
+            BuildCli();
+        }
+    }
+
+    private static string CliExe() => Path.Combine(RepoRoot, "src", "MRC.Cli", "bin", "Release", "net10.0", "MRC.exe");
+
+    private static ProcessResult Run(string fileName, params string[] arguments)
+    {
+        var startInfo = new ProcessStartInfo(fileName)
+        {
+            WorkingDirectory = RepoRoot,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+
+        foreach (var argument in arguments)
+        {
+            startInfo.ArgumentList.Add(argument);
+        }
+
+        using var process = Process.Start(startInfo)
+            ?? throw new InvalidOperationException($"Could not start {fileName}.");
+        var stdout = process.StandardOutput.ReadToEnd();
+        var stderr = process.StandardError.ReadToEnd();
+        process.WaitForExit();
+        return new ProcessResult(process.ExitCode, stdout + stderr);
+    }
+
+    private static void Require(bool condition, string message)
+    {
+        if (!condition)
+        {
+            throw new InvalidOperationException(message);
+        }
+    }
+
+    private static string FindRepoRoot()
+    {
+        var current = new DirectoryInfo(Directory.GetCurrentDirectory());
+        while (current is not null)
+        {
+            if (File.Exists(Path.Combine(current.FullName, "Auth", "0000_MasterAuth.md")))
+            {
+                return current.FullName;
+            }
+
+            current = current.Parent;
+        }
+
+        throw new InvalidOperationException("Could not locate MRC repository root.");
+    }
+
+    private sealed record ProcessResult(int ExitCode, string Output);
+}
