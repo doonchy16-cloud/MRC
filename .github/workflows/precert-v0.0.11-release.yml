@@ -1,0 +1,65 @@
+name: Pre-cert v0.0.11 Release
+
+on:
+  push:
+    branches: [ precert-v0.0.11 ]
+    paths:
+      - .release/v0.0.11.trigger
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Verify, package, and publish v0.0.11
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Setup .NET from global.json
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+      - name: Run targeted diagnostic tests only
+        shell: pwsh
+        run: dotnet run --project tests/MRC.PreCert.Tests/MRC.PreCert.Tests.csproj -c Release
+      - name: Build v0.0.11 installable package
+        shell: pwsh
+        run: ./scripts/package.ps1 -Configuration Release -VersionOverride '0.0.11'
+      - name: Verify v0.0.11 package identity and hash
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $zip = Join-Path $PWD 'artifacts\MRC-v0.0.11-win-x64.zip'
+          $sums = Join-Path $PWD 'artifacts\SHA256SUMS.txt'
+          if (-not (Test-Path -LiteralPath $zip -PathType Leaf)) { throw "Missing package: $zip" }
+          if (-not (Test-Path -LiteralPath $sums -PathType Leaf)) { throw "Missing checksum authority: $sums" }
+          $line = Get-Content -LiteralPath $sums | Where-Object { $_ -match 'MRC-v0\.0\.11-win-x64\.zip$' } | Select-Object -First 1
+          if ([string]::IsNullOrWhiteSpace($line)) { throw 'SHA256SUMS.txt does not name the v0.0.11 package.' }
+          $expected = ([regex]::Match($line, '^([A-Fa-f0-9]{64})')).Groups[1].Value.ToLowerInvariant()
+          $actual = (Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($actual -ne $expected) { throw "Package SHA-256 mismatch. Expected $expected, got $actual." }
+          $extract = Join-Path $env:RUNNER_TEMP 'mrc-v0.0.11-verify'
+          if (Test-Path -LiteralPath $extract) { Remove-Item -LiteralPath $extract -Recurse -Force }
+          Expand-Archive -LiteralPath $zip -DestinationPath $extract -Force
+          $manifest = Get-Content -LiteralPath (Join-Path $extract 'manifest.json') -Raw | ConvertFrom-Json
+          if ([string]$manifest.version -ne '0.0.11') { throw "Manifest version is $($manifest.version), expected 0.0.11." }
+          if ([string]$manifest.targetMachine -ne 'DOONCHYSCOMPUTI') { throw "Manifest targetMachine is $($manifest.targetMachine), expected DOONCHYSCOMPUTI." }
+          $versionOutput = & (Join-Path $extract 'payload\MRC.exe') --version 2>&1 | Out-String
+          if ($LASTEXITCODE -ne 0) { throw "Packaged MRC.exe --version failed: $versionOutput" }
+          if ($versionOutput -notmatch 'Version:\s*0\.0\.11') { throw "Packaged executable does not report 0.0.11: $versionOutput" }
+          Write-Host "Verified SHA-256: $actual"
+          Write-Host 'Verified diagnostic package: v0.0.11 / DOONCHYSCOMPUTI'
+      - name: Create v0.0.11 GitHub prerelease
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create v0.0.11 `
+            artifacts/MRC-v0.0.11-win-x64.zip `
+            artifacts/SHA256SUMS.txt `
+            --target "$env:GITHUB_SHA" `
+            --prerelease `
+            --title "MRC v0.0.11 — Runtime Diagnostic Build" `
+            --notes "Pre-certification diagnostic build. Adds actionable runner-process inspection errors and makes ERROR DETAILS clickable so Main-PC can reveal the exact Windows runtime-state root cause. PASS 1–4 were not rerun; only the targeted diagnostic/bootstrap/package gate was executed."
