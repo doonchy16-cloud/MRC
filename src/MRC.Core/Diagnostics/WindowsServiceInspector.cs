@@ -90,11 +90,11 @@ public sealed class WindowsServiceInspector
 
     private static string StartMode(object? raw) => raw switch
     {
-        int 0 => "Boot",
-        int 1 => "System",
-        int 2 => "Auto",
-        int 3 => "Manual",
-        int 4 => "Disabled",
+        0 => "Boot",
+        1 => "System",
+        2 => "Auto",
+        3 => "Manual",
+        4 => "Disabled",
         _ => "Unknown"
     };
 }
