@@ -14,6 +14,8 @@ internal static class Program
         failures += DoctorAcceptance.Run();
         Console.WriteLine();
         failures += UpdateAcceptance.Run();
+        Console.WriteLine();
+        failures += UpdateRollbackAcceptance.Run();
         return failures == 0 ? 0 : 1;
     }
 }
