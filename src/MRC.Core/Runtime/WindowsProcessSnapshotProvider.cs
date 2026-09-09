@@ -33,10 +33,20 @@ internal sealed class WindowsProcessSnapshotProvider : IProcessSnapshotProvider
                     continue;
                 }
 
+                int? sessionId = null;
+                try
+                {
+                    sessionId = process.SessionId;
+                }
+                catch
+                {
+                    // Session data is diagnostic-only; inability to read it must not invalidate process inventory.
+                }
+
                 WindowsNativeProcess.TryGetImagePath(processId, out var executablePath, out var pathError);
                 WindowsNativeProcess.TryGetParentProcessId(processId, out var parentProcessId, out var parentError);
                 var error = Combine(pathError, parentError);
-                snapshots.Add(new ProcessSnapshot(processId, parentProcessId, processName, executablePath, error));
+                snapshots.Add(new ProcessSnapshot(processId, parentProcessId, processName, executablePath, error, sessionId));
             }
         }
 

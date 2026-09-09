@@ -76,7 +76,9 @@ public sealed class RunnerEngine
             _clock);
     }
 
-    public IReadOnlyList<RunnerSnapshot> Refresh()
+    public IReadOnlyList<RunnerSnapshot> Refresh() => RefreshReport().ManagedRunners;
+
+    public RunnerRuntimeReport RefreshReport()
     {
         var discovered = RunnerDiscovery.Discover(_root);
         var discoveredByPath = discovered.ToDictionary(
@@ -141,7 +143,22 @@ public sealed class RunnerEngine
             snapshots.Add(new RunnerSnapshot(runner, state, ErrorFor(runner, association, transition, state)));
         }
 
-        return snapshots;
+        var analysis = RunnerProcessInventoryAnalyzer.Analyze(_root, discovered, inventory);
+        var findings = analysis.ObservedProcesses
+            .Where(process => process.Ownership != RunnerProcessOwnershipKind.Managed)
+            .Select(process => new RunnerSystemFinding(
+                process.Ownership == RunnerProcessOwnershipKind.External
+                    ? RunnerSystemFindingKind.External
+                    : RunnerSystemFindingKind.Unattributed,
+                process.ProcessId,
+                process.ParentProcessId,
+                process.SessionId,
+                process.ProcessName,
+                process.ExecutablePath,
+                process.Reason))
+            .ToArray();
+
+        return new RunnerRuntimeReport(snapshots, findings);
     }
 
     public RunnerControlResult Start(RunnerDescriptor runner) => _control.Start(runner);

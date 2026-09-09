@@ -5,7 +5,8 @@ internal sealed record ProcessSnapshot(
     int? ParentProcessId,
     string ProcessName,
     string? ExecutablePath,
-    string? InspectionError = null);
+    string? InspectionError = null,
+    int? SessionId = null);
 
 internal sealed record ProcessInventory(
     IReadOnlyList<ProcessSnapshot> Processes,
