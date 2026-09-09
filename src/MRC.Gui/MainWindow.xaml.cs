@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
@@ -43,7 +44,7 @@ public partial class MainWindow : Window
         BoundaryValue.Text = "AUTHORIZED";
         BoundaryValue.Foreground = BrushFromHex("#39E58C");
         BoundaryDot.Fill = BrushFromHex("#39E58C");
-        DetailsValue.Text = "Deterministic PASS 3 visual preview data.";
+        SetBoundaryDetails("Deterministic PASS 3 visual preview data.");
         RefreshStatusValue.Text = $"Preview snapshot • {_dashboard.TotalCount} runners • rendered without runtime control";
         _animationClock.Tick(DateTimeOffset.UtcNow, _dashboard.Rows);
     }
@@ -93,7 +94,14 @@ public partial class MainWindow : Window
         var boundaryBrush = BrushFromHex(fence.IsAuthorized ? "#39E58C" : "#FF8A3D");
         BoundaryValue.Foreground = boundaryBrush;
         BoundaryDot.Fill = boundaryBrush;
-        DetailsValue.Text = fence.Message;
+        SetBoundaryDetails(fence.Message);
+    }
+
+    private void SetBoundaryDetails(string message)
+    {
+        BoundaryValue.ToolTip = message;
+        BoundaryDot.ToolTip = message;
+        AutomationProperties.SetHelpText(BoundaryValue, message);
     }
 
     private async Task RefreshDashboardAsync()
