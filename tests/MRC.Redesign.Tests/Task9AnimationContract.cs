@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using MRC.Core.Runners;
 using MRC.Core.Runtime;
@@ -10,9 +11,10 @@ internal static class Task9AnimationContract
     {
         VerifyLockedCadences();
         VerifyStateSpecificFrames();
+        VerifySharedIntensitySignal();
         VerifyStaticStates();
         VerifySharedClockArchitecture();
-        Console.WriteLine("PASS  Task9A state-specific shared-clock animation");
+        Console.WriteLine("PASS  Task9A/9C state-specific shared-clock animation + intensity");
     }
 
     private static void VerifyLockedCadences()
@@ -31,8 +33,44 @@ internal static class Task9AnimationContract
         VerifySequence(RunnerState.STOPPING, 250, new[] { "█", "▉", "▊", "▋" });
     }
 
+    private static void VerifySharedIntensitySignal()
+    {
+        var intensityProperty = typeof(RunnerRowViewModel).GetProperty(
+            "AnimationIntensity",
+            BindingFlags.Public | BindingFlags.Instance);
+        Require(intensityProperty is not null && intensityProperty.PropertyType == typeof(double),
+            "RunnerRowViewModel.AnimationIntensity double property is missing.");
+
+        var clockSource = File.ReadAllText(Path.Combine(
+            Directory.GetCurrentDirectory(), "src", "MRC.Gui", "Presentation", "RunnerAnimationClock.cs"));
+        Require(clockSource.Contains("AnimationIntensity", StringComparison.Ordinal),
+            "RunnerAnimationClock does not drive AnimationIntensity from the shared clock.");
+
+        var origin = DateTimeOffset.Parse("2026-09-09T22:00:00Z");
+        foreach (var state in new[] { RunnerState.BUSY, RunnerState.STARTING, RunnerState.STOPPING })
+        {
+            var clock = new RunnerAnimationClock();
+            var row = Row(state);
+            var values = new List<double>();
+            for (var tick = 0; tick < 12; tick++)
+            {
+                clock.Tick(origin.AddMilliseconds(tick * 55), new[] { row });
+                var value = (double)intensityProperty!.GetValue(row)!;
+                Require(value >= 0.55 && value <= 1.0,
+                    $"{state} AnimationIntensity must stay in [0.55, 1.00], got {value:F4}.");
+                values.Add(value);
+                Require(row.State == state,
+                    $"Animation clock changed runner truth from {state} to {row.State}.");
+            }
+
+            Require(values.Select(value => Math.Round(value, 4)).Distinct().Count() >= 3,
+                $"{state} AnimationIntensity did not visibly vary across shared 55 ms ticks.");
+        }
+    }
+
     private static void VerifyStaticStates()
     {
+        var intensityProperty = typeof(RunnerRowViewModel).GetProperty("AnimationIntensity");
         var clock = new RunnerAnimationClock();
         var origin = DateTimeOffset.Parse("2026-09-09T22:00:00Z");
 
@@ -40,11 +78,19 @@ internal static class Task9AnimationContract
         clock.Tick(origin, new[] { off });
         clock.Tick(origin.AddSeconds(10), new[] { off });
         Require(off.Glyph == "-", $"OFF glyph must remain '-', got '{off.Glyph}'.");
+        if (intensityProperty is not null)
+        {
+            Require((double)intensityProperty.GetValue(off)! == 1.0, "OFF intensity must remain static at 1.0.");
+        }
 
         var error = Row(RunnerState.ERROR);
         clock.Tick(origin, new[] { error });
         clock.Tick(origin.AddSeconds(10), new[] { error });
         Require(error.Glyph == "!", $"ERROR glyph must remain '!', got '{error.Glyph}'.");
+        if (intensityProperty is not null)
+        {
+            Require((double)intensityProperty.GetValue(error)! == 1.0, "ERROR intensity must remain static at 1.0.");
+        }
     }
 
     private static void VerifySharedClockArchitecture()
