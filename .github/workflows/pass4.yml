@@ -26,6 +26,18 @@ jobs:
         shell: pwsh
         run: ./scripts/verify-pass4.ps1
 
+      - name: Render PASS 4 preview
+        shell: pwsh
+        run: ./scripts/render-pass4-preview.ps1
+
+      - name: Upload PASS 4 preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: MRC-PASS4-visual-preview
+          path: artifacts/pass4/MRC-PASS4-*.png
+          if-no-files-found: error
+          retention-days: 7
+
       - name: Verify PASS 3 UI regressions
         shell: pwsh
         run: ./scripts/verify-pass3.ps1
