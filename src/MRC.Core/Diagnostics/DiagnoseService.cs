@@ -27,15 +27,29 @@ public sealed class DiagnoseService
         {
             var association = RunnerProcessAssociator.Associate(runner, inventory);
             var state = RunnerStateEvaluator.Evaluate(runner, association, null, DateTimeOffset.UtcNow);
+            var expectedListenerPath = RunnerPath.ListenerExecutable(runner.DirectoryPath);
+            var listener = association.Listener;
+            var ownershipProof = listener is not null
+                ? $"Managed ownership proven by exact executable path match: {listener.ExecutablePath} == {expectedListenerPath}."
+                : !string.IsNullOrWhiteSpace(association.Error)
+                    ? $"Managed ownership not proven: {association.Error}"
+                    : $"No exact managed listener or worker process is present for {runner.DirectoryPath}; runner is OFF.";
+
             runnerFindings.Add(new DiagnoseRunnerFinding(
                 runner.AgentName ?? Path.GetFileName(runner.DirectoryPath),
                 runner.RepositoryName ?? "<unknown>",
                 runner.DirectoryPath,
                 state,
                 association.Error ?? runner.IdentityError,
-                RunnerPath.ListenerExecutable(runner.DirectoryPath),
-                association.Listener?.ProcessId,
-                association.Workers.Select(worker => worker.ProcessId).ToArray()));
+                expectedListenerPath,
+                listener?.ProcessId,
+                association.Workers.Select(worker => worker.ProcessId).ToArray(),
+                listener?.ParentProcessId,
+                listener?.SessionId,
+                listener?.ProcessName,
+                listener?.ExecutablePath,
+                ownershipProof,
+                listener?.InspectionError ?? InspectionFailureForUnresolvedRunnerProcesses(inventory)));
         }
 
         var services = new WindowsServiceInspector().Inspect();
@@ -61,6 +75,24 @@ public sealed class DiagnoseService
             folders,
             services);
     }
+
+    private static string? InspectionFailureForUnresolvedRunnerProcesses(ProcessInventory inventory)
+    {
+        var errors = inventory.Processes
+            .Where(process => string.IsNullOrWhiteSpace(process.ExecutablePath)
+                              && IsRunnerProcess(process.ProcessName)
+                              && !string.IsNullOrWhiteSpace(process.InspectionError))
+            .Select(process => $"PID {process.ProcessId} {process.ProcessName}: {process.InspectionError}")
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+        return errors.Length == 0 ? null : string.Join("; ", errors);
+    }
+
+    private static bool IsRunnerProcess(string processName) =>
+        processName.Equals("Runner.Listener", StringComparison.OrdinalIgnoreCase)
+        || processName.Equals("Runner.Listener.exe", StringComparison.OrdinalIgnoreCase)
+        || processName.Equals("Runner.Worker", StringComparison.OrdinalIgnoreCase)
+        || processName.Equals("Runner.Worker.exe", StringComparison.OrdinalIgnoreCase);
 
     private static DiagnoseProcessFinding BuildSystemFinding(
         RunnerObservedProcess process,
