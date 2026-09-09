@@ -26,6 +26,18 @@ jobs:
         shell: pwsh
         run: ./scripts/verify-pass3.ps1
 
+      - name: Render PASS 3 preview
+        shell: pwsh
+        run: ./scripts/render-pass3-preview.ps1
+
+      - name: Upload PASS 3 preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: MRC-PASS3-visual-preview
+          path: artifacts/pass3/MRC-PASS3-1180x760.png
+          if-no-files-found: error
+          retention-days: 7
+
       - name: Verify PASS 1 regressions
         shell: pwsh
         run: ./scripts/verify-pass1.ps1
