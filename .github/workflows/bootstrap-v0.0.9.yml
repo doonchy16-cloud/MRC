@@ -1,0 +1,26 @@
+name: Bootstrap v0.0.9 Installer
+
+on:
+  push:
+    branches: [ bootstrap-v0.0.9 ]
+    paths:
+      - install-mrc.ps1
+      - tests/bootstrap/install-bootstrap.Tests.ps1
+      - .github/workflows/bootstrap-v0.0.9.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bootstrap:
+    name: Verify one-line installer bootstrap
+    runs-on: windows-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Run bootstrap acceptance tests only
+        shell: pwsh
+        run: ./tests/bootstrap/install-bootstrap.Tests.ps1
