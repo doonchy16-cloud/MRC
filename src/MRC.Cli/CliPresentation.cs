@@ -27,6 +27,95 @@ public static class CliPresentation
         };
     }
 
+    public static IReadOnlyList<CliLine> DoctorLines(DoctorReport report)
+    {
+        ArgumentNullException.ThrowIfNull(report);
+        var lines = new List<CliLine>
+        {
+            new("MRC Doctor", CliTone.Heading),
+            new($"Version: {BuildInfo.Version}", CliTone.Metadata),
+            new($"Channel: {MrcConstants.ReleaseChannel}", CliTone.Metadata),
+            new(string.Empty, CliTone.Normal),
+            new("FIND", CliTone.Heading)
+        };
+
+        if (report.Findings.Count == 0)
+        {
+            lines.Add(new("  <no findings>", CliTone.Secondary));
+        }
+        else
+        {
+            foreach (var finding in report.Findings)
+            {
+                var (status, tone) = finding.Status switch
+                {
+                    DoctorCheckStatus.Pass => ("PASS", CliTone.Success),
+                    DoctorCheckStatus.Warning => ("WARN", CliTone.Warning),
+                    DoctorCheckStatus.Fail => ("FAIL", CliTone.Error),
+                    _ => ("UNKNOWN", CliTone.Secondary)
+                };
+                lines.Add(new($"[{status}] {finding.Name} • {finding.Id} • {finding.Message}", tone));
+            }
+        }
+
+        lines.Add(new(string.Empty, CliTone.Normal));
+        lines.Add(new("REPAIR", CliTone.Heading));
+        if (report.Repairs.Count == 0)
+        {
+            lines.Add(new("  <no repairs attempted>", CliTone.Secondary));
+        }
+        else
+        {
+            foreach (var repair in report.Repairs)
+            {
+                var tone = !repair.Attempted
+                    ? CliTone.Warning
+                    : repair.Succeeded && repair.VerificationPassed
+                        ? CliTone.Success
+                        : CliTone.Error;
+                var status = !repair.Attempted
+                    ? "SKIP"
+                    : repair.Succeeded && repair.VerificationPassed
+                        ? "PASS"
+                        : "FAIL";
+                lines.Add(new(
+                    $"[{status}] {repair.Description} • {repair.Id} • Risk: {repair.Risk} • {repair.Message}",
+                    tone));
+            }
+        }
+
+        lines.Add(new(string.Empty, CliTone.Normal));
+        lines.Add(new("VERIFY", CliTone.Heading));
+        if (report.VerificationResults.Count == 0)
+        {
+            lines.Add(new("  <no verification results>", CliTone.Secondary));
+        }
+        else
+        {
+            foreach (var verification in report.VerificationResults)
+            {
+                lines.Add(new(
+                    $"[{(verification.Passed ? "PASS" : "FAIL")}] {verification.FindingId} • {verification.Message}",
+                    verification.Passed ? CliTone.Success : CliTone.Error));
+            }
+        }
+
+        lines.Add(new(string.Empty, CliTone.Normal));
+        lines.Add(new("RESULT", CliTone.Heading));
+        lines.Add(new(
+            $"Health: {report.Health.ToString().ToUpperInvariant()}",
+            report.Health switch
+            {
+                DoctorHealth.Healthy => CliTone.Success,
+                DoctorHealth.Repaired => CliTone.Success,
+                DoctorHealth.Attention => CliTone.Warning,
+                DoctorHealth.Blocked => CliTone.Error,
+                _ => CliTone.Normal
+            }));
+
+        return lines;
+    }
+
     public static IReadOnlyList<CliLine> DiagnoseLines(DiagnoseReport report)
     {
         ArgumentNullException.ThrowIfNull(report);
