@@ -1,4 +1,5 @@
 using MRC.Core;
+using MRC.Core.Diagnostics;
 
 namespace MRC.Cli;
 
@@ -52,8 +53,11 @@ public sealed class CliDispatcher
 
             case "-doctor":
             case "--doctor":
-                await error.WriteLineAsync("MRC doctor is reserved for PASS 4 — Operations + Updating.");
-                return 4;
+            {
+                var report = await new DoctorService().RunAsync();
+                await WriteDoctorAsync(output, report);
+                return report.ExitCode;
+            }
 
             case "-update":
             case "--update":
@@ -76,6 +80,24 @@ public sealed class CliDispatcher
         await output.WriteLineAsync($"Runner root: {MrcConstants.RunnerRoot}");
     }
 
+    private static async Task WriteDoctorAsync(TextWriter output, DoctorReport report)
+    {
+        await output.WriteLineAsync("MRC Doctor");
+        await output.WriteLineAsync($"Version: {BuildInfo.Version} • Channel: {MrcConstants.ReleaseChannel}");
+        await output.WriteLineAsync();
+        foreach (var check in report.Checks)
+        {
+            var status = check.Status switch
+            {
+                DoctorCheckStatus.Pass => "PASS",
+                DoctorCheckStatus.Warning => "WARN",
+                DoctorCheckStatus.Fail => "FAIL",
+                _ => "UNKNOWN"
+            };
+            await output.WriteLineAsync($"{check.Name}: [{status}] {check.Message}");
+        }
+    }
+
     private static async Task WriteHelpAsync(TextWriter output)
     {
         await output.WriteLineAsync("Main Runner Control (MRC)");
@@ -85,7 +107,7 @@ public sealed class CliDispatcher
         await output.WriteLineAsync("  MRC -v | -version | --version");
         await output.WriteLineAsync("                              Show installed version information");
         await output.WriteLineAsync("  MRC -h | -help | --help    Show this help");
-        await output.WriteLineAsync("  MRC -doctor | --doctor     Diagnostics (implemented in PASS 4)");
+        await output.WriteLineAsync("  MRC -doctor | --doctor     Run read-only diagnostics");
         await output.WriteLineAsync("  MRC -update | --update     Update MRC (implemented in PASS 4)");
     }
 
