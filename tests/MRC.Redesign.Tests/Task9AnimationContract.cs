@@ -12,9 +12,10 @@ internal static class Task9AnimationContract
         VerifyLockedCadences();
         VerifyStateSpecificFrames();
         VerifySharedIntensitySignal();
+        VerifyIntensityIsRendered();
         VerifyStaticStates();
         VerifySharedClockArchitecture();
-        Console.WriteLine("PASS  Task9A/9C state-specific shared-clock animation + intensity");
+        Console.WriteLine("PASS  Task9A/9C state-specific shared-clock animation + rendered intensity");
     }
 
     private static void VerifyLockedCadences()
@@ -66,6 +67,23 @@ internal static class Task9AnimationContract
             Require(values.Select(value => Math.Round(value, 4)).Distinct().Count() >= 3,
                 $"{state} AnimationIntensity did not visibly vary across shared 55 ms ticks.");
         }
+    }
+
+    private static void VerifyIntensityIsRendered()
+    {
+        var xaml = File.ReadAllText(Path.Combine(
+            Directory.GetCurrentDirectory(), "src", "MRC.Gui", "MainWindow.xaml"));
+        var glyphBinding = "Text=\"{Binding Glyph}\"";
+        var glyphStart = xaml.IndexOf(glyphBinding, StringComparison.Ordinal);
+        Require(glyphStart >= 0, "Runner glyph TextBlock was not found in MainWindow.xaml.");
+
+        var elementStart = xaml.LastIndexOf("<TextBlock", glyphStart, StringComparison.Ordinal);
+        var elementEnd = xaml.IndexOf("/>", glyphStart, StringComparison.Ordinal);
+        Require(elementStart >= 0 && elementEnd > glyphStart, "Runner glyph TextBlock markup could not be isolated.");
+
+        var glyphElement = xaml[elementStart..(elementEnd + 2)];
+        Require(glyphElement.Contains("Opacity=\"{Binding AnimationIntensity}\"", StringComparison.Ordinal),
+            "Runner glyph does not render the shared AnimationIntensity signal through Opacity binding.");
     }
 
     private static void VerifyStaticStates()
