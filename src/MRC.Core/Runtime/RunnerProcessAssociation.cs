@@ -18,21 +18,6 @@ internal static class RunnerProcessAssociator
             return Error(inventory.Error ?? "Process inventory is incomplete.");
         }
 
-        var unresolvedRunnerProcesses = inventory.Processes
-            .Where(process => IsRunnerProcessName(process.ProcessName) && string.IsNullOrWhiteSpace(process.ExecutablePath))
-            .ToArray();
-        if (unresolvedRunnerProcesses.Length > 0)
-        {
-            var details = string.Join(
-                " | ",
-                unresolvedRunnerProcesses.Select(process =>
-                    $"PID {process.ProcessId} {process.ProcessName}: " +
-                    (string.IsNullOrWhiteSpace(process.InspectionError)
-                        ? "Executable path unavailable."
-                        : process.InspectionError)));
-            return Error($"Runner process path inspection failed; ownership is not provable. {details}");
-        }
-
         var expectedListener = RunnerPath.ListenerExecutable(runner.DirectoryPath);
         var expectedWorker = RunnerPath.WorkerExecutable(runner.DirectoryPath);
 
@@ -104,12 +89,6 @@ internal static class RunnerProcessAssociator
 
         return false;
     }
-
-    private static bool IsRunnerProcessName(string processName) =>
-        processName.Equals("Runner.Listener", StringComparison.OrdinalIgnoreCase) ||
-        processName.Equals("Runner.Listener.exe", StringComparison.OrdinalIgnoreCase) ||
-        processName.Equals("Runner.Worker", StringComparison.OrdinalIgnoreCase) ||
-        processName.Equals("Runner.Worker.exe", StringComparison.OrdinalIgnoreCase);
 
     private static RunnerProcessAssociation Error(string message) =>
         new(null, Array.Empty<ProcessSnapshot>(), message);
