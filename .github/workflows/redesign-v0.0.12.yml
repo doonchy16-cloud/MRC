@@ -10,9 +10,9 @@ permissions:
 
 jobs:
   redesign:
-    name: Redesign + Full Regression Gate
+    name: Redesign + Full Pre-Cert Gate
     runs-on: windows-latest
-    timeout-minutes: 40
+    timeout-minutes: 55
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -26,7 +26,6 @@ jobs:
         shell: pwsh
         run: ./scripts/verify-redesign.ps1
 
-      # Full PASS4 to PASS1 regression ladder
       - name: Run PASS4 operations and updater regression
         shell: pwsh
         run: ./scripts/verify-pass4.ps1
@@ -42,3 +41,71 @@ jobs:
       - name: Run PASS1 foundation and distribution regression
         shell: pwsh
         run: ./scripts/verify-pass1.ps1
+
+      - name: Render canonical v0.0.12 previews
+        shell: pwsh
+        run: ./scripts/render-v0.0.12-preview.ps1
+
+      - name: Build v0.0.12 pre-cert package
+        shell: pwsh
+        run: ./scripts/package.ps1 -Configuration Release -Runtime win-x64 -ArtifactsRoot ./artifacts/v0.0.12/package
+
+      - name: Verify package hash manifest icon and metadata
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $root = Join-Path $PWD 'artifacts\v0.0.12\package'
+          $zip = Join-Path $root 'MRC-v0.0.12-win-x64.zip'
+          $sums = Join-Path $root 'SHA256SUMS.txt'
+          if (-not (Test-Path $zip)) { throw "Missing package: $zip" }
+          if (-not (Test-Path $sums)) { throw "Missing checksum authority: $sums" }
+          $expected = ((Get-Content $sums -Raw).Trim() -split '\s+')[0].ToLowerInvariant()
+          $actual = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($expected -ne $actual) { throw "SHA mismatch: expected $expected actual $actual" }
+          $extract = Join-Path $env:RUNNER_TEMP 'mrc-v0012-package-check'
+          Remove-Item $extract -Recurse -Force -ErrorAction SilentlyContinue
+          Expand-Archive $zip $extract -Force
+          $manifest = Get-Content (Join-Path $extract 'manifest.json') -Raw | ConvertFrom-Json
+          if ($manifest.version -ne '0.0.12') { throw "Manifest version mismatch: $($manifest.version)" }
+          if ($manifest.channel -ne 'precert') { throw "Manifest channel mismatch: $($manifest.channel)" }
+          if ($manifest.releaseStage -ne 'PreCertification') { throw "Manifest stage mismatch: $($manifest.releaseStage)" }
+          if ($manifest.finalTarget -ne '0.1.0') { throw "Manifest final target mismatch: $($manifest.finalTarget)" }
+          if ($manifest.targetMachine -ne 'DOONCHYSCOMPUTI') { throw "Machine authority mismatch: $($manifest.targetMachine)" }
+          if ($manifest.runnerRoot -ne 'D:\Git_Runners_Main') { throw "Runner-root authority mismatch: $($manifest.runnerRoot)" }
+          foreach ($required in @('MRC.exe','MRC.Gui.exe','MRC.ico')) {
+            if (-not (Test-Path (Join-Path $extract "payload\$required"))) { throw "Payload missing $required" }
+          }
+          Write-Host "PACKAGE VERIFIED  SHA256=$actual"
+
+      - name: Smoke real Windows CLI from packaged executable
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $zip = Join-Path $PWD 'artifacts\v0.0.12\package\MRC-v0.0.12-win-x64.zip'
+          $extract = Join-Path $env:RUNNER_TEMP 'mrc-v0012-cli-smoke'
+          Remove-Item $extract -Recurse -Force -ErrorAction SilentlyContinue
+          Expand-Archive $zip $extract -Force
+          $exe = Join-Path $extract 'payload\MRC.exe'
+          $version = (& $exe --version 2>&1 | Out-String)
+          if ($LASTEXITCODE -ne 0) { throw "--version failed: $version" }
+          if ($version -notmatch '0\.0\.12' -or $version -notmatch 'PRE-CERTIFICATION' -or $version -notmatch '0\.1\.0') { throw "--version truth missing: $version" }
+          $help = (& $exe --help 2>&1 | Out-String)
+          if ($LASTEXITCODE -ne 0) { throw "--help failed: $help" }
+          if ($help -notmatch '-diagnose' -or $help -notmatch '-doctor') { throw "Help command surface incomplete: $help" }
+          $version | Set-Content ./artifacts/v0.0.12/MRC-version.txt
+          $help | Set-Content ./artifacts/v0.0.12/MRC-help.txt
+          Write-Host 'CLI SMOKE VERIFIED'
+
+      - name: Upload v0.0.12 pre-cert evidence
+        uses: actions/upload-artifact@v6
+        with:
+          name: MRC-v0.0.12-precert-evidence
+          path: |
+            artifacts/v0.0.12/MRC-v0.0.12-1180x760.png
+            artifacts/v0.0.12/MRC-v0.0.12-900x560.png
+            artifacts/v0.0.12/MRC-version.txt
+            artifacts/v0.0.12/MRC-help.txt
+            artifacts/v0.0.12/package/MRC-v0.0.12-win-x64.zip
+            artifacts/v0.0.12/package/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 14
