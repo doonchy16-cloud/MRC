@@ -8,5 +8,6 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\MRC.Core\MRC.Core.csproj" />
+    <ProjectReference Include="..\..\src\MRC.Cli\MRC.Cli.csproj" />
   </ItemGroup>
 </Project>
