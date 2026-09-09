@@ -54,7 +54,15 @@ public sealed class CliDispatcher
                 return 3;
             }
 
-            await output.WriteLineAsync("✓ Main Runner Control opened.");
+            if (launch.Outcome == GuiLaunchOutcome.AlreadyRunningActivated)
+            {
+                await output.WriteLineAsync("● Main Runner Control is already running.");
+                await output.WriteLineAsync("✓ Existing window restored and focused.");
+            }
+            else
+            {
+                await output.WriteLineAsync("✓ Main Runner Control opened.");
+            }
             return 0;
         }
 
@@ -113,7 +121,6 @@ public sealed class CliDispatcher
             {
                 await renderer.WriteLineAsync(line.Text, line.Tone);
             }
-
             return 0;
         }
         catch (Exception ex)
@@ -133,9 +140,7 @@ public sealed class CliDispatcher
         var fence = _fenceEvaluator();
         if (!fence.IsAuthorized)
         {
-            await errorRenderer.WriteLineAsync(
-                $"CONTROL BLOCKED • {fence.Code} • {fence.Message}",
-                CliTone.Error);
+            await errorRenderer.WriteLineAsync($"CONTROL BLOCKED • {fence.Code} • {fence.Message}", CliTone.Error);
             return 1;
         }
 
@@ -146,7 +151,6 @@ public sealed class CliDispatcher
                 var line = CliPresentation.UpdateProgressLine(updateProgress);
                 outputRenderer.WriteLineAsync(line.Text, line.Tone).GetAwaiter().GetResult();
             });
-
             var result = await _updateRunner(progress, CancellationToken.None);
             await outputRenderer.WriteLineAsync(
                 result.Message,
@@ -166,13 +170,9 @@ public sealed class CliDispatcher
         }
     }
 
-    private static async Task<UpdateResult> RunDefaultUpdateAsync(
-        IProgress<UpdateProgress> progress,
-        CancellationToken cancellationToken)
+    private static async Task<UpdateResult> RunDefaultUpdateAsync(IProgress<UpdateProgress> progress, CancellationToken cancellationToken)
     {
-        var installRoot = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "MRC");
+        var installRoot = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MRC");
         using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
         var source = new GitHubReleaseSource(client);
         var updater = new UpdateService(source, installRoot, new ExecutableVersionVerifier(), progress);
@@ -183,19 +183,13 @@ public sealed class CliDispatcher
     {
         var installLocation = AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
         var renderer = new CliRenderer(output);
-        foreach (var line in CliPresentation.VersionLines(installLocation))
-        {
-            await renderer.WriteLineAsync(line.Text, line.Tone);
-        }
+        foreach (var line in CliPresentation.VersionLines(installLocation)) await renderer.WriteLineAsync(line.Text, line.Tone);
     }
 
     private static async Task WriteDoctorAsync(TextWriter output, DoctorReport report)
     {
         var renderer = new CliRenderer(output);
-        foreach (var line in CliPresentation.DoctorLines(report))
-        {
-            await renderer.WriteLineAsync(line.Text, line.Tone);
-        }
+        foreach (var line in CliPresentation.DoctorLines(report)) await renderer.WriteLineAsync(line.Text, line.Tone);
     }
 
     private static async Task WriteHelpAsync(TextWriter output)
@@ -221,12 +215,7 @@ public sealed class CliDispatcher
     private sealed class ImmediateProgress<T> : IProgress<T>
     {
         private readonly Action<T> _handler;
-
-        public ImmediateProgress(Action<T> handler)
-        {
-            _handler = handler ?? throw new ArgumentNullException(nameof(handler));
-        }
-
+        public ImmediateProgress(Action<T> handler) => _handler = handler ?? throw new ArgumentNullException(nameof(handler));
         public void Report(T value) => _handler(value);
     }
 }
