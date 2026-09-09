@@ -25,3 +25,7 @@ jobs:
       - name: Run v0.0.12 redesign acceptance harness
         shell: pwsh
         run: ./scripts/verify-redesign.ps1
+
+      - name: Run PASS2 runtime regression harness
+        shell: pwsh
+        run: ./scripts/verify-pass2.ps1
