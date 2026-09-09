@@ -7,6 +7,7 @@ on:
       - src/MRC.Core/MrcConstants.cs
       - src/MRC.Core/EnvironmentFence.cs
       - scripts/install.ps1
+      - scripts/package.ps1
       - install-mrc.ps1
       - tests/MRC.PreCert.Tests/**
       - .github/workflows/precert-v0.0.10-minimal.yml
