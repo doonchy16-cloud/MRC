@@ -29,10 +29,10 @@ var tests = new (string Name, Action Body)[]
         Require(package.Contains("targetMachine = 'DOONCHYSCOMPUTI'", StringComparison.Ordinal),
             "scripts/package.ps1 still writes the wrong manifest machine identity.");
     }),
-    ("bootstrap targets v0.0.10 on actual Windows identity", () =>
+    ("bootstrap targets v0.0.11 on actual Windows identity", () =>
     {
         var text = File.ReadAllText(Path.Combine(repoRoot, "install-mrc.ps1"));
-        Require(text.Contains("$version = '0.0.10'", StringComparison.Ordinal), "Bootstrap is not pinned to v0.0.10.");
+        Require(text.Contains("$version = '0.0.11'", StringComparison.Ordinal), "Bootstrap is not pinned to v0.0.11.");
         Require(text.Contains("$targetMachine = 'DOONCHYSCOMPUTI'", StringComparison.Ordinal),
             "Bootstrap is not pinned to DOONCHYSCOMPUTI.");
         Require(text.Contains("releases/download/v$version", StringComparison.Ordinal), "Bootstrap does not use the pinned release asset path.");
