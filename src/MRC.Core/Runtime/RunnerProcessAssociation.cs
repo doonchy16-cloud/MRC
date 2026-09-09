@@ -23,7 +23,14 @@ internal static class RunnerProcessAssociator
             .ToArray();
         if (unresolvedRunnerProcesses.Length > 0)
         {
-            return Error("One or more runner processes could not be path-inspected; ownership is not provable.");
+            var details = string.Join(
+                " | ",
+                unresolvedRunnerProcesses.Select(process =>
+                    $"PID {process.ProcessId} {process.ProcessName}: " +
+                    (string.IsNullOrWhiteSpace(process.InspectionError)
+                        ? "Executable path unavailable."
+                        : process.InspectionError)));
+            return Error($"Runner process path inspection failed; ownership is not provable. {details}");
         }
 
         var expectedListener = RunnerPath.ListenerExecutable(runner.DirectoryPath);
