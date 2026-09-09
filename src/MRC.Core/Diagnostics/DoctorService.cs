@@ -1,4 +1,5 @@
 using MRC.Core.Runners;
+using MRC.Core.Runtime;
 
 namespace MRC.Core.Diagnostics;
 
@@ -155,7 +156,7 @@ public sealed class DoctorService
             try
             {
                 var diagnose = new DiagnoseService().Run();
-                var runnerErrors = diagnose.Runners.Where(runner => runner.State == Runtime.RunnerState.ERROR).ToArray();
+                var runnerErrors = diagnose.Runners.Where(runner => runner.State == RunnerState.ERROR).ToArray();
                 findings.Add(new DoctorFinding(
                     "runtime.managed",
                     "Managed runtime health",
