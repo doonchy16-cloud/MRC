@@ -28,6 +28,7 @@ public partial class MainWindow : Window
         InitializeComponent();
         Icon = BitmapFrame.Create(new Uri("pack://application:,,,/Assets/MRC.ico", UriKind.Absolute));
         DataContext = _dashboard;
+        RunnerList.Loaded += (_, _) => ApplyRunnerScrollBarStyle();
 
         _refreshTimer.Interval = TimeSpan.FromSeconds(3);
         _refreshTimer.Tick += async (_, _) => await RefreshDashboardAsync();
@@ -105,6 +106,25 @@ public partial class MainWindow : Window
     {
         _refreshTimer.Stop();
         _animationTimer.Stop();
+    }
+
+    private void ApplyRunnerScrollBarStyle()
+    {
+        if (Application.Current?.TryFindResource("DarkScrollBarStyle") is not Style style) return;
+        ApplyRunnerScrollBarStyleRecursive(RunnerList, style);
+    }
+
+    private static void ApplyRunnerScrollBarStyleRecursive(DependencyObject root, Style style)
+    {
+        for (var index = 0; index < VisualTreeHelper.GetChildrenCount(root); index++)
+        {
+            var child = VisualTreeHelper.GetChild(root, index);
+            if (child is ScrollBar scrollBar && scrollBar.Orientation == Orientation.Vertical)
+            {
+                scrollBar.Style = style;
+            }
+            ApplyRunnerScrollBarStyleRecursive(child, style);
+        }
     }
 
     private void RenderBoundary(EnvironmentFenceResult fence)
