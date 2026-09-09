@@ -28,8 +28,8 @@ public sealed class DiagnoseService
             var association = RunnerProcessAssociator.Associate(runner, inventory);
             var state = RunnerStateEvaluator.Evaluate(runner, association, null, DateTimeOffset.UtcNow);
             runnerFindings.Add(new DiagnoseRunnerFinding(
-                runner.AgentName,
-                runner.RepositoryName,
+                runner.AgentName ?? Path.GetFileName(runner.DirectoryPath),
+                runner.RepositoryName ?? "<unknown>",
                 runner.DirectoryPath,
                 state,
                 association.Error ?? runner.IdentityError,
@@ -77,9 +77,11 @@ public sealed class DiagnoseService
             relatedService = directService;
         }
 
+        string? serviceExecutable = null;
         var provenExternalService = relatedService is not null
-            && TryExecutablePath(relatedService.PathName, out var serviceExecutable)
-            && !IsUnderRoot(serviceExecutable!, root);
+            && TryExecutablePath(relatedService.PathName, out serviceExecutable)
+            && serviceExecutable is not null
+            && !IsUnderRoot(serviceExecutable, root);
 
         var kind = process.Ownership == RunnerProcessOwnershipKind.External || provenExternalService
             ? RunnerSystemFindingKind.External
