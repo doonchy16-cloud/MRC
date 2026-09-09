@@ -208,7 +208,6 @@
         <Grid Grid.Row="2" Margin="0,0,0,10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="330" />
-                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
@@ -232,7 +231,7 @@
                 </Grid>
             </Border>
 
-            <StackPanel x:Name="FilterPanel" Grid.Column="1" Orientation="Horizontal" Margin="12,0,0,0" VerticalAlignment="Center">
+            <StackPanel x:Name="FilterPanel" Grid.Column="1" Orientation="Horizontal" Margin="12,0,12,0" VerticalAlignment="Center">
                 <Button Content="ALL" Tag="ALL" AutomationProperties.Name="Show all runners" Style="{StaticResource FilterButtonStyle}" Click="FilterButton_OnClick" />
                 <Button Content="IDLE" Tag="IDLE" AutomationProperties.Name="Show idle runners" Style="{StaticResource FilterButtonStyle}" Click="FilterButton_OnClick" />
                 <Button Content="BUSY" Tag="BUSY" AutomationProperties.Name="Show busy runners" Style="{StaticResource FilterButtonStyle}" Click="FilterButton_OnClick" />
@@ -240,9 +239,7 @@
                 <Button Content="ERROR" Tag="ERROR" AutomationProperties.Name="Show error runners" Style="{StaticResource FilterButtonStyle}" Click="FilterButton_OnClick" />
             </StackPanel>
 
-            <TextBlock Grid.Column="2" x:Name="DetailsValue" Margin="12,0" Foreground="{StaticResource MutedBrush}" FontSize="10" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-
-            <Button Grid.Column="3"
+            <Button Grid.Column="2"
                     x:Name="ManualRefreshButton"
                     AutomationProperties.Name="Refresh runner states now"
                     Content="↻  REFRESH"
