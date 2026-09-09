@@ -1,7 +1,7 @@
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
-$version = '0.0.10'
+$version = '0.0.11'
 $targetMachine = 'DOONCHYSCOMPUTI'
 $runnerRoot = 'D:\Git_Runners_Main'
 $packageFile = "MRC-v$version-win-x64.zip"
