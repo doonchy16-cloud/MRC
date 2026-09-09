@@ -41,12 +41,18 @@ $packageRoot = Join-Path $stagingRoot $packageName
 $payloadRoot = Join-Path $packageRoot 'payload'
 $zipPath = Join-Path $ArtifactsRoot "$packageName.zip"
 $checksumPath = Join-Path $ArtifactsRoot 'SHA256SUMS.txt'
+$iconPath = Join-Path $repoRoot 'src\MRC.Gui\Assets\MRC.ico'
 
 if (Test-Path -LiteralPath $stagingRoot) {
     Remove-Item -LiteralPath $stagingRoot -Recurse -Force
 }
 New-Item -ItemType Directory -Force -Path $payloadRoot | Out-Null
 New-Item -ItemType Directory -Force -Path $ArtifactsRoot | Out-Null
+
+& (Join-Path $repoRoot 'scripts\materialize-icon.ps1') -OutputPath $iconPath
+if (-not (Test-Path -LiteralPath $iconPath -PathType Leaf)) {
+    throw "MRC icon materialization failed: $iconPath"
+}
 
 $publishCommon = @(
     '-c', $Configuration,
@@ -78,6 +84,7 @@ foreach ($required in @('MRC.exe', 'MRC.Gui.exe')) {
 }
 
 Copy-Item -LiteralPath (Join-Path $repoRoot 'scripts\install.ps1') -Destination (Join-Path $packageRoot 'install.ps1')
+Copy-Item -LiteralPath $iconPath -Destination (Join-Path $packageRoot 'MRC.ico')
 
 $manifest = [ordered]@{
     product = 'Main Runner Control'
@@ -89,6 +96,7 @@ $manifest = [ordered]@{
     targetMachine = 'DOONCHYSCOMPUTI'
     runnerRoot = 'D:\Git_Runners_Main'
     canonicalCommand = 'MRC'
+    iconFile = 'MRC.ico'
 }
 $manifest | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $packageRoot 'manifest.json') -Encoding utf8
 
