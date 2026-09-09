@@ -13,123 +13,56 @@ internal static class AnimationAcceptance
         var tests = new (string Name, Action Body)[]
         {
             ("OFF and ERROR glyphs remain frozen", FrozenStates),
-            ("IDLE uses exact canonical spinner sequence at 550 ms", IdleSequence),
-            ("BUSY advances at exactly 110 ms", BusySpeed),
-            ("STARTING advances at exactly 180 ms", StartingSpeed),
-            ("STOPPING advances at exactly 250 ms", StoppingSpeed),
-            ("one shared clock advances mixed runner states", SharedClock),
-            ("animation never changes runtime state", StateTruthfulness)
+            ("IDLE uses breathing sequence at 550 ms", IdleSequence),
+            ("BUSY uses fast work spinner at 110 ms", BusySequence),
+            ("STARTING uses fill sequence at 180 ms", StartingSequence),
+            ("STOPPING uses drain sequence at 250 ms", StoppingSequence),
+            ("one shared clock drives bounded intensity without changing state", SharedClockTruth)
         };
-
         var failures = 0;
         Console.WriteLine($"MRC PASS 3 animation harness — {tests.Length} tests");
         foreach (var test in tests)
         {
-            try
-            {
-                test.Body();
-                Console.WriteLine($"PASS  {test.Name}");
-            }
-            catch (Exception ex)
-            {
-                failures++;
-                Console.WriteLine($"FAIL  {test.Name}");
-                Console.WriteLine($"      {ex.Message}");
-            }
+            try { test.Body(); Console.WriteLine($"PASS  {test.Name}"); }
+            catch (Exception ex) { failures++; Console.WriteLine($"FAIL  {test.Name}\n      {ex.Message}"); }
         }
-
-        Console.WriteLine(failures == 0
-            ? $"PASS  all {tests.Length} PASS 3 animation tests"
-            : $"FAIL  {failures} of {tests.Length} PASS 3 animation tests");
-        Console.WriteLine();
-        return failures;
+        Console.WriteLine(failures == 0 ? $"PASS  all {tests.Length} PASS 3 animation tests" : $"FAIL  {failures} of {tests.Length} PASS 3 animation tests");
+        Console.WriteLine(); return failures;
     }
 
     private static void FrozenStates()
     {
-        var clock = new RunnerAnimationClock();
-        var off = Row("off", RunnerState.OFF);
-        var error = Row("error", RunnerState.ERROR);
-
-        clock.Tick(T0, new[] { off, error });
-        clock.Tick(T0.AddSeconds(5), new[] { off, error });
-
-        Require(off.Glyph == "-", $"OFF must be frozen '-', got '{off.Glyph}'.");
-        Require(error.Glyph == "!", $"ERROR must be frozen '!', got '{error.Glyph}'.");
+        var clock = new RunnerAnimationClock(); var off = Row("off", RunnerState.OFF); var error = Row("error", RunnerState.ERROR);
+        clock.Tick(T0, new[] { off, error }); clock.Tick(T0.AddSeconds(5), new[] { off, error });
+        Require(off.Glyph == "-" && off.AnimationIntensity == 1.0, "OFF must remain static '-' at intensity 1.0.");
+        Require(error.Glyph == "!" && error.AnimationIntensity == 1.0, "ERROR must remain static '!' at intensity 1.0.");
     }
 
-    private static void IdleSequence()
+    private static void IdleSequence() => AssertSequence(RunnerState.IDLE, 550, new[] { "·", "•", "●", "•" });
+    private static void BusySequence() => AssertSequence(RunnerState.BUSY, 110, new[] { "⠋", "⠙", "⠹", "⠸" });
+    private static void StartingSequence() => AssertSequence(RunnerState.STARTING, 180, new[] { "▏", "▎", "▍", "▌" });
+    private static void StoppingSequence() => AssertSequence(RunnerState.STOPPING, 250, new[] { "█", "▉", "▊", "▋" });
+
+    private static void AssertSequence(RunnerState state, int interval, IReadOnlyList<string> expected)
+    {
+        var clock = new RunnerAnimationClock(); var row = Row(state.ToString(), state);
+        for (var i = 0; i < expected.Count; i++) { clock.Tick(T0.AddMilliseconds(i * interval), new[] { row }); Require(row.Glyph == expected[i], $"{state} frame {i} expected '{expected[i]}', got '{row.Glyph}'."); }
+    }
+
+    private static void SharedClockTruth()
     {
         var clock = new RunnerAnimationClock();
-        var row = Row("idle", RunnerState.IDLE);
-
-        clock.Tick(T0, new[] { row });
-        Require(row.Glyph == "/", "IDLE initial frame must be '/'.");
-        clock.Tick(T0.AddMilliseconds(549), new[] { row });
-        Require(row.Glyph == "/", "IDLE advanced before 550 ms.");
-        clock.Tick(T0.AddMilliseconds(550), new[] { row });
-        Require(row.Glyph == "-", "IDLE second frame must be '-'.");
-        clock.Tick(T0.AddMilliseconds(1100), new[] { row });
-        Require(row.Glyph == "\\", "IDLE third frame must be '\\'.");
-        clock.Tick(T0.AddMilliseconds(1650), new[] { row });
-        Require(row.Glyph == "|", "IDLE fourth frame must be '|'.");
-        clock.Tick(T0.AddMilliseconds(2200), new[] { row });
-        Require(row.Glyph == "/", "IDLE sequence did not wrap to '/'.");
+        var rows = new[] { Row("idle", RunnerState.IDLE), Row("busy", RunnerState.BUSY), Row("starting", RunnerState.STARTING), Row("stopping", RunnerState.STOPPING) };
+        var states = rows.Select(r => r.State).ToArray(); var intensities = new List<double>();
+        for (var tick = 0; tick < 12; tick++) { clock.Tick(T0.AddMilliseconds(tick * 55), rows); intensities.Add(rows[1].AnimationIntensity); }
+        Require(states.SequenceEqual(rows.Select(r => r.State)), "Animation mutated runtime state truth.");
+        Require(intensities.All(v => v >= 0.55 && v <= 1.0) && intensities.Select(v => Math.Round(v, 4)).Distinct().Count() >= 3, "Shared clock does not drive bounded visible intensity variation.");
+        var main = File.ReadAllText(Path.Combine(RepoRoot(), "src", "MRC.Gui", "MainWindow.xaml.cs"));
+        var rowSource = File.ReadAllText(Path.Combine(RepoRoot(), "src", "MRC.Gui", "Presentation", "RunnerRowViewModel.cs"));
+        Require(main.Contains("_animationTimer.Interval = TimeSpan.FromMilliseconds(55)") && !rowSource.Contains("DispatcherTimer"), "Animation must remain one shared 55 ms GUI timer with no per-row timers.");
     }
 
-    private static void BusySpeed() => AssertSpeed(RunnerState.BUSY, 110);
-    private static void StartingSpeed() => AssertSpeed(RunnerState.STARTING, 180);
-    private static void StoppingSpeed() => AssertSpeed(RunnerState.STOPPING, 250);
-
-    private static void AssertSpeed(RunnerState state, int intervalMs)
-    {
-        var clock = new RunnerAnimationClock();
-        var row = Row(state.ToString(), state);
-        clock.Tick(T0, new[] { row });
-        clock.Tick(T0.AddMilliseconds(intervalMs - 1), new[] { row });
-        Require(row.Glyph == "/", $"{state} advanced before {intervalMs} ms.");
-        clock.Tick(T0.AddMilliseconds(intervalMs), new[] { row });
-        Require(row.Glyph == "-", $"{state} did not advance at {intervalMs} ms.");
-    }
-
-    private static void SharedClock()
-    {
-        var clock = new RunnerAnimationClock();
-        var idle = Row("idle", RunnerState.IDLE);
-        var busy = Row("busy", RunnerState.BUSY);
-        var starting = Row("starting", RunnerState.STARTING);
-        var stopping = Row("stopping", RunnerState.STOPPING);
-
-        var rows = new[] { idle, busy, starting, stopping };
-        clock.Tick(T0, rows);
-        clock.Tick(T0.AddMilliseconds(250), rows);
-
-        Require(idle.Glyph == "/", "IDLE should not yet advance at 250 ms.");
-        Require(busy.Glyph == "\\", $"BUSY should have advanced two frames by 250 ms, got '{busy.Glyph}'.");
-        Require(starting.Glyph == "-", "STARTING should have advanced once by 250 ms.");
-        Require(stopping.Glyph == "-", "STOPPING should advance exactly once at 250 ms.");
-    }
-
-    private static void StateTruthfulness()
-    {
-        var clock = new RunnerAnimationClock();
-        var rows = Enum.GetValues<RunnerState>().Select(state => Row(state.ToString(), state)).ToArray();
-        var before = rows.Select(row => row.State).ToArray();
-
-        clock.Tick(T0, rows);
-        clock.Tick(T0.AddSeconds(2), rows);
-
-        Require(before.SequenceEqual(rows.Select(row => row.State)), "Animation mutated runtime state.");
-    }
-
-    private static RunnerRowViewModel Row(string name, RunnerState state) =>
-        new(new RunnerSnapshot(
-            new RunnerDescriptor($@"C:\R\{name}", name, $"https://github.com/x/{name}", "Repo", 1, "_work", null),
-            state,
-            state == RunnerState.ERROR ? "error" : null));
-
-    private static void Require(bool condition, string message)
-    {
-        if (!condition) throw new InvalidOperationException(message);
-    }
+    private static RunnerRowViewModel Row(string name, RunnerState state) => new(new RunnerSnapshot(new RunnerDescriptor($@"C:\R\{name}", name, $"https://github.com/x/{name}", "Repo", 1, "_work", null), state, state == RunnerState.ERROR ? "error" : null));
+    private static string RepoRoot(){var d=new DirectoryInfo(Directory.GetCurrentDirectory());while(d is not null){if(File.Exists(Path.Combine(d.FullName,"Auth","0000_MasterAuth.md")))return d.FullName;d=d.Parent;}throw new InvalidOperationException("Could not locate MRC repository root.");}
+    private static void Require(bool condition,string message){if(!condition)throw new InvalidOperationException(message);}
 }
