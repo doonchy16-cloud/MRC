@@ -2,6 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="MRC // Runner Diagnostic"
+        Icon="Assets/MRC.ico"
         Width="720"
         Height="430"
         MinWidth="620"
