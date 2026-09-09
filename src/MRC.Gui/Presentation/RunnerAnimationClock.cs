@@ -28,12 +28,16 @@ public sealed class RunnerAnimationClock
                 case RunnerState.OFF:
                     _states.Remove(row);
                     row.Glyph = "-";
+                    row.AnimationIntensity = 1.0;
                     continue;
                 case RunnerState.ERROR:
                     _states.Remove(row);
                     row.Glyph = "!";
+                    row.AnimationIntensity = 1.0;
                     continue;
             }
+
+            row.AnimationIntensity = IntensityFor(row.State, now);
 
             var frames = FramesFor(row.State);
             var interval = IntervalFor(row.State);
@@ -67,6 +71,23 @@ public sealed class RunnerAnimationClock
         RunnerState.OFF or RunnerState.ERROR => Timeout.InfiniteTimeSpan,
         _ => throw new ArgumentOutOfRangeException(nameof(state), state, "Unknown runner state.")
     };
+
+    private static double IntensityFor(RunnerState state, DateTimeOffset now)
+    {
+        var periodMs = state switch
+        {
+            RunnerState.IDLE => 2200d,
+            RunnerState.BUSY => 440d,
+            RunnerState.STARTING => 720d,
+            RunnerState.STOPPING => 1000d,
+            _ => 0d
+        };
+        if (periodMs <= 0) return 1.0;
+
+        var phase = (now.ToUnixTimeMilliseconds() % periodMs) / periodMs;
+        var wave = (Math.Sin(phase * Math.PI * 2d) + 1d) / 2d;
+        return 0.55d + (0.45d * wave);
+    }
 
     private static IReadOnlyList<string> FramesFor(RunnerState state) => state switch
     {
