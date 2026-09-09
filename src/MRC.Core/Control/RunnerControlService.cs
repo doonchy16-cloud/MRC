@@ -39,7 +39,10 @@ internal sealed class RunnerControlService
         var transition = _transitions.Get(runner.DirectoryPath);
         if (transition is { Kind: RunnerTransitionKind.Starting or RunnerTransitionKind.Stopping })
         {
-            return new RunnerControlResult(RunnerControlOutcome.NotOff, RunnerState.STARTING, "Runner already has a control transition in progress.");
+            return new RunnerControlResult(
+                RunnerControlOutcome.NotOff,
+                TransitionState(transition),
+                "Runner already has a control transition in progress.");
         }
         if (transition?.Kind == RunnerTransitionKind.Error)
         {
@@ -80,7 +83,10 @@ internal sealed class RunnerControlService
         var transition = _transitions.Get(runner.DirectoryPath);
         if (transition is { Kind: RunnerTransitionKind.Starting or RunnerTransitionKind.Stopping })
         {
-            return new RunnerControlResult(RunnerControlOutcome.NotIdle, RunnerState.STOPPING, "Runner already has a control transition in progress.");
+            return new RunnerControlResult(
+                RunnerControlOutcome.NotIdle,
+                TransitionState(transition),
+                "Runner already has a control transition in progress.");
         }
         if (transition?.Kind == RunnerTransitionKind.Error)
         {
@@ -170,6 +176,11 @@ internal sealed class RunnerControlService
         _transitions.MarkError(runner.DirectoryPath, _clock(), message);
         return new RunnerControlResult(RunnerControlOutcome.Error, RunnerState.ERROR, message);
     }
+
+    private static RunnerState TransitionState(RunnerTransition transition) =>
+        transition.Kind == RunnerTransitionKind.Starting
+            ? RunnerState.STARTING
+            : RunnerState.STOPPING;
 
     private sealed record Observation(
         RunnerState State,
