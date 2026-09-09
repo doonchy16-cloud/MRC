@@ -1,0 +1,27 @@
+name: MRC v0.0.12 Root Redesign
+
+on:
+  push:
+    branches: [ redesign-v0.0.12 ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  redesign:
+    name: Redesign TDD + Regression Gate
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup .NET from global.json
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Run v0.0.12 redesign acceptance harness
+        shell: pwsh
+        run: ./scripts/verify-redesign.ps1
