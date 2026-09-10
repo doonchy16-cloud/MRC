@@ -21,7 +21,7 @@ internal static class Program
             ("environment fence authorizes only exact machine and exact-root evidence", EnvironmentFenceIsFailClosed),
             ("runner control stays isolated from CLI GUI and install layers", RunnerControlLayering),
             ("installer follows user-scoped PATH architecture", InstallerArchitecture),
-            ("packaging creates the v0.0.12 pre-cert zip checksum and icon payload", PackagingSkeleton)
+            ("packaging creates the v0.0.12 pre-cert zip checksum and icon authority", PackagingSkeleton)
         };
 
         var failures = 0;
@@ -159,7 +159,7 @@ internal static class Program
         Require(File.Exists(zipPath), "v0.0.12 candidate ZIP was not produced."); Require(File.Exists(sumsPath), "SHA256SUMS.txt was not produced.");
         using var archive = ZipFile.OpenRead(zipPath);
         var entries = archive.Entries.Select(entry => entry.FullName.Replace('\\', '/')).ToHashSet(StringComparer.OrdinalIgnoreCase);
-        foreach (var required in new[] { "install.ps1", "manifest.json", "payload/MRC.exe", "payload/MRC.Gui.exe", "payload/MRC.ico" }) Require(entries.Contains(required), $"Candidate ZIP is missing {required}.");
+        foreach (var required in new[] { "install.ps1", "manifest.json", "MRC.ico", "payload/MRC.exe", "payload/MRC.Gui.exe" }) Require(entries.Contains(required), $"Candidate ZIP is missing {required}.");
         var checksumText = File.ReadAllText(sumsPath);
         Require(checksumText.Contains("MRC-v0.0.12-win-x64.zip", StringComparison.Ordinal), "Checksum authority does not name the v0.0.12 candidate ZIP.");
     }
