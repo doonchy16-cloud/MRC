@@ -289,7 +289,7 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <StackPanel>
-                    <TextBlock Text="LOCAL-FIRST RUNNER CONTROL" Foreground="{StaticResource MutedBrush}" FontSize="11" FontWeight="Bold" CharacterSpacing="90" Margin="1,0,0,4" />
+                    <TextBlock Text="LOCAL-FIRST RUNNER CONTROL" Foreground="{StaticResource MutedBrush}" FontSize="11" FontWeight="Bold" Margin="1,0,0,4" />
                     <TextBlock Text="MAIN RUNNER CONTROL" FontSize="34" FontWeight="Bold" Foreground="{StaticResource LabelBrush}" />
                     <StackPanel Orientation="Horizontal" Margin="1,7,0,0">
                         <TextBlock Text="HOST" Foreground="{StaticResource MutedBrush}" FontSize="10" FontWeight="Bold" />
