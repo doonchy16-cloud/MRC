@@ -116,6 +116,7 @@ public sealed class RunnerOperationsService
 
             switch (result.Outcome)
             {
+                case RunnerControlOutcome.Stopped:
                 case RunnerControlOutcome.Stopping:
                 case RunnerControlOutcome.AlreadyOff:
                     succeeded++;
