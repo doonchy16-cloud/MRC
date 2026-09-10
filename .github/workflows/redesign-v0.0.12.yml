@@ -26,7 +26,6 @@ jobs:
         shell: pwsh
         run: ./scripts/verify-redesign.ps1
 
-      # Full PASS4 to PASS1 regression ladder
       - name: Run PASS4 operations and updater regression
         shell: pwsh
         run: ./scripts/verify-pass4.ps1
@@ -68,7 +67,8 @@ jobs:
           Expand-Archive $zip $extract -Force
           $manifest = Get-Content (Join-Path $extract 'manifest.json') -Raw | ConvertFrom-Json
           if ($manifest.version -ne '0.0.12') { throw "Manifest version mismatch: $($manifest.version)" }
-          if ($manifest.channel -ne 'precert') { throw "Manifest channel mismatch: $($manifest.channel)" }
+          if ($manifest.channel -ne 'stable') { throw "Legacy bootstrap manifest channel mismatch: $($manifest.channel)" }
+          if ($manifest.applicationChannel -ne 'precert') { throw "Application channel mismatch: $($manifest.applicationChannel)" }
           if ($manifest.releaseStage -ne 'PreCertification') { throw "Manifest stage mismatch: $($manifest.releaseStage)" }
           if ($manifest.finalTarget -ne '0.1.0') { throw "Manifest final target mismatch: $($manifest.finalTarget)" }
           if ($manifest.targetMachine -ne 'DOONCHYSCOMPUTI') { throw "Machine authority mismatch: $($manifest.targetMachine)" }
