@@ -31,7 +31,8 @@ internal static class Task14GuiEnlargementContract
         Require(xaml.Contains("Text=\"{Binding RunnerName}\"", StringComparison.Ordinal)
                 && xaml.Contains("FontSize=\"18\"", StringComparison.Ordinal),
             "Runner identity is not presented at the enlarged command-center hierarchy.");
-        Require(xaml.Contains("MinHeight=\"38\"", StringComparison.Ordinal),
+        Require(xaml.Contains("Property=\"MinHeight\" Value=\"38\"", StringComparison.Ordinal)
+                || xaml.Contains("MinHeight=\"38\"", StringComparison.Ordinal),
             "Primary card controls do not preserve readable hit-target height.");
 
         Require(xaml.Contains("x:Name=\"VersionValue\"", StringComparison.Ordinal),
