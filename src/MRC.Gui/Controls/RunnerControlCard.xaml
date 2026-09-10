@@ -50,7 +50,7 @@
                                FontFamily="Cascadia Mono, Consolas"
                                FontSize="10"
                                TextTrimming="CharacterEllipsis">
-                        <Run Text="REPO  " /><Run Text="{Binding Row.RepositoryName, ElementName=Root}" />
+                        <Run Text="REPO  " /><Run Text="{Binding Row.RepositoryName, ElementName=Root, Mode=OneWay}" />
                     </TextBlock>
                     <TextBlock Margin="0,2,0,0"
                                Foreground="#667279"
