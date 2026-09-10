@@ -18,6 +18,7 @@ internal static class Task8GuiContract
         var headerXaml = File.ReadAllText(Path.Combine(repoRoot, "src", "MRC.Gui", "Controls", "HeroHeader.xaml"));
         var headerCode = File.ReadAllText(Path.Combine(repoRoot, "src", "MRC.Gui", "Controls", "HeroHeader.xaml.cs"));
         var ambientXaml = File.ReadAllText(Path.Combine(repoRoot, "src", "MRC.Gui", "Controls", "AmbientBackground.xaml"));
+        var drawerXaml = File.ReadAllText(Path.Combine(repoRoot, "src", "MRC.Gui", "Controls", "ControlDrawer.xaml"));
 
         Require(xaml.Contains("Width=\"1200\"", StringComparison.Ordinal)
                 && xaml.Contains("Height=\"760\"", StringComparison.Ordinal)
@@ -40,13 +41,20 @@ internal static class Task8GuiContract
         Require(xaml.Contains("x:Name=\"RefreshStatusValue\"", StringComparison.Ordinal),
             "Command Center status feedback is missing.");
 
-        Require(xaml.Contains("TOTAL", StringComparison.Ordinal)
-                && xaml.Contains("IDLE", StringComparison.Ordinal)
-                && xaml.Contains("BUSY", StringComparison.Ordinal)
-                && xaml.Contains("OFF", StringComparison.Ordinal)
-                && xaml.Contains("ERROR", StringComparison.Ordinal)
-                && xaml.Contains("TRANSITION", StringComparison.Ordinal),
-            "Command Center does not expose all six runtime counters.");
+        Require(xaml.Contains("<controls:ControlDrawer x:Name=\"ControlDrawer\"", StringComparison.Ordinal)
+                && drawerXaml.Contains("Text=\"TOTAL\"", StringComparison.Ordinal)
+                && drawerXaml.Contains("Text=\"IDLE\"", StringComparison.Ordinal)
+                && drawerXaml.Contains("Text=\"BUSY\"", StringComparison.Ordinal)
+                && drawerXaml.Contains("Text=\"OFF\"", StringComparison.Ordinal)
+                && drawerXaml.Contains("Text=\"ERROR\"", StringComparison.Ordinal)
+                && drawerXaml.Contains("Text=\"TRANSITION\"", StringComparison.Ordinal)
+                && drawerXaml.Contains("{Binding TotalCount}", StringComparison.Ordinal)
+                && drawerXaml.Contains("{Binding IdleCount}", StringComparison.Ordinal)
+                && drawerXaml.Contains("{Binding BusyCount}", StringComparison.Ordinal)
+                && drawerXaml.Contains("{Binding OffCount}", StringComparison.Ordinal)
+                && drawerXaml.Contains("{Binding ErrorCount}", StringComparison.Ordinal)
+                && drawerXaml.Contains("{Binding TransitionCount}", StringComparison.Ordinal),
+            "Command Center does not expose all six runtime counters through the control drawer.");
 
         Require(xaml.Contains("<controls:HeroHeader", StringComparison.Ordinal)
                 && headerXaml.Contains("x:Name=\"LiveInventoryPill\"", StringComparison.Ordinal)
