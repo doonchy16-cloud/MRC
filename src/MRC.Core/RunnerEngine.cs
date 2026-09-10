@@ -193,6 +193,8 @@ public sealed class RunnerEngine
 
     public RunnerControlResult StopIdle(RunnerDescriptor runner) => _control.StopIdle(runner);
 
+    public RunnerControlResult Restart(RunnerDescriptor runner) => _control.Restart(runner);
+
     public RunnerControlResult ForceStopBusy(RunnerDescriptor runner, bool confirmed) =>
         _control.ForceStopBusy(runner, confirmed);
 
