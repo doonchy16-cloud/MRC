@@ -31,7 +31,7 @@ internal static class LayoutAcceptance
     private static void WindowGeometry()
     {
         var x = Xaml();
-        foreach (var marker in new[] { "Width=\"1180\"", "Height=\"760\"", "MinWidth=\"900\"", "MinHeight=\"560\"" }) Require(x.Contains(marker), $"Missing geometry marker {marker}.");
+        foreach (var marker in new[] { "Width=\"1200\"", "Height=\"760\"", "MinWidth=\"900\"", "MinHeight=\"560\"" }) Require(x.Contains(marker), $"Missing geometry marker {marker}.");
     }
 
     private static void TerminalPalette()
@@ -51,7 +51,8 @@ internal static class LayoutAcceptance
     private static void DenseRunnerTable()
     {
         var x = Xaml();
-        Require(x.Contains("Height=\"32\""), "Runner rows must target 32 px.");
+        Require(x.Contains("<Setter Property=\"Height\" Value=\"40\"", StringComparison.Ordinal), "Runner rows must use the enlarged 40 px v0.0.13 target.");
+        Require(x.Contains("<Grid Height=\"40\" ToolTip=\"{Binding DirectoryPath}\">", StringComparison.Ordinal), "Runner row template must align to the 40 px v0.0.13 row height.");
         Require(x.Contains("TextTrimming=\"CharacterEllipsis\""), "Long identity text must ellipsize.");
         foreach (var width in new[] { "Width=\"48\"", "Width=\"235\"", "Width=\"95\"", "Width=\"108\"" }) Require(x.Contains(width), $"Compact table width {width} is missing.");
     }
