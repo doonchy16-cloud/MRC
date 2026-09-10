@@ -6,7 +6,27 @@ using MRC.Core.Updating;
 
 namespace MRC.Cli;
 
-public sealed record CliLine(string Text, CliTone Tone);
+public sealed record CliSegment(string Text, CliTone Tone);
+
+public sealed class CliLine
+{
+    public CliLine(string text, CliTone tone)
+        : this(tone, new CliSegment(text, tone))
+    {
+    }
+
+    public CliLine(CliTone tone, params CliSegment[] segments)
+    {
+        ArgumentNullException.ThrowIfNull(segments);
+        Tone = tone;
+        Segments = Array.AsReadOnly(segments.ToArray());
+        Text = string.Concat(Segments.Select(segment => segment.Text));
+    }
+
+    public string Text { get; }
+    public CliTone Tone { get; }
+    public IReadOnlyList<CliSegment> Segments { get; }
+}
 
 public static class CliPresentation
 {
@@ -19,19 +39,18 @@ public static class CliPresentation
         return new[]
         {
             new CliLine(MrcConstants.ProductName, CliTone.Heading),
-            new CliLine($"Version: {release.Version}", CliTone.Metadata),
-            new CliLine($"Channel: {release.Channel}", CliTone.Metadata),
-            new CliLine($"Stage: {stage}", CliTone.Metadata),
-            new CliLine($"Final target: {release.FinalTarget}", CliTone.Metadata),
-            new CliLine($"Install location: {installLocation}", CliTone.Path),
-            new CliLine($"Runner root: {MrcConstants.RunnerRoot}", CliTone.Path)
+            Field("Version: ", release.Version.ToString(), CliTone.Metadata),
+            Field("Channel: ", release.Channel, CliTone.Metadata),
+            Field("Stage: ", stage, CliTone.Metadata),
+            Field("Final target: ", release.FinalTarget.ToString(), CliTone.Metadata),
+            Field("Install location: ", installLocation, CliTone.Path),
+            Field("Runner root: ", MrcConstants.RunnerRoot, CliTone.Path)
         };
     }
 
     public static CliLine UpdateProgressLine(UpdateProgress progress)
     {
         ArgumentNullException.ThrowIfNull(progress);
-        var percent = progress.Percent is int value ? $"[{value,3}%] " : string.Empty;
         var tone = progress.Stage switch
         {
             UpdateProgressStage.Compare => CliTone.Metadata,
@@ -39,7 +58,16 @@ public static class CliPresentation
             UpdateProgressStage.Complete => LooksLikeFailure(progress.Message) ? CliTone.Error : CliTone.Success,
             _ => CliTone.Heading
         };
-        return new CliLine($"{percent}{progress.Stage} • {progress.Message}", tone);
+
+        var segments = new List<CliSegment>();
+        if (progress.Percent is int value)
+        {
+            segments.Add(new CliSegment($"[{value,3}%] ", CliTone.Secondary));
+        }
+        segments.Add(new CliSegment(progress.Stage.ToString(), tone));
+        segments.Add(new CliSegment(" • ", CliTone.Secondary));
+        segments.Add(new CliSegment(progress.Message, tone));
+        return new CliLine(tone, segments.ToArray());
     }
 
     public static IReadOnlyList<CliLine> DoctorLines(DoctorReport report)
@@ -48,8 +76,8 @@ public static class CliPresentation
         var lines = new List<CliLine>
         {
             new("MRC Doctor", CliTone.Heading),
-            new($"Version: {BuildInfo.Version}", CliTone.Metadata),
-            new($"Channel: {MrcConstants.ReleaseChannel}", CliTone.Metadata),
+            Field("Version: ", BuildInfo.Version, CliTone.Metadata),
+            Field("Channel: ", MrcConstants.ReleaseChannel, CliTone.Metadata),
             new(string.Empty, CliTone.Normal),
             new("FIND", CliTone.Heading)
         };
@@ -69,7 +97,7 @@ public static class CliPresentation
                     DoctorCheckStatus.Fail => ("FAIL", CliTone.Error),
                     _ => ("UNKNOWN", CliTone.Secondary)
                 };
-                lines.Add(new($"[{status}] {finding.Name} • {finding.Message}", tone));
+                lines.Add(StatusLine(status, tone, $" {finding.Name} • {finding.Message}"));
             }
         }
 
@@ -93,9 +121,15 @@ public static class CliPresentation
                     : repair.Succeeded && repair.VerificationPassed
                         ? "PASS"
                         : "FAIL";
-                lines.Add(new(
-                    $"[{status}] {repair.Description} • {repair.Id} • Risk: {repair.Risk} • {repair.Message}",
-                    tone));
+                lines.Add(new CliLine(
+                    tone,
+                    new CliSegment($"[{status}]", tone),
+                    new CliSegment($" {repair.Description} • ", CliTone.Normal),
+                    new CliSegment(repair.Id, CliTone.Secondary),
+                    new CliSegment(" • Risk: ", CliTone.Normal),
+                    new CliSegment(repair.Risk.ToString(), repair.Risk == DoctorRepairRisk.Low ? CliTone.Success : CliTone.Warning),
+                    new CliSegment(" • ", CliTone.Secondary),
+                    new CliSegment(repair.Message, CliTone.Normal)));
             }
         }
 
@@ -109,24 +143,25 @@ public static class CliPresentation
         {
             foreach (var verification in report.VerificationResults)
             {
-                lines.Add(new(
-                    $"[{(verification.Passed ? "PASS" : "FAIL")}] {verification.FindingId} • {verification.Message}",
-                    verification.Passed ? CliTone.Success : CliTone.Error));
+                var tone = verification.Passed ? CliTone.Success : CliTone.Error;
+                lines.Add(new CliLine(
+                    tone,
+                    new CliSegment($"[{(verification.Passed ? "PASS" : "FAIL")}]", tone),
+                    new CliSegment($" {verification.FindingId} • {verification.Message}", CliTone.Normal)));
             }
         }
 
         lines.Add(new(string.Empty, CliTone.Normal));
         lines.Add(new("RESULT", CliTone.Heading));
-        lines.Add(new(
-            $"Health: {report.Health.ToString().ToUpperInvariant()}",
-            report.Health switch
-            {
-                DoctorHealth.Healthy => CliTone.Success,
-                DoctorHealth.Repaired => CliTone.Success,
-                DoctorHealth.Attention => CliTone.Warning,
-                DoctorHealth.Blocked => CliTone.Error,
-                _ => CliTone.Normal
-            }));
+        var healthTone = report.Health switch
+        {
+            DoctorHealth.Healthy => CliTone.Success,
+            DoctorHealth.Repaired => CliTone.Success,
+            DoctorHealth.Attention => CliTone.Warning,
+            DoctorHealth.Blocked => CliTone.Error,
+            _ => CliTone.Normal
+        };
+        lines.Add(Field("Health: ", report.Health.ToString().ToUpperInvariant(), healthTone));
 
         return lines;
     }
@@ -134,14 +169,15 @@ public static class CliPresentation
     public static IReadOnlyList<CliLine> DiagnoseLines(DiagnoseReport report)
     {
         ArgumentNullException.ThrowIfNull(report);
+        var elevatedTone = report.IsElevated ? CliTone.Warning : CliTone.Success;
         var lines = new List<CliLine>
         {
             new("MRC Diagnose", CliTone.Heading),
-            new($"Machine: {report.MachineName}", CliTone.Metadata),
-            new($"User: {report.UserName}", CliTone.Metadata),
-            new($"Session: {Value(report.SessionId)}", CliTone.Metadata),
-            new($"Elevated: {(report.IsElevated ? "YES" : "NO")}", report.IsElevated ? CliTone.Warning : CliTone.Success),
-            new($"Runner root: {MrcConstants.RunnerRoot}", CliTone.Path),
+            Field("Machine: ", report.MachineName, CliTone.Metadata),
+            Field("User: ", report.UserName, CliTone.Metadata),
+            Field("Session: ", Value(report.SessionId), CliTone.Metadata),
+            Field("Elevated: ", report.IsElevated ? "YES" : "NO", elevatedTone),
+            Field("Runner root: ", MrcConstants.RunnerRoot, CliTone.Path),
             new(string.Empty, CliTone.Normal),
             new($"Managed runners ({report.Runners.Count})", CliTone.Heading)
         };
@@ -154,26 +190,45 @@ public static class CliPresentation
         {
             foreach (var runner in report.Runners)
             {
-                lines.Add(new($"[{runner.State}] {runner.RunnerName} • {runner.RepositoryName}", ToneFor(runner.State)));
-                lines.Add(new($"  Path: {runner.DirectoryPath}", CliTone.Path));
-                lines.Add(new($"  Expected listener: {runner.ExpectedListenerPath}", CliTone.Path));
-                lines.Add(new(
-                    $"  Listener: PID {Value(runner.ListenerProcessId)} • Parent {Value(runner.ListenerParentProcessId)} • Session {Value(runner.ListenerSessionId)} • {runner.ListenerProcessName ?? "<not running>"}",
-                    CliTone.Metadata));
-                lines.Add(new($"  Executable: {runner.ListenerExecutablePath ?? "<unavailable>"}",
+                var stateTone = ToneFor(runner.State);
+                lines.Add(new CliLine(
+                    stateTone,
+                    new CliSegment($"[{runner.State}]", stateTone),
+                    new CliSegment($" {runner.RunnerName} • ", CliTone.Normal),
+                    new CliSegment(runner.RepositoryName, CliTone.Metadata)));
+                lines.Add(Field("  Path: ", runner.DirectoryPath, CliTone.Path));
+                lines.Add(Field("  Expected listener: ", runner.ExpectedListenerPath, CliTone.Path));
+                lines.Add(new CliLine(
+                    CliTone.Metadata,
+                    new CliSegment("  Listener: ", CliTone.Normal),
+                    new CliSegment($"PID {Value(runner.ListenerProcessId)}", CliTone.Metadata),
+                    new CliSegment(" • Parent ", CliTone.Secondary),
+                    new CliSegment(Value(runner.ListenerParentProcessId), CliTone.Metadata),
+                    new CliSegment(" • Session ", CliTone.Secondary),
+                    new CliSegment(Value(runner.ListenerSessionId), CliTone.Metadata),
+                    new CliSegment(" • ", CliTone.Secondary),
+                    new CliSegment(runner.ListenerProcessName ?? "<not running>", CliTone.Metadata)));
+                lines.Add(Field(
+                    "  Executable: ",
+                    runner.ListenerExecutablePath ?? "<unavailable>",
                     runner.ListenerExecutablePath is null ? CliTone.Secondary : CliTone.Path));
-                lines.Add(new($"  Ownership: {runner.OwnershipProof}",
+                lines.Add(Field(
+                    "  Ownership: ",
+                    runner.OwnershipProof,
                     runner.ListenerProcessId is null ? CliTone.Secondary : CliTone.Success));
-                lines.Add(new($"  Workers: {(runner.WorkerProcessIds.Count == 0 ? "<none>" : string.Join(", ", runner.WorkerProcessIds))}", CliTone.Secondary));
+                lines.Add(Field(
+                    "  Workers: ",
+                    runner.WorkerProcessIds.Count == 0 ? "<none>" : string.Join(", ", runner.WorkerProcessIds),
+                    CliTone.Secondary));
 
                 if (!string.IsNullOrWhiteSpace(runner.InspectionError))
                 {
-                    lines.Add(new($"  Inspection: {runner.InspectionError}", CliTone.Warning));
+                    lines.Add(Field("  Inspection: ", runner.InspectionError, CliTone.Warning));
                 }
 
                 if (!string.IsNullOrWhiteSpace(runner.Error))
                 {
-                    lines.Add(new($"  Error: {runner.Error}", CliTone.Error));
+                    lines.Add(Field("  Error: ", runner.Error, CliTone.Error));
                 }
             }
         }
@@ -189,26 +244,48 @@ public static class CliPresentation
             foreach (var process in report.SystemProcesses)
             {
                 var kindTone = process.Kind == RunnerSystemFindingKind.External ? CliTone.Warning : CliTone.Error;
-                lines.Add(new(
-                    $"[{process.Kind}] PID {process.ProcessId} • Parent {Value(process.ParentProcessId)} • Session {Value(process.SessionId)} • {process.ProcessName}",
-                    kindTone));
-                lines.Add(new($"  Executable: {process.ExecutablePath ?? "<unavailable>"}",
+                lines.Add(new CliLine(
+                    kindTone,
+                    new CliSegment($"[{process.Kind}]", kindTone),
+                    new CliSegment(" PID ", CliTone.Normal),
+                    new CliSegment(process.ProcessId.ToString(), CliTone.Metadata),
+                    new CliSegment(" • Parent ", CliTone.Secondary),
+                    new CliSegment(Value(process.ParentProcessId), CliTone.Metadata),
+                    new CliSegment(" • Session ", CliTone.Secondary),
+                    new CliSegment(Value(process.SessionId), CliTone.Metadata),
+                    new CliSegment(" • ", CliTone.Secondary),
+                    new CliSegment(process.ProcessName, CliTone.Normal)));
+                lines.Add(Field(
+                    "  Executable: ",
+                    process.ExecutablePath ?? "<unavailable>",
                     process.ExecutablePath is null ? CliTone.Secondary : CliTone.Path));
                 if (!string.IsNullOrWhiteSpace(process.ServiceName))
                 {
-                    lines.Add(new($"  Service: {process.ServiceName}", CliTone.Metadata));
+                    lines.Add(Field("  Service: ", process.ServiceName, CliTone.Metadata));
                 }
 
-                lines.Add(new($"  Ownership: {process.OwnershipProof}", kindTone));
+                lines.Add(Field("  Ownership: ", process.OwnershipProof, kindTone));
                 if (!string.IsNullOrWhiteSpace(process.InspectionError))
                 {
-                    lines.Add(new($"  Inspection: {process.InspectionError}", CliTone.Warning));
+                    lines.Add(Field("  Inspection: ", process.InspectionError, CliTone.Warning));
                 }
             }
         }
 
         return lines;
     }
+
+    private static CliLine Field(string label, string value, CliTone valueTone) =>
+        new(
+            valueTone,
+            new CliSegment(label, CliTone.Normal),
+            new CliSegment(value, valueTone));
+
+    private static CliLine StatusLine(string status, CliTone statusTone, string rest) =>
+        new(
+            statusTone,
+            new CliSegment($"[{status}]", statusTone),
+            new CliSegment(rest, CliTone.Normal));
 
     private static bool LooksLikeFailure(string message)
     {
