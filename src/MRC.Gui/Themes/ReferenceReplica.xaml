@@ -1,0 +1,20 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Color x:Key="ReplicaBackgroundColor">#090E0F</Color>
+    <Color x:Key="ReplicaCardColor">#12181C</Color>
+    <Color x:Key="ReplicaAmberColor">#FCC34C</Color>
+    <Color x:Key="ReplicaWarmFieldColor">#522E11</Color>
+    <Color x:Key="ReplicaHeroWhiteColor">#F5F7F9</Color>
+    <Color x:Key="ReplicaIdleColor">#2AD98B</Color>
+    <Color x:Key="ReplicaBusyColor">#FFD166</Color>
+    <Color x:Key="ReplicaOffColor">#9AA4AA</Color>
+    <Color x:Key="ReplicaErrorColor">#FF7B45</Color>
+    <Color x:Key="ReplicaMutedColor">#8D969B</Color>
+
+    <SolidColorBrush x:Key="ReplicaBackgroundBrush" Color="{StaticResource ReplicaBackgroundColor}" />
+    <SolidColorBrush x:Key="ReplicaCardBrush" Color="{StaticResource ReplicaCardColor}" />
+    <SolidColorBrush x:Key="ReplicaAmberBrush" Color="{StaticResource ReplicaAmberColor}" />
+    <SolidColorBrush x:Key="ReplicaIdleBrush" Color="{StaticResource ReplicaIdleColor}" />
+    <SolidColorBrush x:Key="ReplicaHeroWhiteBrush" Color="{StaticResource ReplicaHeroWhiteColor}" />
+    <SolidColorBrush x:Key="ReplicaMutedBrush" Color="{StaticResource ReplicaMutedColor}" />
+</ResourceDictionary>
