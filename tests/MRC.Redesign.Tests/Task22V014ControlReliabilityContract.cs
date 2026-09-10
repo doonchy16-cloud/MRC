@@ -40,7 +40,7 @@ internal static class Task22V014ControlReliabilityContract
         {
             new RunnerServiceEvidence(
                 "actions.runner.doonchy16-cloud-Lotto_engine.Lotto_MainPC_Runner",
-                @"\"C:\actions-runner-lotto-mainpc\bin\RunnerService.exe\"",
+                "\"C:\\actions-runner-lotto-mainpc\\bin\\RunnerService.exe\"",
                 3120,
                 "GitHub Actions Runner",
                 "RUNNING",
