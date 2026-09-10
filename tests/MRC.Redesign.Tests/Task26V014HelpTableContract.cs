@@ -43,7 +43,8 @@ internal static class Task26V014HelpTableContract
         string descriptionFragment)
     {
         var row = lines.SingleOrDefault(line =>
-            line.Text.StartsWith(canonical, StringComparison.Ordinal));
+            line.Text.StartsWith(canonical, StringComparison.Ordinal)
+            && line.Text.Contains(descriptionFragment, StringComparison.OrdinalIgnoreCase));
         Require(row is not null, $"Help is missing canonical command row '{canonical}'.");
 
         Require(row!.Segments.Any(segment =>
