@@ -153,9 +153,18 @@ V0.0.12 SHALL use a dense native Windows terminal/PowerShell operations-console 
 Existing state palette remains authoritative unless explicitly amended later.
 
 ## 11. Animation Authority Amendment
-The `/ - \\ |` spinner language and one-shared-clock rule remain authoritative.
+The one-shared-clock rule remains authoritative.
 
-V0.0.12 SHALL improve visibility, polish, state-specific motion character, and optional subtle intensity/pulse effects without introducing per-row timers or weakening state truth.
+V0.0.12 uses state-specific terminal animation while preserving the locked cadences:
+
+- `IDLE` — breathing sequence at 550 ms;
+- `BUSY` — fast work spinner at 110 ms;
+- `STARTING` — filling sequence at 180 ms;
+- `STOPPING` — draining sequence at 250 ms;
+- `OFF` — static `-`;
+- `ERROR` — static `!`.
+
+A bounded shared-clock `AnimationIntensity` signal may vary visible glyph opacity for active states. It MUST NOT alter `RunnerState`, and rows MUST NOT own independent timers.
 
 ## 12. Icon Authority
 MRC SHALL have a real application identity icon, used for:
@@ -199,3 +208,50 @@ Final certification requires:
 - every applicable review category scoring exactly 10.0/10.
 
 Any category below 10.0/10 or any unresolved/unverified requirement means HOLD.
+
+## 15. V0.0.12 Pre-Certification Release Evidence
+The root redesign implementation reached its automated pre-certification artifact gate and was published for Owner/Main-PC acceptance on 2026-09-09 Pacific time / 2026-09-10 UTC.
+
+Canonical release:
+
+- tag: `v0.0.12`;
+- release title: `MRC v0.0.12 — Root Redesign Pre-Cert Build`;
+- GitHub release ID: `385927198`;
+- release target commit: `43a4a4e366d23623bf835a70961f0c51d0510810`;
+- release workflow run: `34421212699` — SUCCESS;
+- package: `MRC-v0.0.12-win-x64.zip`;
+- package SHA-256: `d15d6891b821fb91c63cb049ca99f954c0d83079fa0a2deb8ca53a509c7f5cd7`;
+- checksum authority: `SHA256SUMS.txt`;
+- canonical preview assets: `MRC-v0.0.12-1180x760.png` and `MRC-v0.0.12-900x560.png`.
+
+Immediately before publication, the release workflow independently passed:
+
+- v0.0.12 redesign acceptance harness;
+- PASS4 operations/updater regression;
+- PASS3 presentation/animation/preview regression;
+- PASS2 runtime regression;
+- PASS1 foundation/distribution regression;
+- both canonical WPF preview renders;
+- package build;
+- SHA-256 and manifest verification;
+- packaged executable version/stage/final-target verification.
+
+The release is intentionally represented by GitHub with `prerelease=false` ONLY as a bootstrap compatibility bridge because installed v0.0.11 clients resolve the legacy `/releases/latest` endpoint, which excludes GitHub prereleases. This GitHub transport flag does not change product authority: v0.0.12 reports `channel=precert`, `stage=PRE-CERTIFICATION`, and `final target=0.1.0`. After v0.0.12 is installed, its redesigned updater enumerates authorized releases and can discover true prerelease metadata.
+
+The first publication workflow run `34420927098` failed only in a brittle standalone `gh release view` not-found pre-check after all product verification/package gates had passed. That pre-check was removed; the successful publication workflow `34421212699` then re-ran the complete release gate and published successfully.
+
+## 16. Remaining Final-Certification Boundary
+Publication of v0.0.12 authorizes installation and live acceptance testing; it is NOT final certification.
+
+The next Owner/Main-PC acceptance sequence is:
+
+1. From the currently installed v0.0.11, run `MRC --update` and require successful update to `0.0.12`.
+2. Run `MRC --version` and verify `Version: 0.0.12`, `Channel: precert`, `Stage: PRE-CERTIFICATION`, and final target `0.1.0`.
+3. Launch bare `MRC`; verify launch feedback, terminal-console GUI, application icon, and repeated-launch restore/focus behavior.
+4. With the known real fixture of seven managed interactive listeners and zero workers, verify managed counters are exactly TOTAL 7 / IDLE 7 / BUSY 0 / OFF 0 / ERROR 0 / TRANSITION 0.
+5. Verify Lotto remains visible only as an external/system warning and is never offered a MRC control path.
+6. Run `MRC -doctor` and `MRC -diagnose`; review truthful repair/verification and forensic output on Main-PC.
+7. Review the real GUI at normal viewing size and the minimum supported size; any clipping, crowding, weak hierarchy, poor animation, generic/debug aesthetics, misleading status, or accessibility regression is a certification blocker.
+8. Score runtime safety, Doctor/Diagnose, CLI UX, updater, GUI visual design, animation, accessibility, packaging, regression engineering, and live Main-PC acceptance separately. Every applicable category must be exactly 10.0/10.
+
+Until those live/visual checks pass, v0.0.12 remains a PRE-CERTIFICATION build and final `v0.1.0` certification remains HOLD.
