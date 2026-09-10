@@ -42,33 +42,64 @@ internal static class GuiOperationsAcceptance
 
     private static void PerRunnerControlsRouteSafely()
     {
-        var xaml = Xaml(); var code = Code();
-        Require(xaml.Contains("Content=\"START\"") && xaml.Contains("RunnerStart_OnClick"), "Explicit START card control is missing.");
-        Require(xaml.Contains("Content=\"STOP\"") && xaml.Contains("RunnerStop_OnClick"), "Explicit STOP card control is missing.");
-        Require(xaml.Contains("Content=\"RESTART\"") && xaml.Contains("RunnerRestart_OnClick"), "Explicit RESTART card control is missing.");
-        Require(xaml.Contains("CommandParameter=\"{Binding}\""), "Runner controls do not carry exact row identity.");
+        var card = CardXaml();
+        var cardCode = CardCode();
+        var code = Code();
 
-        var start = MethodBody(code, "RunnerStart_OnClick");
-        var stop = MethodBody(code, "RunnerStop_OnClick");
-        var restart = MethodBody(code, "RunnerRestart_OnClick");
-        Require(start.Contains("row.CanStart") && start.Contains("_operations.Start(row.Runner)"), "START does not honor state authority and route through safe Start.");
-        Require(stop.Contains("row.CanStop") && stop.Contains("_operations.StopIdle(row.Runner)"), "STOP does not honor state authority and route through safe StopIdle.");
-        Require(restart.Contains("row.CanRestart") && restart.Contains("_operations.Restart(row.Runner)"), "RESTART does not honor state authority and route through verified Restart.");
-        Require(!code.Contains("_engine.Start(row.Runner)")
-                && !code.Contains("_engine.StopIdle(row.Runner)")
-                && !code.Contains("_engine.Restart(row.Runner)"),
+        Require(card.Contains("Value=\"START\"") && card.Contains("Click=\"Primary_OnClick\""), "Explicit START card control is missing.");
+        Require(card.Contains("Content=\"STOP\"") && card.Contains("Click=\"Stop_OnClick\""), "Explicit STOP card control is missing.");
+        Require(card.Contains("Content=\"RESTART\"") && card.Contains("Click=\"Restart_OnClick\""), "Explicit RESTART card control is missing.");
+        Require(card.Contains("Row.CanStart") && card.Contains("Row.CanStop") && card.Contains("Row.CanRestart"),
+            "Extracted runner controls do not bind exact row state authority.");
+        Require(cardCode.Contains("RunnerCardAction.Start")
+                && cardCode.Contains("RunnerCardAction.Stop")
+                && cardCode.Contains("RunnerCardAction.Restart"),
+            "Extracted card does not emit typed lifecycle actions.");
+
+        var route = MethodBody(code, "RunnerControlCard_OnActionRequested");
+        Require(route.Contains("e.Row.CanStart") && route.Contains("_operations.Start(e.Row.Runner)"),
+            "START does not honor state authority and route through safe Start.");
+        Require(route.Contains("e.Row.CanStop") && route.Contains("_operations.StopIdle(e.Row.Runner)"),
+            "STOP does not honor state authority and route through safe StopIdle.");
+        Require(route.Contains("e.Row.CanRestart") && route.Contains("_operations.Restart(e.Row.Runner)"),
+            "RESTART does not honor state authority and route through verified Restart.");
+        Require(!cardCode.Contains("RunnerOperationsService") && !cardCode.Contains("RunnerEngine"),
+            "Extracted presentation card owns lifecycle/runtime authority instead of emitting actions.");
+        Require(!code.Contains("_engine.Start(")
+                && !code.Contains("_engine.StopIdle(")
+                && !code.Contains("_engine.Restart("),
             "GUI bypasses RunnerOperationsService lifecycle authority.");
     }
 
     private static void BusyForceStopIsSecondaryAndConfirmed()
     {
-        var xaml = Xaml(); var code = Code();
-        Require(xaml.Contains("Content=\"FORCE STOP\"") && xaml.Contains("RunnerMoreControl_OnClick"), "BUSY secondary destructive action is missing.");
-        Require(code.Contains("row.State != RunnerState.BUSY"), "Secondary force path is not BUSY-only.");
-        Require(code.Contains("active GitHub Actions job", StringComparison.OrdinalIgnoreCase), "Force-stop warning omits active-job interruption risk.");
-        Require(code.Contains("MessageBoxButton.YesNo") && code.Contains("MessageBoxImage.Warning"), "Force-stop lacks explicit destructive confirmation.");
-        Require(code.Contains("_operations.ForceStopBusy(row.Runner, confirmed: true)"), "Confirmed force-stop does not route through safe force policy.");
-        Require(!MethodBody(code, "TurnAllOffButton_OnClick").Contains("ForceStopBusy"), "TURN ALL OFF contains a force-stop path.");
+        var card = CardXaml();
+        var cardCode = CardCode();
+        var code = Code();
+
+        Require(card.Contains("Value=\"FORCE STOP\"")
+                && card.Contains("RunnerState.BUSY")
+                && cardCode.Contains("RunnerCardAction.ForceStop"),
+            "BUSY destructive action is missing from the state-authorized primary slot.");
+
+        var route = MethodBody(code, "RunnerControlCard_OnActionRequested");
+        Require(route.Contains("case RunnerCardAction.ForceStop")
+                && route.Contains("e.Row.State == RunnerState.BUSY")
+                && route.Contains("ExecuteForceStopAsync(e.Row)"),
+            "BUSY card action does not remain state-gated and separately routed to confirmed force-stop policy.");
+
+        var force = MethodBody(code, "ExecuteForceStopAsync");
+        Require(force.Contains("row.State != RunnerState.BUSY"), "Force-stop execution helper is not BUSY-only.");
+        Require(force.Contains("_operations.ForceStopBusy(row.Runner, confirmed: false)"),
+            "Force-stop path no longer performs a non-destructive confirmation preflight.");
+        Require(force.Contains("active GitHub Actions job", StringComparison.OrdinalIgnoreCase),
+            "Force-stop warning omits active-job interruption risk.");
+        Require(force.Contains("MessageBoxButton.YesNo") && force.Contains("MessageBoxImage.Warning"),
+            "Force-stop lacks explicit destructive confirmation.");
+        Require(force.Contains("_operations.ForceStopBusy(row.Runner, confirmed: true)"),
+            "Confirmed force-stop does not route through safe force policy.");
+        Require(!MethodBody(code, "TurnAllOffButton_OnClick").Contains("ForceStopBusy"),
+            "TURN ALL OFF contains a force-stop path.");
     }
 
     private static void BulkOffConfirmationStatesExactImpact()
@@ -82,21 +113,25 @@ internal static class GuiOperationsAcceptance
     private static void PreviewModeCannotOperate()
     {
         var code = Code();
-        foreach (var method in new[] { "TurnAllOnButton_OnClick", "TurnAllOffButton_OnClick", "RunnerMoreControl_OnClick" })
+        foreach (var method in new[] { "TurnAllOnButton_OnClick", "TurnAllOffButton_OnClick" })
         {
             var body = MethodBody(code, method);
             Require(body.Contains("_previewMode") && body.Contains("_operations is null"), $"{method} is not preview/unavailable guarded.");
         }
 
-        foreach (var method in new[] { "RunnerStart_OnClick", "RunnerStop_OnClick", "RunnerRestart_OnClick" })
-        {
-            var body = MethodBody(code, method);
-            Require(body.Contains("TryGetCardRow") && body.Contains("_operations is null"), $"{method} does not route through the preview guard and operations-availability guard.");
-        }
+        var route = MethodBody(code, "RunnerControlCard_OnActionRequested");
+        Require(route.Contains("_previewMode")
+                && route.Contains("_operations is null")
+                && route.Contains("_operationInProgress"),
+            "Active extracted-card dispatcher does not block preview, unavailable operations, or overlapping operations.");
 
-        var guard = MethodBody(code, "private bool TryGetCardRow");
-        Require(guard.Contains("_previewMode") && guard.Contains("_operationInProgress"), "Shared card-row gate does not block preview or overlapping operations.");
-        Require(code.Contains("OperationsPanel.IsEnabled = false") && code.Contains("RunnerList.IsHitTestVisible = false"), "Preview mode does not visibly disable lifecycle controls.");
+        var force = MethodBody(code, "ExecuteForceStopAsync");
+        Require(force.Contains("_previewMode") && force.Contains("_operations is null"),
+            "Force-stop helper is not independently preview/unavailable guarded.");
+        Require(!CardCode().Contains("RunnerOperationsService") && !CardCode().Contains("RunnerEngine"),
+            "Extracted card can directly invoke lifecycle/runtime authority.");
+        Require(code.Contains("OperationsPanel.IsEnabled = false") && code.Contains("RunnerList.IsHitTestVisible = false"),
+            "Preview mode does not visibly disable lifecycle controls.");
     }
 
     private static void OperationFailuresAreVisible()
@@ -128,6 +163,8 @@ internal static class GuiOperationsAcceptance
 
     private static string Xaml() => File.ReadAllText(Path.Combine(RepoRoot(), "src", "MRC.Gui", "MainWindow.xaml"));
     private static string Code() => File.ReadAllText(Path.Combine(RepoRoot(), "src", "MRC.Gui", "MainWindow.xaml.cs"));
+    private static string CardXaml() => File.ReadAllText(Path.Combine(RepoRoot(), "src", "MRC.Gui", "Controls", "RunnerControlCard.xaml"));
+    private static string CardCode() => File.ReadAllText(Path.Combine(RepoRoot(), "src", "MRC.Gui", "Controls", "RunnerControlCard.xaml.cs"));
     private static string MethodBody(string code, string methodName)
     {
         var start = code.IndexOf(methodName, StringComparison.Ordinal); Require(start >= 0, $"Method {methodName} is missing.");
