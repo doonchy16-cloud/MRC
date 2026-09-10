@@ -73,9 +73,10 @@ jobs:
           if ($manifest.finalTarget -ne '0.1.0') { throw "Manifest final target mismatch: $($manifest.finalTarget)" }
           if ($manifest.targetMachine -ne 'DOONCHYSCOMPUTI') { throw "Machine authority mismatch: $($manifest.targetMachine)" }
           if ($manifest.runnerRoot -ne 'D:\Git_Runners_Main') { throw "Runner-root authority mismatch: $($manifest.runnerRoot)" }
-          foreach ($required in @('MRC.exe','MRC.Gui.exe','MRC.ico')) {
+          foreach ($required in @('MRC.exe','MRC.Gui.exe')) {
             if (-not (Test-Path (Join-Path $extract "payload\$required"))) { throw "Payload missing $required" }
           }
+          if (-not (Test-Path (Join-Path $extract 'MRC.ico'))) { throw 'Package-root MRC.ico is missing.' }
           Write-Host "PACKAGE VERIFIED  SHA256=$actual"
 
       - name: Smoke real Windows CLI from packaged executable
