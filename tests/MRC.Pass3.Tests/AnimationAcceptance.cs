@@ -54,12 +54,12 @@ internal static class AnimationAcceptance
         var clock = new RunnerAnimationClock();
         var rows = new[] { Row("idle", RunnerState.IDLE), Row("busy", RunnerState.BUSY), Row("starting", RunnerState.STARTING), Row("stopping", RunnerState.STOPPING) };
         var states = rows.Select(r => r.State).ToArray(); var intensities = new List<double>();
-        for (var tick = 0; tick < 12; tick++) { clock.Tick(T0.AddMilliseconds(tick * 55), rows); intensities.Add(rows[1].AnimationIntensity); }
+        for (var tick = 0; tick < 12; tick++) { clock.Tick(T0.AddMilliseconds(tick * 50), rows); intensities.Add(rows[1].AnimationIntensity); }
         Require(states.SequenceEqual(rows.Select(r => r.State)), "Animation mutated runtime state truth.");
         Require(intensities.All(v => v >= 0.55 && v <= 1.0) && intensities.Select(v => Math.Round(v, 4)).Distinct().Count() >= 3, "Shared clock does not drive bounded visible intensity variation.");
         var main = File.ReadAllText(Path.Combine(RepoRoot(), "src", "MRC.Gui", "MainWindow.xaml.cs"));
         var rowSource = File.ReadAllText(Path.Combine(RepoRoot(), "src", "MRC.Gui", "Presentation", "RunnerRowViewModel.cs"));
-        Require(main.Contains("_animationTimer.Interval = TimeSpan.FromMilliseconds(55)") && !rowSource.Contains("DispatcherTimer"), "Animation must remain one shared 55 ms GUI timer with no per-row timers.");
+        Require(main.Contains("_animationTimer.Interval = TimeSpan.FromMilliseconds(50)") && !rowSource.Contains("DispatcherTimer"), "Animation must remain one shared 50 ms (20 FPS) GUI timer with no per-row timers.");
     }
 
     private static RunnerRowViewModel Row(string name, RunnerState state) => new(new RunnerSnapshot(new RunnerDescriptor($@"C:\R\{name}", name, $"https://github.com/x/{name}", "Repo", 1, "_work", null), state, state == RunnerState.ERROR ? "error" : null));
