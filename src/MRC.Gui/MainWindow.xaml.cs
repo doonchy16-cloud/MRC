@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
@@ -38,6 +39,8 @@ public partial class MainWindow : Window
         _animationTimer.Interval = TimeSpan.FromMilliseconds(50);
         _animationTimer.Tick += (_, _) => _animationClock.Tick(DateTimeOffset.UtcNow, _dashboard.Rows);
 
+        SizeChanged += (_, _) => ApplyResponsiveScale();
+        PreviewKeyDown += MainWindow_OnPreviewKeyDown;
         Loaded += OnLoaded;
         Closed += OnClosed;
     }
@@ -67,6 +70,7 @@ public partial class MainWindow : Window
 
     private async void OnLoaded(object sender, RoutedEventArgs e)
     {
+        ApplyResponsiveScale();
         if (_previewMode) return;
 
         var fence = EnvironmentFence.EvaluateCurrent();
@@ -108,6 +112,35 @@ public partial class MainWindow : Window
     {
         _refreshTimer.Stop();
         _animationTimer.Stop();
+    }
+
+    private void ApplyResponsiveScale()
+    {
+        if (ActualWidth <= 0 || ActualHeight <= 0) return;
+
+        var scale = Math.Clamp(
+            Math.Min(ActualWidth / 1200d, ActualHeight / 760d),
+            1d,
+            1.5d);
+
+        if (RootSurface.LayoutTransform is ScaleTransform current
+            && Math.Abs(current.ScaleX - scale) < 0.001
+            && Math.Abs(current.ScaleY - scale) < 0.001)
+        {
+            return;
+        }
+
+        RootSurface.LayoutTransform = new ScaleTransform(scale, scale);
+    }
+
+    private void MainWindow_OnPreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (SearchBox.IsKeyboardFocusWithin || Keyboard.Modifiers != ModifierKeys.None) return;
+        if (e.Key is not Key.OemQuestion and not Key.Divide) return;
+
+        SearchBox.Focus();
+        SearchBox.SelectAll();
+        e.Handled = true;
     }
 
     private void ApplyRunnerScrollBarStyle()
