@@ -8,7 +8,7 @@ internal static class Task32V014ReferenceRecoveryContract
         VerifyResponsiveReferenceLayout();
         VerifyReferenceVisualHierarchy();
         VerifyRunnerControlModules();
-        Console.WriteLine("PASS  Task32 v0.0.14 reference-first GUI recovery contract");
+        Console.WriteLine("PASS  Task32 v0.0.14 reference-first GUI recovery preserved through v0.0.15 card extraction");
     }
 
     private static void VerifyResponsiveReferenceLayout()
@@ -18,6 +18,7 @@ internal static class Task32V014ReferenceRecoveryContract
         var dashboard = File.ReadAllText(Path.Combine(root, "src", "MRC.Gui", "Presentation", "RunnerDashboardViewModel.cs"));
         var responsive = File.ReadAllText(Path.Combine(root, "src", "MRC.Gui", "Presentation", "RunnerResponsiveLayout.cs"));
         var xaml = File.ReadAllText(Path.Combine(root, "src", "MRC.Gui", "MainWindow.xaml"));
+        var card = File.ReadAllText(Path.Combine(root, "src", "MRC.Gui", "Controls", "RunnerControlCard.xaml"));
 
         Require(dashboard.Contains("Math.Clamp(value, 1, 4)", StringComparison.Ordinal),
             "CardColumnCount is not bounded to the approved one-through-four column range.");
@@ -31,9 +32,8 @@ internal static class Task32V014ReferenceRecoveryContract
             "Reference recovery lost adaptive card layout authority.");
         Require(xaml.Contains("VerticalAlignment=\"Top\"", StringComparison.Ordinal),
             "Runner-card layout still stretches cards through the full available height.");
-        Require(xaml.Contains("MaxHeight=\"210\"", StringComparison.Ordinal)
-                || xaml.Contains("Property=\"MaxHeight\" Value=\"210\"", StringComparison.Ordinal),
-            "Runner cards have no bounded large-screen height and can become giant empty panels.");
+        Require(card.Contains("Height=\"150\"", StringComparison.Ordinal),
+            "Current extracted runner cards do not preserve the locked compact 150 px reference height.");
     }
 
     private static void VerifyReferenceVisualHierarchy()
@@ -58,39 +58,43 @@ internal static class Task32V014ReferenceRecoveryContract
 
     private static void VerifyRunnerControlModules()
     {
-        var xaml = File.ReadAllText(Path.Combine(
-            Directory.GetCurrentDirectory(), "src", "MRC.Gui", "MainWindow.xaml"));
+        var root = Directory.GetCurrentDirectory();
+        var windowXaml = File.ReadAllText(Path.Combine(root, "src", "MRC.Gui", "MainWindow.xaml"));
+        var cardXaml = File.ReadAllText(Path.Combine(root, "src", "MRC.Gui", "Controls", "RunnerControlCard.xaml"));
+        var themeXaml = File.ReadAllText(Path.Combine(root, "src", "MRC.Gui", "Themes", "ReferenceReplica.xaml"));
 
-        Require(xaml.Contains("Property=\"MinHeight\" Value=\"44\"", StringComparison.Ordinal)
-                || xaml.Contains("MinHeight=\"44\"", StringComparison.Ordinal),
-            "Runner lifecycle controls are still too small; 44 px minimum control height is required.");
-        Require(xaml.Contains("x:Key=\"StartButtonStyle\"", StringComparison.Ordinal)
-                && (xaml.Contains("Background=\"{StaticResource AmberActionBrush}\"", StringComparison.Ordinal)
-                    || xaml.Contains("Property=\"Background\" Value=\"{StaticResource AmberActionBrush}\"", StringComparison.Ordinal)),
-            "START is not rendered as the warm primary action.");
-        Require(xaml.Contains("Text=\"{Binding RunnerName}\"", StringComparison.Ordinal)
-                && xaml.Contains("FontSize=\"19\"", StringComparison.Ordinal),
-            "Runner identity does not have the approved strong card hierarchy.");
-        Require(xaml.Contains("x:Key=\"RunnerCardStyle\"", StringComparison.Ordinal)
-                && xaml.Contains("Property=\"MinHeight\" Value=\"168\"", StringComparison.Ordinal),
-            "Runner cards do not have the approved substantial control-module height.");
-        Require(xaml.Contains("RunnerState.IDLE", StringComparison.Ordinal)
-                && xaml.Contains("DropShadowEffect", StringComparison.Ordinal),
-            "Healthy runner cards have no restrained active-edge/glow treatment.");
+        Require(windowXaml.Contains("<controls:RunnerControlCard", StringComparison.Ordinal),
+            "Reference recovery no longer composes the active extracted runner control module.");
+        Require(cardXaml.Contains("x:Name=\"ThreeSlotActionRail\"", StringComparison.Ordinal)
+                && cardXaml.Contains("Height=\"46\"", StringComparison.Ordinal),
+            "Runner lifecycle controls do not preserve the locked 46 px compact action rail.");
+        Require(themeXaml.Contains("x:Key=\"ReplicaPrimaryActionButtonStyle\"", StringComparison.Ordinal)
+                && themeXaml.Contains("Background\" Value=\"{StaticResource ReplicaAmberBrush}\"", StringComparison.Ordinal),
+            "START is not rendered through the warm reference-replica primary action authority.");
+        Require(cardXaml.Contains("Text=\"{Binding Row.RunnerName, ElementName=Root}\"", StringComparison.Ordinal)
+                && cardXaml.Contains("FontSize=\"17\"", StringComparison.Ordinal),
+            "Runner identity does not have the approved strong compact-card hierarchy.");
+        Require(cardXaml.Contains("Height=\"150\"", StringComparison.Ordinal)
+                && themeXaml.Contains("x:Key=\"ReplicaCardSurfaceStyle\"", StringComparison.Ordinal),
+            "Runner cards do not use the approved compact reference control-module surface.");
+        Require(themeXaml.Contains("RunnerState.IDLE", StringComparison.Ordinal)
+                && themeXaml.Contains("DropShadowEffect", StringComparison.Ordinal),
+            "Healthy runner cards have no restrained active-edge/glow treatment authority.");
 
         foreach (var required in new[]
         {
-            "Content=\"START\"",
+            "Value=\"START\"",
+            "Value=\"FORCE STOP\"",
             "Content=\"STOP\"",
             "Content=\"RESTART\"",
-            "Content=\"DETAILS\"",
-            "IsEnabled=\"{Binding CanStart}\"",
-            "IsEnabled=\"{Binding CanStop}\"",
-            "IsEnabled=\"{Binding CanRestart}\""
+            "ToolTip=\"DETAILS\"",
+            "Row.CanStart",
+            "Row.CanStop",
+            "Row.CanRestart"
         })
         {
-            Require(xaml.Contains(required, StringComparison.Ordinal),
-                $"Reference recovery lost functional runner-control contract marker: {required}");
+            Require(cardXaml.Contains(required, StringComparison.Ordinal),
+                $"Reference recovery lost active runner-control contract marker: {required}");
         }
     }
 
