@@ -10,7 +10,7 @@ internal static class LayoutAcceptance
             ("native control-room palette and selective monospace identity are present", ControlRoomPalette),
             ("command center regions and controls exist", CanonicalRegions),
             ("runner cards are readable responsive and ellipsize long identities", ResponsiveRunnerCards),
-            ("state has glyph text semantic color and visible intensity", MultiChannelState),
+            ("state has text semantic color and visible shared intensity", MultiChannelState),
             ("refresh and animation use exactly two shared UI timers", TimerArchitecture),
             ("runner cards bind to stable presentation collections", StableBinding),
             ("search filters and state text remain keyboard-readable", AccessibilitySignals),
@@ -68,19 +68,23 @@ internal static class LayoutAcceptance
         Require(x.Contains("Content=\"TURN ALL ON\"", StringComparison.Ordinal)
                 && x.Contains("Content=\"TURN ALL OFF\"", StringComparison.Ordinal),
             "Native bulk controls are missing.");
+        Require(x.Contains("<controls:RunnerControlCard", StringComparison.Ordinal)
+                && x.Contains("ActionRequested=\"RunnerControlCard_OnActionRequested\"", StringComparison.Ordinal),
+            "Command center no longer composes the active extracted runner card.");
     }
 
     private static void ResponsiveRunnerCards()
     {
         var x = Xaml();
+        var card = CardXaml();
+        var theme = ThemeXaml();
         var code = CodeBehind();
         var dashboard = File.ReadAllText(Path.Combine(RepoRoot(), "src", "MRC.Gui", "Presentation", "RunnerDashboardViewModel.cs"));
         var responsive = File.ReadAllText(Path.Combine(RepoRoot(), "src", "MRC.Gui", "Presentation", "RunnerResponsiveLayout.cs"));
 
-        Require(x.Contains("x:Key=\"RunnerCardStyle\"", StringComparison.Ordinal)
-                && (x.Contains("Property=\"CornerRadius\" Value=\"14\"", StringComparison.Ordinal)
-                    || x.Contains("CornerRadius=\"14\"", StringComparison.Ordinal)),
-            "Purpose-built runner card surface is missing.");
+        Require(theme.Contains("x:Key=\"ReplicaCardSurfaceStyle\"", StringComparison.Ordinal)
+                && theme.Contains("CornerRadius\" Value=\"16\"", StringComparison.Ordinal),
+            "Purpose-built compact runner card surface is missing.");
         Require(x.Contains("<UniformGrid Columns=\"{Binding CardColumnCount}\"", StringComparison.Ordinal),
             "Runner cards are not hosted in the adaptive multi-column panel.");
         Require(dashboard.Contains("CardColumnCount", StringComparison.Ordinal)
@@ -90,59 +94,68 @@ internal static class LayoutAcceptance
                 && responsive.Contains("MinimumCardSlotWidth = ReferenceReplicaMetrics.MinimumCardSlotWidth", StringComparison.Ordinal)
                 && responsive.Contains("ReferenceReplicaMetrics.ColumnCountForWidth(windowWidth)", StringComparison.Ordinal),
             "Safe-width 1-through-4 responsive layout authority is incomplete.");
-        Require(x.Contains("Text=\"{Binding RunnerName}\"", StringComparison.Ordinal)
-                && x.Contains("FontSize=\"19\"", StringComparison.Ordinal),
-            "Runner identity is not presented at the reference-first card hierarchy.");
-        Require(x.Contains("TextTrimming=\"CharacterEllipsis\"", StringComparison.Ordinal),
+        Require(card.Contains("Text=\"{Binding Row.RunnerName, ElementName=Root}\"", StringComparison.Ordinal)
+                && card.Contains("FontSize=\"17\"", StringComparison.Ordinal),
+            "Runner identity is not presented at the compact reference-first card hierarchy.");
+        Require(card.Contains("TextTrimming=\"CharacterEllipsis\"", StringComparison.Ordinal),
             "Long identity text must ellipsize.");
-        Require(x.Contains("Property=\"MinHeight\" Value=\"44\"", StringComparison.Ordinal)
-                || x.Contains("MinHeight=\"44\"", StringComparison.Ordinal),
-            "Card action controls do not preserve the 44 px reference hit-target height.");
-        Require(x.Contains("Property=\"MaxHeight\" Value=\"210\"", StringComparison.Ordinal)
-                || x.Contains("MaxHeight=\"210\"", StringComparison.Ordinal),
-            "Runner cards are not bounded against giant large-screen stretching.");
+        Require(card.Contains("Height=\"150\"", StringComparison.Ordinal)
+                && card.Contains("x:Name=\"ThreeSlotActionRail\"", StringComparison.Ordinal)
+                && card.Contains("Grid.Row=\"1\" Height=\"46\"", StringComparison.Ordinal),
+            "Compact runner card does not preserve the locked 150 px card and 46 px action-rail geometry.");
         Require(!code.Contains("RootSurface.LayoutTransform", StringComparison.Ordinal),
             "Superseded whole-window scaling remains active.");
     }
 
     private static void MultiChannelState()
     {
-        var x = Xaml();
-        Require(x.Contains("Text=\"{Binding Glyph}\"") && x.Contains("Opacity=\"{Binding AnimationIntensity}\""),
-            "State glyph/intensity binding is incomplete.");
-        Require(x.Contains("Text=\"{Binding StateText}\""), "State text binding is missing.");
-        Require(x.Contains("x:Key=\"StateBadgeStyle\"", StringComparison.Ordinal), "State badge visual language is missing.");
+        var card = CardXaml();
+        var theme = ThemeXaml();
+        Require(card.Contains("Opacity=\"{Binding Row.AnimationIntensity, ElementName=Root}\"", StringComparison.Ordinal),
+            "Active card indicator does not render the shared AnimationIntensity signal.");
+        Require(card.Contains("Text=\"{Binding Row.StateText, ElementName=Root}\"", StringComparison.Ordinal),
+            "State text binding is missing from the active card.");
+        Require(theme.Contains("x:Key=\"ReplicaStateBadgeStyle\"", StringComparison.Ordinal),
+            "State badge visual language is missing.");
         foreach (var state in new[] { "IDLE", "BUSY", "OFF", "ERROR", "STARTING", "STOPPING" })
-            Require(x.Contains(state), $"Visual handling for {state} is missing.");
+            Require(theme.Contains($"RunnerState.{state}", StringComparison.Ordinal), $"Visual handling for {state} is missing.");
     }
 
     private static void TimerArchitecture()
     {
         var code = CodeBehind();
         var rows = File.ReadAllText(Path.Combine(RepoRoot(), "src", "MRC.Gui", "Presentation", "RunnerRowViewModel.cs"));
+        var cardCode = CardCode();
         Require(code.Contains("_refreshTimer") && code.Contains("_animationTimer") && code.Contains("TimeSpan.FromSeconds(3)"),
             "Shared refresh/animation timers or refresh cadence are missing.");
         Require(code.Contains("TimeSpan.FromMilliseconds(50)"), "20 FPS shared animation clock target is missing.");
         Require(Count(code, "new DispatcherTimer") == 2, "MainWindow must create exactly one refresh and one shared animation timer.");
-        Require(!rows.Contains("DispatcherTimer"), "Runner cards must never allocate per-row timers.");
+        Require(!rows.Contains("DispatcherTimer") && !cardCode.Contains("DispatcherTimer"),
+            "Runner presentation components must never allocate per-row/per-card timers.");
     }
 
     private static void StableBinding()
     {
         var x = Xaml();
+        var card = CardXaml();
+        Require(x.Contains("ItemsSource=\"{Binding VisibleRows}\"", StringComparison.Ordinal),
+            "Runner list is not bound to the stable visible-row collection.");
         foreach (var marker in new[]
                  {
-                     "ItemsSource=\"{Binding VisibleRows}\"", "Text=\"{Binding RunnerName}\"",
-                     "Text=\"{Binding RepositoryName}\"", "Text=\"{Binding StateText}\""
+                     "Text=\"{Binding Row.RunnerName, ElementName=Root}\"",
+                     "Text=\"{Binding Row.RepositoryName, ElementName=Root}\"",
+                     "Text=\"{Binding Row.StateText, ElementName=Root}\""
                  })
-            Require(x.Contains(marker), $"Stable binding '{marker}' is missing.");
+            Require(card.Contains(marker), $"Stable extracted-card binding '{marker}' is missing.");
     }
 
     private static void AccessibilitySignals()
     {
         var x = Xaml();
+        var card = CardXaml();
         var code = CodeBehind();
-        Require(x.Contains("AutomationProperties.Name"), "Accessible automation names are missing.");
+        Require(x.Contains("AutomationProperties.Name") && card.Contains("AutomationProperties.Name"),
+            "Accessible automation names are missing from window/card composition.");
         foreach (var filter in new[] { "ALL", "IDLE", "BUSY", "OFF", "ERROR" })
             Require(x.Contains($"Tag=\"{filter}\""), $"Filter {filter} must be directly selectable.");
         Require(x.Contains("Text=\"SEARCH\"", StringComparison.Ordinal)
@@ -165,28 +178,42 @@ internal static class LayoutAcceptance
 
     private static void Pass4IntegrationFence()
     {
-        var x = Xaml(); var code = CodeBehind();
+        var x = Xaml();
+        var card = CardXaml();
+        var cardCode = CardCode();
+        var code = CodeBehind();
         Require(code.Contains("new RunnerOperationsService(_engine)"), "Controls must route through RunnerOperationsService.");
         Require(!code.Contains("_engine.Start(")
                 && !code.Contains("_engine.StopIdle(")
                 && !code.Contains("_engine.Restart(")
                 && !code.Contains("_engine.ForceStopBusy("),
             "GUI bypasses operations safety orchestration.");
+        Require(!cardCode.Contains("RunnerOperationsService") && !cardCode.Contains("RunnerEngine"),
+            "Extracted card owns runtime/lifecycle authority instead of emitting presentation actions.");
 
-        Require(x.Contains("Content=\"START\"") && x.Contains("IsEnabled=\"{Binding CanStart}\"") && x.Contains("RunnerStart_OnClick"),
+        Require(card.Contains("Value=\"START\"") && card.Contains("Row.CanStart") && cardCode.Contains("RunnerCardAction.Start"),
             "Explicit START control is not integrated with state authority.");
-        Require(x.Contains("Content=\"STOP\"") && x.Contains("IsEnabled=\"{Binding CanStop}\"") && x.Contains("RunnerStop_OnClick"),
+        Require(card.Contains("Content=\"STOP\"") && card.Contains("Row.CanStop") && cardCode.Contains("RunnerCardAction.Stop"),
             "Explicit STOP control is not integrated with state authority.");
-        Require(x.Contains("Content=\"RESTART\"") && x.Contains("IsEnabled=\"{Binding CanRestart}\"") && x.Contains("RunnerRestart_OnClick"),
+        Require(card.Contains("Content=\"RESTART\"") && card.Contains("Row.CanRestart") && cardCode.Contains("RunnerCardAction.Restart"),
             "Explicit RESTART control is not integrated with state authority.");
-        Require(x.Contains("Content=\"DETAILS\"") && x.Contains("RunnerDetails_OnClick"),
-            "Explicit DETAILS diagnostics control is missing.");
-        Require(x.Contains("Content=\"FORCE STOP\"") && x.Contains("RunnerMoreControl_OnClick"),
-            "Separate BUSY force-stop control is missing.");
+        Require(card.Contains("ToolTip=\"DETAILS\"") && cardCode.Contains("RunnerCardAction.Details"),
+            "DETAILS diagnostics affordance is missing from the active card.");
+        Require(card.Contains("Value=\"FORCE STOP\"")
+                && card.Contains("RunnerState.BUSY")
+                && cardCode.Contains("RunnerCardAction.ForceStop"),
+            "BUSY FORCE STOP action is missing from the state-authorized active card.");
+        Require(x.Contains("ActionRequested=\"RunnerControlCard_OnActionRequested\"", StringComparison.Ordinal)
+                && code.Contains("case RunnerCardAction.ForceStop", StringComparison.Ordinal)
+                && code.Contains("ExecuteForceStopAsync(e.Row)", StringComparison.Ordinal),
+            "Typed card actions are not routed through the guarded MainWindow operations boundary.");
     }
 
     private static string Xaml()=>File.ReadAllText(Path.Combine(RepoRoot(),"src","MRC.Gui","MainWindow.xaml"));
     private static string CodeBehind()=>File.ReadAllText(Path.Combine(RepoRoot(),"src","MRC.Gui","MainWindow.xaml.cs"));
+    private static string CardXaml()=>File.ReadAllText(Path.Combine(RepoRoot(),"src","MRC.Gui","Controls","RunnerControlCard.xaml"));
+    private static string CardCode()=>File.ReadAllText(Path.Combine(RepoRoot(),"src","MRC.Gui","Controls","RunnerControlCard.xaml.cs"));
+    private static string ThemeXaml()=>File.ReadAllText(Path.Combine(RepoRoot(),"src","MRC.Gui","Themes","ReferenceReplica.xaml"));
     private static string RepoRoot(){var d=new DirectoryInfo(Directory.GetCurrentDirectory());while(d is not null){if(File.Exists(Path.Combine(d.FullName,"Auth","0000_MasterAuth.md")))return d.FullName;d=d.Parent;}throw new InvalidOperationException("Could not locate MRC repository root.");}
     private static int Count(string text,string value){var count=0;var i=0;while((i=text.IndexOf(value,i,StringComparison.Ordinal))>=0){count++;i+=value.Length;}return count;}
     private static void Require(bool condition,string message){if(!condition)throw new InvalidOperationException(message);}
