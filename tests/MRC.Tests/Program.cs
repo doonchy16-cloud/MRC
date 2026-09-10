@@ -21,14 +21,14 @@ internal static class Program
             ("environment fence authorizes only exact machine and exact-root evidence", EnvironmentFenceIsFailClosed),
             ("runner control stays isolated from CLI GUI and install layers", RunnerControlLayering),
             ("installer follows user-scoped PATH architecture", InstallerArchitecture),
-            ("packaging creates the v0.0.12 pre-cert zip checksum and icon authority", PackagingSkeleton)
+            ("packaging creates the v0.0.13 pre-cert zip checksum and icon authority", PackagingSkeleton)
         };
 
         var failures = 0;
         Console.WriteLine($"MRC PASS 1 regression harness — {tests.Length} tests");
         foreach (var test in tests)
         {
-            try { test.Body(); Console.WriteLine($"PASS  {test.Name}"); }
+            try { test.Body(); Console.WriteLine("PASS  " + test.Name); }
             catch (Exception ex) { failures++; Console.WriteLine($"FAIL  {test.Name}\n      {ex.Message}"); }
         }
         Console.WriteLine();
@@ -56,7 +56,7 @@ internal static class Program
             var result = Run(CliExe(), alias);
             Require(result.ExitCode == 0, $"{alias} exited {result.ExitCode}.\n{result.Output}");
             Require(result.Output.Contains("Main Runner Control", StringComparison.Ordinal), $"{alias} omitted product name.");
-            Require(result.Output.Contains("Version: 0.0.12", StringComparison.Ordinal), $"{alias} omitted v0.0.12 identity.");
+            Require(result.Output.Contains("Version: 0.0.13", StringComparison.Ordinal), $"{alias} omitted v0.0.13 identity.");
             Require(result.Output.Contains("Channel: precert", StringComparison.OrdinalIgnoreCase), $"{alias} omitted pre-cert channel.");
             Require(result.Output.Contains("Stage: PRE-CERTIFICATION", StringComparison.OrdinalIgnoreCase), $"{alias} omitted release stage.");
             Require(result.Output.Contains("Final target: 0.1.0", StringComparison.OrdinalIgnoreCase), $"{alias} omitted final target.");
@@ -154,14 +154,14 @@ internal static class Program
     {
         var packageScript = Path.Combine(RepoRoot, "scripts", "package.ps1"); Require(File.Exists(packageScript), "scripts/package.ps1 is missing.");
         var result = Run("pwsh", "-NoProfile", "-File", packageScript, "-Configuration", "Release"); Require(result.ExitCode == 0, $"Packaging failed.\n{result.Output}");
-        var zipPath = Path.Combine(RepoRoot, "artifacts", "MRC-v0.0.12-win-x64.zip");
+        var zipPath = Path.Combine(RepoRoot, "artifacts", "MRC-v0.0.13-win-x64.zip");
         var sumsPath = Path.Combine(RepoRoot, "artifacts", "SHA256SUMS.txt");
-        Require(File.Exists(zipPath), "v0.0.12 candidate ZIP was not produced."); Require(File.Exists(sumsPath), "SHA256SUMS.txt was not produced.");
+        Require(File.Exists(zipPath), "v0.0.13 candidate ZIP was not produced."); Require(File.Exists(sumsPath), "SHA256SUMS.txt was not produced.");
         using var archive = ZipFile.OpenRead(zipPath);
         var entries = archive.Entries.Select(entry => entry.FullName.Replace('\\', '/')).ToHashSet(StringComparer.OrdinalIgnoreCase);
         foreach (var required in new[] { "install.ps1", "manifest.json", "MRC.ico", "payload/MRC.exe", "payload/MRC.Gui.exe" }) Require(entries.Contains(required), $"Candidate ZIP is missing {required}.");
         var checksumText = File.ReadAllText(sumsPath);
-        Require(checksumText.Contains("MRC-v0.0.12-win-x64.zip", StringComparison.Ordinal), "Checksum authority does not name the v0.0.12 candidate ZIP.");
+        Require(checksumText.Contains("MRC-v0.0.13-win-x64.zip", StringComparison.Ordinal), "Checksum authority does not name the v0.0.13 candidate ZIP.");
     }
 
     private static void EnsureCliBuilt() { if (!File.Exists(CliExe())) BuildCli(); }
