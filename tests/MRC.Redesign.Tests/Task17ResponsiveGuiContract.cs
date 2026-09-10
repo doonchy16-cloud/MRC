@@ -9,7 +9,7 @@ internal static class Task17ResponsiveGuiContract
         VerifySearchSemantics();
         VerifyBoundedSystemStrip();
         VerifyLargeScreenPreviewEvidence();
-        Console.WriteLine("PASS  Task17 adaptive command-center responsiveness + search/system-strip semantics");
+        Console.WriteLine("PASS  Task17 adaptive command-center responsiveness + drawer-search/system-strip semantics");
     }
 
     private static void VerifyAdaptiveCardResponsiveness()
@@ -36,16 +36,19 @@ internal static class Task17ResponsiveGuiContract
     private static void VerifySearchSemantics()
     {
         var root = Directory.GetCurrentDirectory();
-        var xaml = File.ReadAllText(Path.Combine(root, "src", "MRC.Gui", "MainWindow.xaml"));
+        var drawer = File.ReadAllText(Path.Combine(root, "src", "MRC.Gui", "Controls", "ControlDrawer.xaml"));
+        var drawerCode = File.ReadAllText(Path.Combine(root, "src", "MRC.Gui", "Controls", "ControlDrawer.xaml.cs"));
         var code = File.ReadAllText(Path.Combine(root, "src", "MRC.Gui", "MainWindow.xaml.cs"));
 
-        Require(xaml.Contains("Text=\"SEARCH\"", StringComparison.Ordinal),
-            "Search field still lacks an explicit SEARCH label.");
-        Require(xaml.Contains("ToolTip=\"Press / to focus search\"", StringComparison.Ordinal),
+        Require(drawer.Contains("Text=\"SEARCH\"", StringComparison.Ordinal),
+            "Drawer search field lacks an explicit SEARCH label.");
+        Require(drawer.Contains("ToolTip=\"Press / to focus search\"", StringComparison.Ordinal),
             "Slash search shortcut is not explained as a shortcut.");
         Require(code.Contains("Key.OemQuestion", StringComparison.Ordinal)
-                && code.Contains("SearchBox.Focus()", StringComparison.Ordinal),
-            "Slash cue is decorative only; the search focus shortcut is not implemented.");
+                && code.Contains("OpenControlDrawer(focusSearch: true)", StringComparison.Ordinal)
+                && drawerCode.Contains("SearchBox.Focus()", StringComparison.Ordinal)
+                && drawerCode.Contains("SearchBox.SelectAll()", StringComparison.Ordinal),
+            "Slash cue is decorative only; opening and focusing drawer search is not implemented.");
     }
 
     private static void VerifyBoundedSystemStrip()
