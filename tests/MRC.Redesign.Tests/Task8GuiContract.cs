@@ -47,9 +47,12 @@ internal static class Task8GuiContract
 
         Require(xaml.Contains("AUTHORIZED", StringComparison.Ordinal),
             "Command Center header does not expose authorization state.");
-        Require(xaml.Contains("Background=\"#080D12\"", StringComparison.OrdinalIgnoreCase),
-            "Near-black v0.0.14 control-room background authority is missing.");
-        Require(xaml.Contains("CornerRadius=\"14\"", StringComparison.Ordinal)
+        Require(xaml.Contains("Background=\"#071015\"", StringComparison.OrdinalIgnoreCase),
+            "Reference-first near-black control-room background authority is missing.");
+        Require(xaml.Contains("x:Name=\"AmbientGlowLayer\"", StringComparison.Ordinal),
+            "Reference-first dimensional ambient layer is missing.");
+        Require((xaml.Contains("CornerRadius=\"14\"", StringComparison.Ordinal)
+                 || xaml.Contains("Property=\"CornerRadius\" Value=\"14\"", StringComparison.Ordinal))
                 && xaml.Contains("x:Key=\"StateBadgeStyle\"", StringComparison.Ordinal),
             "Purpose-built application card/badge language is missing.");
     }
