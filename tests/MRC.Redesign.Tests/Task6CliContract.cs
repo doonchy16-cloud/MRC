@@ -54,8 +54,8 @@ internal static class Task6CliContract
 
         Require(exitCode == 0, $"MRC --version returned exit code {exitCode}.");
         Require(string.IsNullOrWhiteSpace(error.ToString()), $"MRC --version wrote to stderr: {error}");
-        Require(text.Contains("Version: 0.0.13", StringComparison.Ordinal),
-            $"Version output does not identify v0.0.13: {text}");
+        Require(text.Contains("Version: 0.0.14", StringComparison.Ordinal),
+            $"Version output does not identify v0.0.14: {text}");
         Require(text.Contains("Channel: precert", StringComparison.OrdinalIgnoreCase),
             $"Version output does not identify the precert channel: {text}");
         Require(text.Contains("Stage: PRE-CERTIFICATION", StringComparison.OrdinalIgnoreCase),
@@ -154,7 +154,7 @@ internal static class Task6CliContract
             modifiers: null);
         Require(versionLines is not null, "CliPresentation.VersionLines(string) is missing.");
 
-        var result = versionLines!.Invoke(null, new object[] { @"C:\MRC\versions\0.0.13" }) as System.Collections.IEnumerable;
+        var result = versionLines!.Invoke(null, new object[] { @"C:\MRC\versions\0.0.14" }) as System.Collections.IEnumerable;
         Require(result is not null, "CliPresentation.VersionLines returned null.");
 
         var lines = result!.Cast<object>().ToArray();
