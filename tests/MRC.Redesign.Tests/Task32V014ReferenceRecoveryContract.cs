@@ -42,6 +42,7 @@ internal static class Task32V014ReferenceRecoveryContract
         var xaml = File.ReadAllText(Path.Combine(root, "src", "MRC.Gui", "MainWindow.xaml"));
         var header = File.ReadAllText(Path.Combine(root, "src", "MRC.Gui", "Controls", "HeroHeader.xaml"));
         var ambient = File.ReadAllText(Path.Combine(root, "src", "MRC.Gui", "Controls", "AmbientBackground.xaml"));
+        var drawer = File.ReadAllText(Path.Combine(root, "src", "MRC.Gui", "Controls", "ControlDrawer.xaml"));
 
         Require(xaml.Contains("x:Key=\"AmberActionBrush\"", StringComparison.Ordinal),
             "Reference-first GUI is missing the warm amber primary-action authority.");
@@ -59,9 +60,16 @@ internal static class Task32V014ReferenceRecoveryContract
         Require(header.Contains("x:Name=\"LiveInventoryPill\"", StringComparison.Ordinal)
                 && header.Contains("Text=\"{Binding InventoryText, ElementName=Root}\"", StringComparison.Ordinal),
             "Authorization/inventory pill is not expressed as a first-class truthful live state.");
-        Require(xaml.Contains("x:Key=\"CounterCardStyle\"", StringComparison.Ordinal)
-                && xaml.Contains("FontSize=\"24\"", StringComparison.Ordinal),
-            "Counter modules remain too visually restrained for the reference hierarchy.");
+        Require(xaml.Contains("<controls:ControlDrawer x:Name=\"ControlDrawer\"", StringComparison.Ordinal)
+                && drawer.Contains("x:Key=\"CounterTileStyle\"", StringComparison.Ordinal)
+                && drawer.Contains("FontSize=\"20\"", StringComparison.Ordinal)
+                && drawer.Contains("{Binding TotalCount}", StringComparison.Ordinal)
+                && drawer.Contains("{Binding IdleCount}", StringComparison.Ordinal)
+                && drawer.Contains("{Binding BusyCount}", StringComparison.Ordinal)
+                && drawer.Contains("{Binding OffCount}", StringComparison.Ordinal)
+                && drawer.Contains("{Binding ErrorCount}", StringComparison.Ordinal)
+                && drawer.Contains("{Binding TransitionCount}", StringComparison.Ordinal),
+            "Drawer counter modules do not preserve the complete reference hierarchy.");
     }
 
     private static void VerifyRunnerControlModules()
