@@ -201,7 +201,7 @@
 
         <!-- command bar -->
         <Grid x:Name="OperationsPanel" Grid.Row="2" Margin="0,0,0,8" IsEnabled="False">
-            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="260" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" MinWidth="160" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
             <StackPanel x:Name="FilterPanel" Orientation="Horizontal" VerticalAlignment="Center">
                 <Button Content="[ ALL ]" Tag="ALL" AutomationProperties.Name="Show all runners" Style="{StaticResource TerminalButtonStyle}" Click="FilterButton_OnClick" />
                 <Button Content="[ IDLE ]" Tag="IDLE" AutomationProperties.Name="Show idle runners" Style="{StaticResource TerminalButtonStyle}" Click="FilterButton_OnClick" />
