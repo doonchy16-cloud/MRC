@@ -11,7 +11,26 @@ internal static class RunnerProcessAssociator
 {
     private const int MaxAncestryDepth = 64;
 
-    public static RunnerProcessAssociation Associate(RunnerDescriptor runner, ProcessInventory inventory)
+    /// <summary>
+    /// Conservative association used by control preflight until machine-wide unresolved
+    /// runner evidence has been classified. This preserves fail-closed behavior for
+    /// mutation paths.
+    /// </summary>
+    public static RunnerProcessAssociation Associate(RunnerDescriptor runner, ProcessInventory inventory) =>
+        AssociateCore(runner, inventory, failOnUnresolvedGlobalRunnerEvidence: true);
+
+    /// <summary>
+    /// Exact per-runner association for truthful runtime state. Process-name matches
+    /// with no executable path are machine-level unresolved evidence, not evidence that
+    /// any particular managed runner is in ERROR.
+    /// </summary>
+    public static RunnerProcessAssociation AssociateExact(RunnerDescriptor runner, ProcessInventory inventory) =>
+        AssociateCore(runner, inventory, failOnUnresolvedGlobalRunnerEvidence: false);
+
+    private static RunnerProcessAssociation AssociateCore(
+        RunnerDescriptor runner,
+        ProcessInventory inventory,
+        bool failOnUnresolvedGlobalRunnerEvidence)
     {
         if (!inventory.IsComplete)
         {
@@ -40,14 +59,17 @@ internal static class RunnerProcessAssociator
                 return Error("A same-runner worker exists without an associated listener.");
             }
 
-            var unresolved = inventory.Processes
-                .Where(process => IsRunnerProcess(process.ProcessName) && string.IsNullOrWhiteSpace(process.ExecutablePath))
-                .ToArray();
-            if (unresolved.Length != 0)
+            if (failOnUnresolvedGlobalRunnerEvidence)
             {
-                var detail = string.Join("; ", unresolved.Select(process =>
-                    $"PID {process.ProcessId} {process.ProcessName}: {process.InspectionError ?? "executable path unavailable"}"));
-                return Error($"Runner appears OFF, but unresolved runner-process ownership could overlap this runner. {detail}");
+                var unresolved = inventory.Processes
+                    .Where(process => IsRunnerProcess(process.ProcessName) && string.IsNullOrWhiteSpace(process.ExecutablePath))
+                    .ToArray();
+                if (unresolved.Length != 0)
+                {
+                    var detail = string.Join("; ", unresolved.Select(process =>
+                        $"PID {process.ProcessId} {process.ProcessName}: {process.InspectionError ?? "executable path unavailable"}"));
+                    return Error($"Runner appears OFF, but unresolved runner-process ownership could overlap this runner. {detail}");
+                }
             }
 
             return new RunnerProcessAssociation(null, Array.Empty<ProcessSnapshot>(), null);
