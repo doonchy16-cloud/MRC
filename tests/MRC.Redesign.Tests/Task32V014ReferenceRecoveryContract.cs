@@ -16,17 +16,16 @@ internal static class Task32V014ReferenceRecoveryContract
         var root = Directory.GetCurrentDirectory();
         var code = File.ReadAllText(Path.Combine(root, "src", "MRC.Gui", "MainWindow.xaml.cs"));
         var dashboard = File.ReadAllText(Path.Combine(root, "src", "MRC.Gui", "Presentation", "RunnerDashboardViewModel.cs"));
+        var responsive = File.ReadAllText(Path.Combine(root, "src", "MRC.Gui", "Presentation", "RunnerResponsiveLayout.cs"));
         var xaml = File.ReadAllText(Path.Combine(root, "src", "MRC.Gui", "MainWindow.xaml"));
 
         Require(dashboard.Contains("Math.Clamp(value, 1, 4)", StringComparison.Ordinal),
-            "CardColumnCount is still capped at three columns instead of four.");
-        Require(code.Contains("ActualWidth >= 1600", StringComparison.Ordinal)
-                && code.Contains("? 4", StringComparison.Ordinal)
-                && code.Contains("ActualWidth >= 1100", StringComparison.Ordinal)
-                && code.Contains("? 3", StringComparison.Ordinal)
-                && code.Contains("ActualWidth >= 800", StringComparison.Ordinal)
-                && code.Contains("? 2", StringComparison.Ordinal),
-            "Responsive layout does not implement the approved 4 / 3 / 2 / 1 column doctrine.");
+            "CardColumnCount is not bounded to the approved one-through-four column range.");
+        Require(code.Contains("RunnerResponsiveLayout.ColumnCountForWidth(ActualWidth)", StringComparison.Ordinal),
+            "MainWindow does not delegate responsive card allocation to the safe-width layout authority.");
+        Require(responsive.Contains("MinimumCardSlotWidth", StringComparison.Ordinal)
+                && responsive.Contains("Math.Clamp(columns, 1, 4)", StringComparison.Ordinal),
+            "Safe-width responsive authority is missing its minimum-slot or one-through-four bounds.");
 
         Require(xaml.Contains("<UniformGrid Columns=\"{Binding CardColumnCount}\"", StringComparison.Ordinal),
             "Reference recovery lost adaptive card layout authority.");
