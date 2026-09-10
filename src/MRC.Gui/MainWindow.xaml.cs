@@ -27,7 +27,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        Icon = BitmapFrame.Create(new Uri("pack://application:,,,/Assets/MRC.ico", UriKind.Absolute));
+        Icon = BitmapFrame.Create(new Uri("pack://application:,,,/MRC.Gui;component/Assets/MRC.ico", UriKind.Absolute));
         DataContext = _dashboard;
         RunnerList.Loaded += (_, _) => ApplyRunnerScrollBarStyle();
 
