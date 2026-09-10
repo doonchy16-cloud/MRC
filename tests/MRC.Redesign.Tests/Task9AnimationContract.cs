@@ -15,7 +15,7 @@ internal static class Task9AnimationContract
         VerifyIntensityIsRendered();
         VerifyStaticStates();
         VerifySharedClockArchitecture();
-        Console.WriteLine("PASS  Task9A/9C state-specific shared-clock animation + rendered intensity");
+        Console.WriteLine("PASS  Task9A/9C state-specific true-20-FPS shared-clock animation + rendered intensity");
     }
 
     private static void VerifyLockedCadences()
@@ -55,7 +55,7 @@ internal static class Task9AnimationContract
             var values = new List<double>();
             for (var tick = 0; tick < 12; tick++)
             {
-                clock.Tick(origin.AddMilliseconds(tick * 55), new[] { row });
+                clock.Tick(origin.AddMilliseconds(tick * 50), new[] { row });
                 var value = (double)intensityProperty!.GetValue(row)!;
                 Require(value >= 0.55 && value <= 1.0,
                     $"{state} AnimationIntensity must stay in [0.55, 1.00], got {value:F4}.");
@@ -65,7 +65,7 @@ internal static class Task9AnimationContract
             }
 
             Require(values.Select(value => Math.Round(value, 4)).Distinct().Count() >= 3,
-                $"{state} AnimationIntensity did not visibly vary across shared 55 ms ticks.");
+                $"{state} AnimationIntensity did not visibly vary across shared 50 ms ticks.");
         }
     }
 
@@ -118,15 +118,29 @@ internal static class Task9AnimationContract
         var rowViewModel = File.ReadAllText(Path.Combine(repoRoot, "src", "MRC.Gui", "Presentation", "RunnerRowViewModel.cs"));
         var clockSource = File.ReadAllText(Path.Combine(repoRoot, "src", "MRC.Gui", "Presentation", "RunnerAnimationClock.cs"));
 
-        Require(mainWindow.Contains("_animationTimer.Interval = TimeSpan.FromMilliseconds(55)", StringComparison.Ordinal),
-            "Shared GUI animation timer must tick at 55 ms.");
+        Require(mainWindow.Contains("_animationTimer.Interval = TimeSpan.FromMilliseconds(50)", StringComparison.Ordinal),
+            "Shared GUI animation timer must tick at exactly 50 ms (20 FPS).");
         Require(mainWindow.Contains("_animationClock.Tick", StringComparison.Ordinal),
             "MainWindow does not drive rows through the shared RunnerAnimationClock.");
+        Require(Count(mainWindow, "new DispatcherTimer()") == 2,
+            "MainWindow must retain exactly one refresh timer plus one shared animation timer.");
         Require(!rowViewModel.Contains("DispatcherTimer", StringComparison.Ordinal)
                 && !rowViewModel.Contains("System.Timers", StringComparison.Ordinal),
             "Runner rows must never own per-row animation timers.");
         Require(!clockSource.Contains("DispatcherTimer", StringComparison.Ordinal),
             "RunnerAnimationClock must remain timer-agnostic and driven by one shared GUI timer.");
+    }
+
+    private static int Count(string source, string token)
+    {
+        var count = 0;
+        var index = 0;
+        while ((index = source.IndexOf(token, index, StringComparison.Ordinal)) >= 0)
+        {
+            count++;
+            index += token.Length;
+        }
+        return count;
     }
 
     private static void VerifySequence(RunnerState state, int intervalMs, IReadOnlyList<string> expected)
