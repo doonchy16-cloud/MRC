@@ -12,48 +12,48 @@
 
 Reconstruct MRC's primary Windows GUI to match the Owner-authored Runner Control reference as faithfully as practical in native WPF, while preserving the already-verified MRC runtime, lifecycle, ownership, update, and safety architecture.
 
-The primary success criterion is no longer "modern dark dashboard" or "reference-inspired." The primary screen must read as the same visual product family as the supplied reference at first glance: same density, same card proportions, same warm/cool atmosphere, same hero hierarchy, same three-button control rhythm, same luminous state language, and same four-column large-screen composition.
+The target is no longer "reference-inspired." At the canonical 2048x1222 viewport, the primary screen must reproduce the reference's composition, density, card proportions, spacing rhythm, hero hierarchy, three-button control rail, luminous state language, and dark/amber atmosphere closely enough that it clearly reads as the same visual design.
 
-MRC-specific capabilities that do not exist in the reference remain available through secondary instrumentation surfaces so they do not deform the primary runner-control composition.
+MRC-specific capabilities absent from the reference remain available through secondary surfaces so they do not deform the primary runner-control composition.
 
 ## 2. Version and release boundary
 
-The reconstruction is `v0.0.15`, not a same-version replacement of `v0.0.14`.
+This reconstruction is `v0.0.15`, not a same-version replacement of `v0.0.14`.
 
-Reason: the live updater compares semantic versions. Main-PC already has `0.0.14`; replacing `v0.0.14` bytes would still produce `UP TO DATE` and prevent the normal update path from discovering the rebuilt UI.
+Main-PC already has `0.0.14`. MRC's updater compares semantic versions, so replacing `v0.0.14` bytes would still result in `UP TO DATE` and would make the new GUI invisible to the normal update path.
 
-Implementation SHALL therefore begin on a new `precert-v0.0.15` branch created from the final approved design/spec baseline. `v0.0.14` remains frozen as live evidence.
+Implementation SHALL begin on `precert-v0.0.15`, created from the final approved design/spec baseline. `v0.0.14` remains frozen as live evidence.
 
 ## 3. Architecture choice
 
 ### Chosen approach: Native WPF reference replica
 
-The GUI remains native WPF. The reconstruction uses WPF layout, templates, brushes, gradients, effects, user controls, bindings, and the existing presentation models.
+The GUI remains native WPF. Use WPF layout, templates, brushes, gradients, effects, bindings, and focused controls/resources.
 
-Rejected alternatives:
+Rejected:
 
-- **WebView2/HTML/CSS:** excellent styling flexibility but adds an unnecessary browser dependency, a second UI runtime, and a larger security/packaging surface.
-- **Custom Direct2D/drawn surface:** can achieve exact pixels but creates excessive implementation and maintenance cost for a control application.
+- **WebView2/HTML/CSS:** unnecessary browser dependency and second UI runtime.
+- **Custom Direct2D surface:** unnecessary implementation and maintenance cost for this control application.
 
-Native WPF gives sufficient fidelity while preserving the existing application architecture and testability.
+Native WPF is sufficient for the reference fidelity required while preserving the current executable and test architecture.
 
 ## 4. Authority precedence
 
-For v0.0.15 GUI work, precedence is:
+For v0.0.15 GUI work:
 
-1. hard runtime/safety authorities;
+1. hard runtime/safety authority;
 2. `Auth/0017_V0015_ReferenceReplica.md`;
-3. Owner-authored visual reference image;
-4. non-conflicting prior v0.0.14 visual authorities;
+3. Owner-authored reference image;
+4. non-conflicting prior visual authority;
 5. implementation convenience.
 
-Where prior visual guidance conflicts with the new reference replica, the new reference wins. Where visual fidelity conflicts with safety or runtime truth, safety/runtime truth wins and the visual adaptation must preserve the reference as closely as possible without lying.
+If visual fidelity conflicts with runtime truth or safety, runtime truth/safety wins and the visual adaptation must stay as close to the reference as possible without lying.
 
-## 5. Reference geometry model
+## 5. Canonical reference geometry
 
-The canonical reference image is 2048x1222.
+Canonical reference image: `2048x1222`.
 
-Reference-derived large-screen target bands:
+Reference-derived large-screen targets:
 
 | Measure | Target |
 | --- | ---: |
@@ -68,490 +68,458 @@ Reference-derived large-screen target bands:
 | primary action slots | 3 |
 | card aspect | ~3.1:1 |
 
-These values are reconstruction targets. The renderer may vary by a few pixels because WPF text measurement, DPI, and anti-aliasing differ from the browser reference. However, visible structural drift is a defect.
+Small WPF/DPI/anti-aliasing variance is acceptable. Structural drift is not.
 
-The primary anti-regression rule is: **more power, less height**. Cards must gain strength through density, contrast, state lighting, and control scale, not empty vertical area.
+Primary anti-regression rule: **more power, less height**. Cards gain strength through density, contrast, state lighting, and control scale, not empty vertical area.
 
 ## 6. Primary screen composition
 
-The primary screen is intentionally sparse in types of widgets but rich in visual hierarchy.
+Always visible:
 
-### Primary always-visible elements
-
-- reference-style menu/control button;
-- machine/local-control eyebrow;
+- reference-style menu button;
+- exact eyebrow text: `MAIN PC • LOCAL-FIRST CONTROL`;
 - large `MAIN RUNNER CONTROL` hero title;
-- large live/control-ready status capsule;
-- small local-truth/refresh metadata;
-- compact runner grid;
-- minimal system/status affordance.
+- upper-right live capsule;
+- compact truth/refresh metadata beneath the capsule;
+- dense runner grid;
+- minimal bottom system/status affordance.
 
-### Secondary elements
+The six counters, filters, search, bulk controls, manual refresh, and detailed findings SHALL NOT remain as permanent full-width rows above the runner grid.
 
-The following no longer consume permanent top-level dashboard rows:
+## 7. Exact hero/header content
 
-- counters;
-- filters;
-- search;
-- TURN ALL ON;
-- TURN ALL OFF;
-- manual refresh;
-- detailed external/system findings;
-- deep diagnostics.
+### Left
 
-They move into compact drawers or secondary surfaces.
+- square rounded menu button with amber three-line glyph;
+- eyebrow: `MAIN PC • LOCAL-FIRST CONTROL`;
+- hero: `MAIN RUNNER CONTROL`.
 
-## 7. Visual component decomposition
+### Right
 
-The design SHOULD decompose the presentation into focused units. Exact filenames can be adjusted during implementation if existing project conventions suggest a better grouping.
+Live capsule text:
 
-### `AmbientBackground`
+`LOCAL INVENTORY LIVE • {TotalCount} MANAGED`
 
-Purpose: render the layered dark/warm environment behind the control surface.
+This uses the managed-runner count only and must not include external/unattributed processes.
 
-Responsibilities:
+Truth line beneath capsule:
 
-- near-black/navy upper field;
+`local truth • {HH:mm:ss} • 3s refresh • 20 FPS UI`
+
+The time is local machine time. Version/build identity remains secondary technical metadata and must not compete with the hero title.
+
+## 8. Visual component decomposition
+
+Implementation SHALL decompose the presentation into focused units/resources rather than permanently expanding `MainWindow.xaml` into a monolith.
+
+Planned structure:
+
+- `src/MRC.Gui/Themes/ReferenceReplica.xaml`
+- `src/MRC.Gui/Controls/AmbientBackground.xaml`
+- `src/MRC.Gui/Controls/HeroHeader.xaml`
+- `src/MRC.Gui/Controls/RunnerControlCard.xaml`
+- `src/MRC.Gui/Controls/StateOrb.xaml`
+- `src/MRC.Gui/Controls/ControlDrawer.xaml`
+- `src/MRC.Gui/Controls/SystemDrawer.xaml`
+
+`MainWindow.xaml` composes these units and owns the main runner-grid container. Exact code-behind class files accompany controls only where WPF requires them; lifecycle logic remains outside the controls.
+
+### AmbientBackground
+
+Owns only visual atmosphere:
+
+- deep near-black/navy upper field;
 - subtle cool haze;
 - lower/right amber bloom;
 - edge vignette;
 - no hit testing;
-- no runtime state logic.
+- no runner state logic.
 
-Dependencies: WPF brushes/effects only.
+### HeroHeader
 
-### `HeroHeader`
+Owns only header presentation and drawer-open request surface. It consumes boundary/count/refresh presentation state but performs no lifecycle mutation.
 
-Purpose: reproduce the reference hero hierarchy.
+### RunnerControlCard
 
-Contains:
+Owns one managed-runner visual module. It binds state/capabilities and routes actions to the existing MainWindow/operations boundary. It does not call processes or `RunnerEngine` directly.
 
-- menu/control button;
-- eyebrow (`MAIN PC • LOCAL-FIRST CONTROL` or equivalent exact MRC wording);
-- `MAIN RUNNER CONTROL` title;
-- live inventory/control-ready pill;
-- compact local truth / refresh metadata.
+### StateOrb
 
-Dependencies: dashboard counts/boundary state, no lifecycle mutation.
+Owns the reference-style orb visuals. It consumes existing state and shared animation intensity. It creates no timer.
 
-### `RunnerGrid`
+### ControlDrawer
 
-Purpose: lay out managed runner cards using reference-safe geometry.
+Owns search, filters, counters, bulk controls, and manual refresh.
 
-Responsibilities:
+### SystemDrawer
 
-- adaptive column count from usable width;
-- stable ordering;
-- scrolling;
-- no global scale transform;
-- 4 columns at canonical large viewport.
+Owns system/external/unattributed findings and detailed refresh/status evidence. It is read-only with respect to external/unattributed runtimes.
 
-### `RunnerControlCard`
+## 9. Runner-card anatomy
 
-Purpose: render one managed runner as a compact reference-style control module.
+Each card contains exactly:
 
-Contains:
+1. luminous state orb at upper-left;
+2. dominant runner name;
+3. secondary technical line: `REPO  <repository-name>` in monospace;
+4. small DETAILS affordance;
+5. state badge at upper-right;
+6. three-slot lifecycle rail.
 
-- `StateOrb`;
-- runner name;
-- secondary technical identity line;
-- state badge;
-- secondary details affordance;
-- `ThreeSlotActionRail`.
+Full paths, PIDs, session data, agent IDs, and verbose diagnostics do not appear on the default card.
 
-The card must not own runner lifecycle logic. It binds capabilities and routes events/commands to the existing operations boundary.
+### DETAILS affordance
 
-### `StateOrb`
+DETAILS is a quiet `28x28` header control placed immediately to the left of the state badge. It opens the existing diagnostic/details path. It is never a fourth primary lifecycle button.
 
-Purpose: replace the tiny square/dot visual with the reference's luminous state object.
+## 10. Three-slot lifecycle rail
 
-Responsibilities:
+The three-button anatomy is authoritative.
 
-- dark outer housing;
-- luminous center;
-- soft radial state halo;
-- intensity binding from shared animation state;
-- state-specific color.
-
-No timer is created here. The existing shared 20 FPS animation clock remains the only animation timing authority.
-
-### `ThreeSlotActionRail`
-
-Purpose: preserve the reference's three equal primary controls.
-
-State mapping:
-
-| Runner state | Slot 1 | Slot 2 | Slot 3 |
+| State | Slot 1 | Slot 2 | Slot 3 |
 | --- | --- | --- | --- |
 | OFF | START enabled | STOP disabled | RESTART disabled |
 | IDLE | START disabled | STOP enabled | RESTART enabled |
-| BUSY | FORCE STOP enabled through confirmation path | STOP disabled/protected | RESTART disabled/protected |
-| STARTING | disabled | disabled | disabled |
-| STOPPING | disabled | disabled | disabled |
-| ERROR | disabled/fail-closed | disabled/fail-closed | disabled/fail-closed |
+| BUSY | FORCE STOP enabled | STOP disabled | RESTART disabled |
+| STARTING | START disabled | STOP disabled | RESTART disabled |
+| STOPPING | START disabled | STOP disabled | RESTART disabled |
+| ERROR | START disabled | STOP disabled | RESTART disabled |
 
-FORCE STOP replacing START visually in BUSY state does not merge their semantics. FORCE STOP still invokes its distinct existing confirmed path.
+FORCE STOP replacing START in the first visual slot does not merge semantics. It invokes only the existing distinct FORCE STOP path and must still require explicit confirmation that an active GitHub Actions job may be interrupted.
 
-### `ControlDrawer`
+At large reference scale, all three primary slots target ~46 px height and equal visual width.
 
-Purpose: house MRC capabilities that are useful but not part of the reference's primary composition.
-
-Contains:
-
-- search;
-- state filters;
-- counters;
-- TURN ALL ON;
-- TURN ALL OFF;
-- manual refresh.
-
-The drawer should open from the reference-style menu button. Search shortcut `/` should open/focus the drawer and search box when necessary.
-
-### `SystemDrawer`
-
-Purpose: preserve visibility of external/unattributed/system evidence without contaminating the managed runner grid.
-
-Contains:
-
-- system findings summary;
-- external/unattributed evidence;
-- detailed status/refresh text where appropriate.
-
-It must remain read-only with respect to external/unattributed processes.
-
-## 8. Header design
-
-At 2048 reference scale, the header should recreate the reference proportions rather than the compact v0.0.14 utility header.
-
-### Left side
-
-- square rounded menu button with amber glyph treatment;
-- eyebrow in small monospace uppercase;
-- very large white hero title below.
-
-### Right side
-
-- large rounded green live/control-ready capsule;
-- bright green indicator dot;
-- concise inventory/control-ready text;
-- small monospace local truth / clock / refresh metadata underneath.
-
-The version string remains technical metadata and should not compete with the main title.
-
-## 9. Runner-card visual anatomy
-
-### Top row
-
-- luminous orb, approximately reference scale;
-- runner name large, bold, white;
-- state badge upper-right.
-
-### Secondary row
-
-Use one compact monospace identity line. MRC may use repository name and/or a short managed identity instead of the reference's Windows ID, but it should preserve the same visual role and density.
-
-Full directory paths, PIDs, session details, and verbose diagnostics stay out of the default card.
-
-### Action rail
-
-- three equal primary slots;
-- rail sits close to the bottom of the compact card;
-- enabled START is filled amber/yellow with dark text;
-- enabled STOP is high-contrast outlined/light-on-dark;
-- enabled RESTART is high-contrast outlined/light-on-dark;
-- disabled controls are dark/subdued but remain legible as controls;
-- target reference height near 46 px at large scale;
-- no fourth primary DETAILS button.
-
-### Details affordance
-
-A small secondary icon/text affordance may sit near the identity area. It opens the existing diagnostic/details path and must not visually compete with lifecycle controls.
-
-## 10. State visual system
+## 11. State orb and card-state treatment
 
 ### OFF
 
-- neutral gray/cool orb;
-- restrained cool border;
+- cool neutral orb/housing;
+- restrained gray border;
 - OFF badge;
 - amber START active.
 
 ### IDLE
 
-- green luminous orb;
-- clear green border/outer glow;
+- bright green center and halo;
+- clear green card edge/glow;
 - IDLE badge;
-- STOP and RESTART active;
+- STOP/RESTART active;
 - START disabled.
 
 ### BUSY
 
-- amber/yellow luminous orb;
-- amber/yellow card-state presence;
+- amber/yellow orb and halo;
+- amber state edge/presence;
 - BUSY badge;
-- first slot is FORCE STOP;
-- normal STOP and RESTART remain disabled/protected;
-- confirmation dialog remains mandatory.
+- first slot becomes FORCE STOP;
+- normal STOP/RESTART remain protected.
 
-### STARTING / STOPPING
+### STARTING
 
-- blue / purple state semantics respectively;
-- animated intensity via existing shared animation model;
-- lifecycle controls disabled during transition.
+- blue orb/state treatment;
+- shared animation intensity active;
+- rail disabled.
+
+### STOPPING
+
+- purple orb/state treatment;
+- shared animation intensity active;
+- rail disabled.
 
 ### ERROR
 
-- orange/red urgency;
-- no speculative lifecycle mutation;
-- diagnostic affordance remains available.
+- orange/red orb and urgency treatment;
+- lifecycle mutation remains fail-closed;
+- DETAILS remains available.
 
-## 11. Color and atmosphere
+The existing shared 20 FPS animation architecture remains the only timing authority. No per-card timers.
 
-The candidate should visually match the reference rather than merely reuse the current v0.0.14 token palette.
+## 12. Card visual treatment
 
-Implementation preparation should derive final WPF color tokens by sampling the Owner reference at representative locations and then tune them through rendered comparison.
+At canonical large-screen scale:
 
-Required visual families:
+- dark blue-charcoal raised card surface;
+- subtle cool gray border;
+- rounded corners matched to reference appearance;
+- soft black depth shadow;
+- IDLE uses visible green border/glow;
+- BUSY uses amber/yellow presence;
+- OFF uses neutral cool treatment;
+- hover raises border brightness/elevation slightly without changing state meaning.
 
-- near-black/navy background;
-- dark blue-charcoal card surface;
-- cool gray card border;
-- bright warm amber/yellow primary action;
-- green live/IDLE glow;
-- cool gray OFF orb/badge;
-- white hero/runner text;
-- muted gray technical text.
+Enabled START SHALL be a bright filled warm amber/yellow button with dark text at reference-level priority. It should be one of the most visually obvious elements on an OFF card.
 
-The background must include a visible but restrained amber atmospheric bloom in the same lower/right compositional region as the reference.
+Enabled STOP and RESTART SHALL use substantial equal-scale outlined controls. Disabled controls remain visibly control-shaped but strongly subdued.
 
-## 12. Responsive model
+## 13. Background atmosphere
 
-Responsive layout should be based primarily on available runner-surface width divided by a reference-safe card slot width.
+The background is a layered composition, not one flat brush:
 
-Expected outcomes:
+1. near-black/navy base;
+2. subtle cool haze in upper/middle field;
+3. warm amber radial bloom biased toward lower-right;
+4. restrained secondary amber warmth beneath card rows;
+5. outer vignette.
 
-- 2048x1222: 4 columns;
-- around 1600: normally 3 columns;
-- 1200x760: 2 columns;
-- 1180x760: 2 columns;
-- 900x560: 1 column.
+No wallpaper or network asset dependency is required. Native WPF gradients/effects are preferred.
 
-Controls should retain useful size. Reduce columns before shrinking the primary rail.
+Final color tokens SHALL be derived from the Owner reference and tuned using rendered comparison. Initial sampled anchors from the reference may be used as starting evidence, including approximately:
 
-The current eight Main-PC runners should appear as two rows of four at the canonical large viewport.
+- upper field near `RGB(9,14,15)`;
+- normal card interior near `RGB(18,24,28)`;
+- enabled START center near `RGB(252,195,76)`;
+- lower-right amber field near `RGB(82,46,17)`;
+- hero white near `RGB(245,247,249)`.
 
-## 13. Secondary instrumentation interaction
+These sampled values are starting anchors, not substitutes for visual review.
 
-### Menu button
+## 14. Responsive model
 
-Opens/closes `ControlDrawer`.
+Layout is derived from usable runner-surface width and reference-safe card width, bounded to 1–4 columns.
 
-### Search
+Required canonical outcomes:
 
-- remains live filtering;
-- `/` keyboard shortcut opens/focuses search if drawer is closed;
-- Escape may return focus/close drawer if this can be added without conflicting with existing behavior.
+- `2048x1222` → 4 columns;
+- approximately 1600 px → normally 3 columns;
+- `1200x760` → 2 columns;
+- `1180x760` → 2 columns;
+- `900x560` → 1 column.
 
-### Filters
+Reduce columns before shrinking the three-slot control rail. At 2048, the current eight Main-PC managed runners appear as two compact rows of four when unfiltered.
 
-Remain ALL / IDLE / BUSY / OFF / ERROR unless runtime authority later requires additional filter exposure.
+## 15. Control Drawer
 
-### Counters
+The reference-style menu button opens a **left overlay drawer**. It does not push or resize the runner grid.
 
-Remain truthful dashboard counts but appear compactly inside the drawer rather than as six large permanent cards.
+Large/desktop target width: `400 px`. At smaller windows, drawer width is `min(400 px, window width - 32 px)`.
 
-### Bulk actions
+Drawer contains:
 
-TURN ALL ON and TURN ALL OFF remain explicit controls. Existing safety semantics are unchanged.
+- compact truthful counters;
+- search;
+- ALL / IDLE / BUSY / OFF / ERROR filters;
+- TURN ALL ON;
+- TURN ALL OFF;
+- manual refresh.
 
-## 14. CLI Help micro-design
+Keyboard behavior:
 
-The three-column Help table remains structurally unchanged.
+- `/` opens the drawer if closed, focuses Search, and selects existing search text;
+- `Escape` closes the Control Drawer when open and returns keyboard focus to the runner surface;
+- modal safety confirmations retain normal Windows dialog behavior and are not closed through drawer handling.
 
-Interactive semantic color grammar becomes:
+Bulk safety semantics remain unchanged.
 
-- literal `MRC`: yellow/warm command token;
-- option token (`--help`, `--doctor`, `--diagnose`, `--update`, `--check`, `--version`): cyan;
-- alias column: gray;
-- description: white;
-- heading may render `MRC` yellow and `// COMMAND REFERENCE` cyan;
-- redirected output remains plain deterministic text with no ANSI/control characters.
+## 16. System Drawer
 
-The formatter should segment canonical command cells rather than applying one tone to the entire command string.
+System findings use a bottom anchored secondary surface.
 
-## 15. Data flow
+Collapsed state: compact one-line summary/indicator that does not consume the card field.
+
+Expanded state: overlays upward without resizing the primary runner grid and may use up to 35% of available window height.
+
+It shows external/unattributed evidence and refresh/status detail. External/unattributed entries never gain lifecycle controls.
+
+## 17. CLI Help micro-design
+
+The existing three-column Help table remains structurally approved.
+
+Interactive command-cell grammar becomes:
+
+- literal `MRC` → YELLOW/warm command token;
+- option token such as `--help`, `--check`, `--update`, `--version`, `--doctor`, `--diagnose` → CYAN;
+- aliases → GRAY;
+- descriptions → WHITE.
+
+Heading is exact semantic composition:
+
+- `MRC` → YELLOW;
+- ` // COMMAND REFERENCE` → CYAN.
+
+Canonical command cells must be segmented, not given one tone for the whole string.
+
+Redirected output stays deterministic plain text without ANSI/control characters.
+
+## 18. Data flow
 
 No new runtime authority is introduced.
 
-### Refresh flow
+### Refresh
 
-`RunnerEngine.RefreshReport()` → existing dashboard/presentation model → runner grid/card bindings → state orb/badge/action eligibility.
+`RunnerEngine.RefreshReport()` → existing dashboard/presentation model → runner-grid/card bindings → orb/badge/action eligibility.
 
-### Lifecycle flow
+### Per-runner lifecycle
 
-Card action → existing GUI event/command boundary → `RunnerOperationsService` → existing verified lifecycle implementation.
+Card action → existing GUI action boundary → `RunnerOperationsService` → existing verified lifecycle implementation.
 
-No visual component may call runner processes directly or bypass `RunnerOperationsService`.
+No visual control may call runner processes or bypass `RunnerOperationsService`.
 
-### Bulk flow
+### Bulk lifecycle
 
-Control Drawer bulk action → existing bulk handler/service → existing shared lifecycle operations.
+Control Drawer action → existing bulk action boundary → existing operations service/shared lifecycle.
 
-### System evidence flow
+### System evidence
 
-Runtime report system findings → System Drawer only. External/unattributed entries never become managed cards and never gain control actions.
+Runtime report system findings → System Drawer only. External/unattributed evidence remains display-only.
 
-## 16. Error handling
+## 19. Error handling
 
-- GUI rendering errors must not weaken environment fencing or lifecycle eligibility.
-- ERROR runner state remains fail-closed for mutation.
-- BUSY FORCE STOP keeps the explicit warning/confirmation dialog.
-- drawer state or visual animation failures must not alter control eligibility.
-- secondary visual failures should degrade to readable static controls where feasible rather than making the application unusable.
+- rendering failure never weakens environment fencing or control eligibility;
+- ERROR remains fail-closed;
+- BUSY FORCE STOP retains confirmation;
+- drawer/animation state never changes lifecycle capability truth;
+- if a decorative effect cannot render, controls should degrade to readable static presentation rather than become unusable.
 
-## 17. Implementation boundaries
+## 20. Expected implementation files
 
-### Expected presentation files
-
-Likely touched/created:
+Expected presentation work:
 
 - `src/MRC.Gui/MainWindow.xaml`;
-- `src/MRC.Gui/MainWindow.xaml.cs` only for presentation composition/drawer/focus wiring;
-- `src/MRC.Gui/Presentation/RunnerDashboardViewModel.cs` only if drawer/presentation state needs a bounded property;
-- new WPF control/resource files for hero, cards, orb, action rail, drawers, and theme tokens;
-- `src/MRC.Cli/CliPresentation.cs` and/or central CLI table segmentation code for Help token coloring;
-- visual preview tooling/scripts/tests;
-- v0.0.15 identity/release workflow files after visual implementation is accepted.
+- `src/MRC.Gui/MainWindow.xaml.cs` only for composition/focus/drawer wiring;
+- `src/MRC.Gui/Themes/ReferenceReplica.xaml`;
+- `src/MRC.Gui/Controls/AmbientBackground.xaml(.cs if required)`;
+- `src/MRC.Gui/Controls/HeroHeader.xaml(.cs if required)`;
+- `src/MRC.Gui/Controls/RunnerControlCard.xaml(.cs if required)`;
+- `src/MRC.Gui/Controls/StateOrb.xaml(.cs if required)`;
+- `src/MRC.Gui/Controls/ControlDrawer.xaml(.cs if required)`;
+- `src/MRC.Gui/Controls/SystemDrawer.xaml(.cs if required)`;
+- `src/MRC.Gui/Presentation/RunnerDashboardViewModel.cs` only for bounded presentation state if needed;
+- central CLI presentation/table code for Help token segmentation;
+- preview/render tooling;
+- v0.0.15 identity/package/release workflow files after visual acceptance.
 
-### Files/layers not to redesign
+Not redesign targets:
 
-- runner process discovery/control core;
-- Windows process ownership evidence;
+- runner discovery/control core;
+- Windows ownership evidence;
 - `RunnerOperationsService` semantics;
-- update verification/atomic activation/rollback;
-- Doctor/Diagnose behavior;
-- exact machine/root fence;
+- updater verification/activation/rollback;
+- Doctor/Diagnose;
+- environment fence;
 - release selection semantics;
 - managed/external/unattributed ownership model.
 
-## 18. TDD strategy
+## 21. TDD slicing strategy
 
-Implementation must proceed through small RED/GREEN slices rather than one giant XAML rewrite.
+The future implementation plan SHALL decompose work into RED/GREEN slices rather than one giant XAML rewrite:
 
-Recommended test slices for the future implementation plan:
-
-1. v0.0.15 identity/version boundary;
-2. reference geometry tokens and responsive card count;
-3. compact three-slot card anatomy;
-4. luminous state orb/state styling;
-5. hero/header composition;
-6. ambient background layers;
-7. Control Drawer and preserved search/filter/bulk behavior;
-8. System Drawer and external isolation;
+1. create/freeze `precert-v0.0.15` and establish 0.0.15 identity RED;
+2. reference theme/geometry tokens and responsive layout;
+3. compact runner-card anatomy and three-slot rail;
+4. state orb and state-specific card treatment;
+5. hero/header reconstruction;
+6. ambient background reconstruction;
+7. Control Drawer while preserving search/filter/counter/bulk behavior;
+8. System Drawer while preserving external isolation;
 9. Help command-token segmentation;
-10. visual preview/reference comparison harness;
-11. release packaging/provenance;
-12. live Main-PC gauntlet.
+10. reference comparison/evidence harness;
+11. full visual convergence passes;
+12. v0.0.15 package/release provenance;
+13. Main-PC update and live gauntlet.
 
-Each slice: RED → correct failure proof → minimal GREEN → focused tests → full inherited regression at appropriate gates.
+Each slice follows RED → correct failure proof → minimal GREEN → focused verification. Full inherited regression is mandatory at integration gates and before any release trigger.
 
-## 19. Visual evidence strategy
+## 22. Visual evidence package
 
-The visual gate must be stronger than the v0.0.14 gate.
-
-### Mandatory candidate renders
+Mandatory renders:
 
 - 2048x1222 primary screen;
 - 1200x760 primary screen;
 - 1180x760 primary screen;
 - 900x560 primary screen;
-- 900x560 BUSY-focused frame if BUSY FORCE STOP is not visible in the ordinary minimum viewport;
-- drawer-open evidence at one representative desktop viewport;
-- BUSY/IDLE/OFF mixed-state evidence at large viewport.
+- 900x560 BUSY-focused frame if BUSY FORCE STOP is not visible in ordinary minimum view;
+- Control Drawer open at a representative desktop viewport;
+- System Drawer expanded at a representative desktop viewport;
+- mixed OFF/IDLE/BUSY large-screen state frame.
 
-### Reference comparison
+For the canonical 2048 review, evidence package SHALL include:
 
-For the 2048 candidate, generate a comparison package containing:
+- Owner reference;
+- candidate render;
+- side-by-side comparison;
+- 50% opacity normalized overlay where practical;
+- difference visualization where practical.
 
-- Owner reference image;
-- candidate screenshot;
-- side-by-side presentation;
-- optional 50% opacity overlay or normalized difference visualization where practical.
+Overlay/difference images are diagnostic evidence. Human rendered review remains authoritative for aesthetic fidelity.
 
-The overlay is diagnostic evidence, not a numeric certification shortcut. Human review remains authoritative for aesthetic fidelity.
+## 23. Visual acceptance matrix
 
-## 20. Visual acceptance criteria
+Every applicable category must individually receive `10.0/10`:
 
-A large-screen visual PASS requires all of the following:
+- hero/title scale;
+- menu-button role/geometry;
+- live-pill role/geometry;
+- primary field margins;
+- four-column geometry;
+- card width/height/aspect;
+- column/row spacing;
+- runner-name hierarchy;
+- technical-line hierarchy;
+- orb size/luminosity;
+- state-badge geometry;
+- three-slot control dimensions;
+- enabled START amber strength;
+- STOP/RESTART visual balance;
+- disabled-state clarity;
+- IDLE glow fidelity;
+- BUSY state clarity;
+- background amber bloom composition;
+- overall density;
+- absence of dead card space;
+- no clipping/overlap/tiny text;
+- secondary instrumentation does not deform primary composition.
 
-- four-column runner field;
-- card proportions visibly match the reference;
-- no giant vertical card interiors;
-- hero title has comparable scale and dominance;
-- menu button occupies comparable visual role;
-- upper-right live pill has comparable role/weight;
-- runner names and metadata follow reference hierarchy;
-- state orb geometry and luminosity feel equivalent;
-- IDLE green edge/glow is clearly visible but controlled;
-- enabled START has reference-level amber brightness and prominence;
-- STOP/RESTART controls have comparable scale and alignment;
-- inter-card gaps and field margins are visually close;
-- lower/right amber atmosphere is present in comparable composition;
-- MRC-specific secondary instrumentation does not deform the primary layout;
-- no clipping, overlap, tiny text, misleading disabled state, or fake terminal layout remains.
+Any category below 10.0/10 means HOLD. No average score can override an individual miss.
 
-No average score is sufficient. Any applicable visual category below 10.0/10 means HOLD.
-
-## 21. Functional acceptance criteria
-
-The visual reconstruction is not accepted merely because it resembles the reference.
+## 24. Functional acceptance matrix
 
 Must preserve/prove:
 
-- individual START;
-- individual IDLE STOP;
-- RESTART waits for verified OFF;
+- START from verified OFF;
+- IDLE STOP;
+- RESTART completes verified OFF before START;
 - repeated START/STOP/RESTART without duplicate sessions;
-- BUSY normal lifecycle protection;
+- BUSY ordinary mutation protection;
 - explicit FORCE STOP confirmation;
-- TURN ALL ON only affects verified OFF managed runners;
-- TURN ALL OFF skips BUSY and never force-stops;
+- TURN ALL ON targets only verified OFF managed runners;
+- TURN ALL OFF targets only verified IDLE and skips BUSY;
 - closing GUI leaves runners running;
-- external Lotto service remains display-only and non-blocking when ownership is proven;
+- external Lotto remains display-only and non-blocking when ownership is proven;
 - genuinely unattributed unsafe evidence remains fail-closed;
 - search/filter/counters remain truthful;
-- single-instance GUI open/focus behavior remains truthful and consistent;
-- CLI Help colors work interactively and redirected output remains deterministic.
+- single-instance open/focus behavior remains truthful and consistent;
+- Help colors are correct interactively;
+- redirected Help remains deterministic plain text.
 
-## 22. Release acceptance
+## 25. Release acceptance
 
-After implementation and visual/function certification:
+After implementation and visual/function acceptance:
 
-- build identity must be 0.0.15 everywhere;
-- package name `MRC-v0.0.15-win-x64.zip`;
-- manifest version/channel/stage/final target coherent;
-- SHA256SUMS authority matches package bytes;
+- build identity `0.0.15` everywhere;
+- package `MRC-v0.0.15-win-x64.zip`;
+- manifest version/channel/stage/final-target coherence;
+- SHA256SUMS matches exact package bytes;
 - packaged CLI reports 0.0.15;
-- Git tag and release target exact-head match;
-- prerelease remains clearly pre-certification;
-- Main-PC `MRC --check` must discover 0.0.15 from installed 0.0.14;
-- `MRC --update` must activate 0.0.15 and retain rollback;
-- live Main-PC evidence must be collected before any final certification claim.
+- Git tag and release target match exact candidate HEAD;
+- release remains prerelease/pre-certification;
+- Main-PC `MRC --check` discovers 0.0.15 from installed 0.0.14;
+- `MRC --update` verifies/activates 0.0.15 and retains rollback;
+- live Main-PC GUI and lifecycle evidence passes.
 
-## 23. Non-goals
+## 26. Non-goals
 
-This design does not authorize:
+Not authorized:
 
 - runner registration/unregistration;
-- Windows service management;
+- Windows runner service management;
 - multi-machine fleet control;
-- control of external/unattributed runners;
-- a WebView2/browser rewrite;
-- a new updater model;
-- a new runner lifecycle implementation;
-- removing safety confirmations for aesthetic reasons;
-- final `v0.1.0` release before the full certification gate.
+- external/unattributed control;
+- WebView2/browser rewrite;
+- new updater semantics;
+- new runner lifecycle semantics;
+- safety-confirmation removal for visual fidelity;
+- final v0.1.0 publication before full certification.
 
-## 24. Definition of design-complete
+## 27. Design-complete gate
 
-The design is complete when the Owner confirms this written spec correctly captures the locked architecture. Only then should a detailed implementation plan be written. No implementation work should begin before that approval.
+This design becomes implementation-plan input only after the Owner reviews and approves this written spec. No implementation begins before that approval.
