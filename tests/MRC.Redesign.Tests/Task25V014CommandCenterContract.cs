@@ -22,11 +22,12 @@ internal static class Task25V014CommandCenterContract
             "V0.0.14 still exposes the superseded table-era runner surface.");
         Require(xaml.Contains("x:Key=\"RunnerCardStyle\"", StringComparison.Ordinal),
             "Runner cards do not have a dedicated application-card visual language.");
-        Require(xaml.Contains("CornerRadius=\"14\"", StringComparison.Ordinal),
+        Require(xaml.Contains("CornerRadius=\"14\"", StringComparison.Ordinal)
+                || xaml.Contains("Property=\"CornerRadius\" Value=\"14\"", StringComparison.Ordinal),
             "Runner cards are missing the approved polished rounded application surface.");
         Require(xaml.Contains("Text=\"{Binding RunnerName}\"", StringComparison.Ordinal)
-                && xaml.Contains("FontSize=\"18\"", StringComparison.Ordinal),
-            "Runner identity is not visually dominant at a readable card scale.");
+                && xaml.Contains("FontSize=\"19\"", StringComparison.Ordinal),
+            "Runner identity is not visually dominant at the reference-recovery card scale.");
         Require(xaml.Contains("Text=\"{Binding StateText}\"", StringComparison.Ordinal)
                 && xaml.Contains("x:Key=\"StateBadgeStyle\"", StringComparison.Ordinal),
             "Runner cards do not expose a dedicated state badge.");
@@ -76,9 +77,9 @@ internal static class Task25V014CommandCenterContract
                 && xaml.Contains("IsEnabled=\"{Binding CanShowDetails}\"", StringComparison.Ordinal)
                 && xaml.Contains("Click=\"RunnerDetails_OnClick\"", StringComparison.Ordinal),
             "Runner card DETAILS path is missing or not bound to diagnostic authority.");
-        Require(xaml.Contains("Property=\"MinHeight\" Value=\"38\"", StringComparison.Ordinal)
-                || xaml.Contains("MinHeight=\"38\"", StringComparison.Ordinal),
-            "Runner card controls are missing a readable minimum hit-target height.");
+        Require(xaml.Contains("Property=\"MinHeight\" Value=\"44\"", StringComparison.Ordinal)
+                || xaml.Contains("MinHeight=\"44\"", StringComparison.Ordinal),
+            "Runner card lifecycle controls are missing the reference-recovery 44 px minimum hit-target height.");
     }
 
     private static void Require(bool condition, string message)
