@@ -24,3 +24,12 @@ jobs:
         run: ./scripts/verify-pass2.ps1
       - shell: pwsh
         run: ./scripts/verify-pass1.ps1
+      - name: Render v0.0.15 GUI previews
+        shell: pwsh
+        run: ./scripts/render-v0.0.15-preview.ps1
+      - name: Upload v0.0.15 GUI evidence
+        uses: actions/upload-artifact@v6
+        with:
+          name: MRC-v0.0.15-gui-previews
+          path: artifacts/v0.0.15
+          if-no-files-found: error
