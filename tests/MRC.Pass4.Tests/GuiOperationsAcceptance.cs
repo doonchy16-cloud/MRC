@@ -94,7 +94,7 @@ internal static class GuiOperationsAcceptance
             Require(body.Contains("TryGetCardRow") && body.Contains("_operations is null"), $"{method} does not route through the preview guard and operations-availability guard.");
         }
 
-        var guard = MethodBody(code, "TryGetCardRow");
+        var guard = MethodBody(code, "private bool TryGetCardRow");
         Require(guard.Contains("_previewMode") && guard.Contains("_operationInProgress"), "Shared card-row gate does not block preview or overlapping operations.");
         Require(code.Contains("OperationsPanel.IsEnabled = false") && code.Contains("RunnerList.IsHitTestVisible = false"), "Preview mode does not visibly disable lifecycle controls.");
     }
