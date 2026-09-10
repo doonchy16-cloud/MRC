@@ -60,7 +60,7 @@ public sealed class RunnerDashboardViewModel : INotifyPropertyChanged
     public int CardColumnCount
     {
         get => _cardColumnCount;
-        set => Set(ref _cardColumnCount, Math.Clamp(value, 1, 3));
+        set => Set(ref _cardColumnCount, Math.Clamp(value, 1, 4));
     }
 
     public bool HasSystemFindings
