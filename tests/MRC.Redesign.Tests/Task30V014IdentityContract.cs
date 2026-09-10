@@ -11,20 +11,20 @@ internal static class Task30V014IdentityContract
         VerifyReleaseAuthority();
         VerifyCliIdentity();
         VerifyPackageAuthority();
-        Console.WriteLine("PASS  Task30 v0.0.14 pre-cert identity is coherent across build, release, CLI, and package authority");
+        Console.WriteLine("PASS  Task30 v0.0.15 pre-cert identity is coherent across build, release, CLI, and package authority");
     }
 
     private static void VerifyBuildIdentity()
     {
-        Require(BuildInfo.Version == "0.0.14", $"BuildInfo.Version is '{BuildInfo.Version}', expected 0.0.14.");
+        Require(BuildInfo.Version == "0.0.15", $"BuildInfo.Version is '{BuildInfo.Version}', expected 0.0.15.");
 
         var props = File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "Directory.Build.props"));
         foreach (var marker in new[]
         {
-            "<Version>0.0.14</Version>",
-            "<AssemblyVersion>0.0.14.0</AssemblyVersion>",
-            "<FileVersion>0.0.14.0</FileVersion>",
-            "<InformationalVersion>0.0.14</InformationalVersion>"
+            "<Version>0.0.15</Version>",
+            "<AssemblyVersion>0.0.15.0</AssemblyVersion>",
+            "<FileVersion>0.0.15.0</FileVersion>",
+            "<InformationalVersion>0.0.15</InformationalVersion>"
         })
         {
             Require(props.Contains(marker, StringComparison.Ordinal), $"Directory.Build.props is missing '{marker}'.");
@@ -34,19 +34,19 @@ internal static class Task30V014IdentityContract
     private static void VerifyReleaseAuthority()
     {
         var current = ReleaseAuthority.Current;
-        Require(current.Version == "0.0.14", $"ReleaseAuthority.Current.Version is '{current.Version}', expected 0.0.14.");
+        Require(current.Version == "0.0.15", $"ReleaseAuthority.Current.Version is '{current.Version}', expected 0.0.15.");
         Require(current.Channel == "precert", $"Release channel is '{current.Channel}', expected precert.");
         Require(current.Stage == ReleaseStage.PreCertification, $"Release stage is {current.Stage}, expected PreCertification.");
         Require(current.FinalTarget == "0.1.0", $"Final target is '{current.FinalTarget}', expected 0.1.0.");
-        Require(ReleaseAuthority.ManifestCompatibilityChannelFor(new Version(0, 0, 14)) == "precert",
-            "v0.0.14 manifest transport channel must be precert; only v0.0.12 may use the legacy stable bootstrap bridge.");
+        Require(ReleaseAuthority.ManifestCompatibilityChannelFor(new Version(0, 0, 15)) == "precert",
+            "v0.0.15 manifest transport channel must be precert; only v0.0.12 may use the legacy stable bootstrap bridge.");
     }
 
     private static void VerifyCliIdentity()
     {
-        var lines = CliPresentation.VersionLines(@"C:\MRC\versions\0.0.14");
-        Require(lines.Any(line => line.Text == "Version: 0.0.14"),
-            "CLI version presentation does not identify 0.0.14.");
+        var lines = CliPresentation.VersionLines(@"C:\MRC\versions\0.0.15");
+        Require(lines.Any(line => line.Text == "Version: 0.0.15"),
+            "CLI version presentation does not identify 0.0.15.");
         Require(lines.Any(line => line.Text == "Channel: precert"),
             "CLI version presentation does not identify precert channel.");
         Require(lines.Any(line => line.Text == "Stage: PRE-CERTIFICATION"),
