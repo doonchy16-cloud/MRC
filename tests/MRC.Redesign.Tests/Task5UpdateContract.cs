@@ -34,10 +34,12 @@ internal static class Task5UpdateContract
         {
             Require(currentType.GetProperty(property) is not null, $"ReleaseInfo.{property} is missing.");
         }
-        Require(currentType.GetProperty("Version")!.GetValue(current)?.ToString() == "0.0.13",
-            $"Current pre-cert build must identify as 0.0.13, got {currentType.GetProperty("Version")!.GetValue(current)}.");
+        Require(currentType.GetProperty("Version")!.GetValue(current)?.ToString() == "0.0.14",
+            $"Current pre-cert build must identify as 0.0.14, got {currentType.GetProperty("Version")!.GetValue(current)}.");
+        Require(currentType.GetProperty("Channel")!.GetValue(current)?.ToString() == "precert",
+            "Current pre-cert build must report precert channel.");
         Require(currentType.GetProperty("Stage")!.GetValue(current)?.ToString() == "PreCertification",
-            "v0.0.13 must report PreCertification stage.");
+            "Current pre-cert build must report PreCertification stage.");
         Require(currentType.GetProperty("FinalTarget")!.GetValue(current)?.ToString() == "0.1.0",
             "Final target must remain v0.1.0.");
     }
@@ -50,7 +52,9 @@ internal static class Task5UpdateContract
         Require(ReleaseAuthority.ManifestCompatibilityChannelFor(bootstrap) == "stable",
             "v0.0.12 package manifest must use stable transport channel so installed v0.0.11 can validate the bootstrap update.");
         Require(ReleaseAuthority.ManifestCompatibilityChannelFor(new Version(0, 0, 13)) == "precert",
-            "The legacy transport bridge must be limited to v0.0.12; later pre-cert packages must use precert.");
+            "v0.0.13 package manifest must remain precert after the one-version legacy bridge.");
+        Require(ReleaseAuthority.ManifestCompatibilityChannelFor(new Version(0, 0, 14)) == "precert",
+            "v0.0.14 package manifest must use precert; the legacy transport bridge is limited to v0.0.12.");
         Require(ReleaseAuthority.ManifestCompatibilityChannelFor(ReleaseAuthority.FinalTargetVersion) == "stable",
             "Final v0.1.0 package transport channel must remain stable.");
     }
