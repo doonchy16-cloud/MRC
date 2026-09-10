@@ -49,7 +49,7 @@ internal static class Task13CheckContract
                 updateCalls++;
                 throw new InvalidOperationException("--check must never invoke the update mutation pipeline.");
             },
-            static () => new EnvironmentFenceResult(true, "AUTHORIZED", "authorized"),
+            static () => AuthorizedFence(),
             _ =>
             {
                 checkCalls++;
@@ -85,7 +85,7 @@ internal static class Task13CheckContract
                 updateCalls++;
                 throw new InvalidOperationException("--check must never invoke the update mutation pipeline.");
             },
-            static () => new EnvironmentFenceResult(true, "AUTHORIZED", "authorized"),
+            static () => AuthorizedFence(),
             _ => Task.FromResult(new UpdateCheckResult(
                 UpdateCheckOutcome.UpToDate,
                 new Version(0, 0, 13),
@@ -125,6 +125,13 @@ internal static class Task13CheckContract
         Require(upToDateStatus.Segments[1].Text == "UP TO DATE" && upToDateStatus.Segments[1].Tone == CliTone.Success,
             "UP TO DATE is not green/Success.");
     }
+
+    private static EnvironmentFenceResult AuthorizedFence() => new(
+        true,
+        MrcConstants.TargetMachineName,
+        MrcConstants.RunnerRoot,
+        "AUTHORIZED",
+        "authorized");
 
     private static DoctorReport HealthyDoctor() => new(
         Array.Empty<DoctorFinding>(),
