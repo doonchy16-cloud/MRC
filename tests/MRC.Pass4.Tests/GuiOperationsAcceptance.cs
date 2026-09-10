@@ -6,14 +6,14 @@ internal static class GuiOperationsAcceptance
     {
         var tests = new (string Name, Action Body)[]
         {
-            ("bulk ON/OFF controls exist in the compact terminal command bar", BulkControlsExist),
-            ("per-runner primary controls route by truthful state through operations service", PerRunnerControlsRouteSafely),
-            ("BUSY force-stop is secondary and requires explicit destructive confirmation", BusyForceStopIsSecondaryAndConfirmed),
+            ("bulk ON/OFF controls exist in the native application command bar", BulkControlsExist),
+            ("explicit per-runner controls route through shared operations authority", PerRunnerControlsRouteSafely),
+            ("BUSY force-stop remains separate and explicitly confirmed", BusyForceStopIsSecondaryAndConfirmed),
             ("TURN ALL OFF confirmation states exact IDLE stop and BUSY remain impact", BulkOffConfirmationStatesExactImpact),
             ("preview mode cannot invoke any runner lifecycle operation", PreviewModeCannotOperate),
             ("operation failures surface clear visible error feedback", OperationFailuresAreVisible),
-            ("bulk/search/filter controls occupy distinct compact command-bar columns", OperationsLayoutIsResponsive),
-            ("v0.0.12 CI requires fresh default and minimum-size rendered previews", RenderGateExists)
+            ("bulk/search/filter controls occupy distinct responsive command-bar columns", OperationsLayoutIsResponsive),
+            ("inherited CI retains canonical rendered-preview evidence coverage", RenderGateExists)
         };
 
         var failures = 0;
@@ -31,11 +31,11 @@ internal static class GuiOperationsAcceptance
     private static void BulkControlsExist()
     {
         var xaml = Xaml(); var code = Code();
-        Require(xaml.Contains("x:Name=\"OperationsPanel\""), "Compact operations command bar is missing.");
-        Require(xaml.Contains("x:Name=\"TurnAllOnButton\"") && xaml.Contains("Content=\"[ ALL ON ]\""), "[ ALL ON ] control is missing.");
-        Require(xaml.Contains("x:Name=\"TurnAllOffButton\"") && xaml.Contains("Content=\"[ ALL OFF ]\""), "[ ALL OFF ] control is missing.");
-        Require(xaml.Contains("AutomationProperties.Name=\"Turn all OFF runners on\""), "Bulk ON accessible name is missing.");
-        Require(xaml.Contains("AutomationProperties.Name=\"Stop all IDLE runners\""), "Bulk OFF accessible name is missing.");
+        Require(xaml.Contains("x:Name=\"OperationsPanel\""), "Operations command bar is missing.");
+        Require(xaml.Contains("x:Name=\"TurnAllOnButton\"") && xaml.Contains("Content=\"TURN ALL ON\""), "TURN ALL ON control is missing.");
+        Require(xaml.Contains("x:Name=\"TurnAllOffButton\"") && xaml.Contains("Content=\"TURN ALL OFF\""), "TURN ALL OFF control is missing.");
+        Require(xaml.Contains("AutomationProperties.Name=\"Turn all verified OFF runners on\""), "Bulk ON accessible name is missing or no longer states verified OFF scope.");
+        Require(xaml.Contains("AutomationProperties.Name=\"Stop all verified IDLE runners\""), "Bulk OFF accessible name is missing or no longer states verified IDLE scope.");
         Require(code.Contains("new RunnerOperationsService(_engine)"), "GUI does not construct the verified operations layer.");
         Require(code.Contains("TurnAllOnButton_OnClick") && code.Contains("TurnAllOffButton_OnClick"), "Bulk control handlers are missing.");
     }
@@ -43,17 +43,27 @@ internal static class GuiOperationsAcceptance
     private static void PerRunnerControlsRouteSafely()
     {
         var xaml = Xaml(); var code = Code();
-        Require(xaml.Contains("RunnerPrimaryControl_OnClick"), "Per-runner primary action handler is missing.");
+        Require(xaml.Contains("Content=\"START\"") && xaml.Contains("RunnerStart_OnClick"), "Explicit START card control is missing.");
+        Require(xaml.Contains("Content=\"STOP\"") && xaml.Contains("RunnerStop_OnClick"), "Explicit STOP card control is missing.");
+        Require(xaml.Contains("Content=\"RESTART\"") && xaml.Contains("RunnerRestart_OnClick"), "Explicit RESTART card control is missing.");
         Require(xaml.Contains("CommandParameter=\"{Binding}\""), "Runner controls do not carry exact row identity.");
-        Require(code.Contains("row.State == RunnerState.OFF") && code.Contains("_operations.Start(row.Runner)"), "OFF primary action does not route to safe Start.");
-        Require(code.Contains("row.State == RunnerState.IDLE") && code.Contains("_operations.StopIdle(row.Runner)"), "IDLE primary action does not route to safe StopIdle.");
-        Require(!code.Contains("_engine.Start(row.Runner)") && !code.Contains("_engine.StopIdle(row.Runner)"), "GUI bypasses RunnerOperationsService.");
+
+        var start = MethodBody(code, "RunnerStart_OnClick");
+        var stop = MethodBody(code, "RunnerStop_OnClick");
+        var restart = MethodBody(code, "RunnerRestart_OnClick");
+        Require(start.Contains("row.CanStart") && start.Contains("_operations.Start(row.Runner)"), "START does not honor state authority and route through safe Start.");
+        Require(stop.Contains("row.CanStop") && stop.Contains("_operations.StopIdle(row.Runner)"), "STOP does not honor state authority and route through safe StopIdle.");
+        Require(restart.Contains("row.CanRestart") && restart.Contains("_operations.Restart(row.Runner)"), "RESTART does not honor state authority and route through verified Restart.");
+        Require(!code.Contains("_engine.Start(row.Runner)")
+                && !code.Contains("_engine.StopIdle(row.Runner)")
+                && !code.Contains("_engine.Restart(row.Runner)"),
+            "GUI bypasses RunnerOperationsService lifecycle authority.");
     }
 
     private static void BusyForceStopIsSecondaryAndConfirmed()
     {
         var xaml = Xaml(); var code = Code();
-        Require(xaml.Contains("Content=\"!\"") && xaml.Contains("RunnerMoreControl_OnClick"), "BUSY secondary destructive action is missing.");
+        Require(xaml.Contains("Content=\"FORCE STOP\"") && xaml.Contains("RunnerMoreControl_OnClick"), "BUSY secondary destructive action is missing.");
         Require(code.Contains("row.State != RunnerState.BUSY"), "Secondary force path is not BUSY-only.");
         Require(code.Contains("active GitHub Actions job", StringComparison.OrdinalIgnoreCase), "Force-stop warning omits active-job interruption risk.");
         Require(code.Contains("MessageBoxButton.YesNo") && code.Contains("MessageBoxImage.Warning"), "Force-stop lacks explicit destructive confirmation.");
@@ -72,11 +82,20 @@ internal static class GuiOperationsAcceptance
     private static void PreviewModeCannotOperate()
     {
         var code = Code();
-        foreach (var method in new[] { "TurnAllOnButton_OnClick", "TurnAllOffButton_OnClick", "RunnerPrimaryControl_OnClick", "RunnerMoreControl_OnClick" })
+        foreach (var method in new[] { "TurnAllOnButton_OnClick", "TurnAllOffButton_OnClick", "RunnerMoreControl_OnClick" })
         {
             var body = MethodBody(code, method);
             Require(body.Contains("_previewMode") && body.Contains("_operations is null"), $"{method} is not preview/unavailable guarded.");
         }
+
+        foreach (var method in new[] { "RunnerStart_OnClick", "RunnerStop_OnClick", "RunnerRestart_OnClick" })
+        {
+            var body = MethodBody(code, method);
+            Require(body.Contains("TryGetCardRow") && body.Contains("_operations is null"), $"{method} does not route through the preview guard and operations-availability guard.");
+        }
+
+        var guard = MethodBody(code, "TryGetCardRow");
+        Require(guard.Contains("_previewMode") && guard.Contains("_operationInProgress"), "Shared card-row gate does not block preview or overlapping operations.");
         Require(code.Contains("OperationsPanel.IsEnabled = false") && code.Contains("RunnerList.IsHitTestVisible = false"), "Preview mode does not visibly disable lifecycle controls.");
     }
 
@@ -90,21 +109,21 @@ internal static class GuiOperationsAcceptance
     private static void OperationsLayoutIsResponsive()
     {
         var xaml = Xaml();
-        Require(xaml.Contains("x:Name=\"OperationsPanel\" Grid.Row=\"2\""), "Command bar is not in the compact terminal layout.");
+        Require(xaml.Contains("x:Name=\"OperationsPanel\" Grid.Row=\"2\""), "Command bar is not in the approved application layout.");
         Require(xaml.Contains("Grid.Column=\"1\" Orientation=\"Horizontal\" HorizontalAlignment=\"Right\""), "Bulk operations do not have a distinct command-bar column.");
         Require(xaml.Contains("Grid.Column=\"2\" BorderBrush=\"{StaticResource BorderBrush}\""), "Search does not have a distinct command-bar column.");
-        Require(xaml.Contains("x:Name=\"FilterPanel\" Orientation=\"Horizontal\""), "State filters are not kept in their own compact region.");
+        Require(xaml.Contains("x:Name=\"FilterPanel\" Orientation=\"Horizontal\""), "State filters are not kept in their own region.");
     }
 
     private static void RenderGateExists()
     {
         var root = RepoRoot();
         var script = Path.Combine(root, "scripts", "render-v0.0.12-preview.ps1");
-        Require(File.Exists(script), "v0.0.12 rendered-preview script is missing.");
+        Require(File.Exists(script), "Inherited rendered-preview script is missing.");
         var text = File.ReadAllText(script);
-        Require(text.Contains("1180x760") && text.Contains("900x560"), "Render script does not require both canonical geometries.");
+        Require(text.Contains("1180x760") && text.Contains("900x560"), "Render script does not retain canonical default/minimum evidence geometries.");
         var workflow = File.ReadAllText(Path.Combine(root, ".github", "workflows", "redesign-v0.0.12.yml"));
-        Require(workflow.Contains("Render canonical v0.0.12 previews") && workflow.Contains("Upload v0.0.12 pre-cert evidence"), "Final redesign CI does not render/upload canonical GUI evidence.");
+        Require(workflow.Contains("Render canonical v0.0.12 previews") && workflow.Contains("Upload v0.0.12 pre-cert evidence"), "Inherited redesign CI no longer preserves its rendered evidence gate.");
     }
 
     private static string Xaml() => File.ReadAllText(Path.Combine(RepoRoot(), "src", "MRC.Gui", "MainWindow.xaml"));
