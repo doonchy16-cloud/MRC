@@ -281,3 +281,39 @@ No visual or product PASS until:
 - no applicable review category is below exactly 10.0/10.
 
 Until then: HOLD.
+
+## 16. Owner lock and execution handoff — 2026-09-10
+
+The Owner explicitly approved the written design with `LOCKED!`.
+
+Durable design/spec:
+
+- `docs/superpowers/specs/2026-09-10-mrc-reference-replica-design.md`
+
+Durable implementation plan:
+
+- `docs/superpowers/plans/2026-09-10-mrc-v0.0.15-reference-replica.md`
+
+The implementation plan is complete and contains its own self-review. Do **not** recreate or replace it at handoff unless a new Owner requirement conflicts with it.
+
+The Owner selected execution **Option 1: Subagent-Driven Development**. Execution SHALL use `superpowers:subagent-driven-development`, with a fresh implementation worker per task and review gates between tasks, following the committed plan.
+
+Current handoff state:
+
+- v0.0.14 remains the installed/published/frozen baseline;
+- v0.0.15 design is locked;
+- v0.0.15 implementation plan is complete;
+- no v0.0.15 implementation task has begun;
+- no product code should be changed on `precert-v0.0.14`;
+- execution begins by creating/using `precert-v0.0.15` from this fully preserved planning baseline;
+- TDD remains mandatory for every implementation slice;
+- no visual PASS may be inferred from structure/tests without rendered evidence and direct comparison to the Owner reference.
+
+Exact Owner visual reference retrieval requirement:
+
+- reference image name: `Screenshot 2026-09-09 214130.png`;
+- it is the Owner-authored Runner Control screenshot used to define this authority;
+- a fresh chat/agent MUST retrieve and inspect that exact image from the user's File Library before implementing or reviewing visual tasks;
+- do not reconstruct the reference from prose alone.
+
+Handoff execution entrypoint: read this authority, the locked spec, and the committed implementation plan; retrieve the exact Owner reference image; create/use `precert-v0.0.15`; then begin Task 1 of the plan with Subagent-Driven Development. Do not skip directly to GUI implementation.
