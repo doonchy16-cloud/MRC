@@ -123,7 +123,7 @@ public sealed class RunnerEngine
                 continue;
             }
 
-            var association = RunnerProcessAssociator.Associate(runner, inventory);
+            var association = RunnerProcessAssociator.AssociateExact(runner, inventory);
             var transition = _transitions.Get(path);
             var state = RunnerStateEvaluator.Evaluate(runner, association, transition, _clock());
 
