@@ -61,22 +61,13 @@ public sealed class CliDispatcher
         if (args.Length == 0)
         {
             var launch = _guiLauncher.Launch();
-            if (!launch.Success)
+            var writer = launch.Success ? output : error;
+            var renderer = new CliRenderer(writer);
+            foreach (var line in CliPresentation.GuiLaunchLines(launch))
             {
-                await error.WriteLineAsync(launch.Message);
-                return 3;
+                await renderer.WriteLineAsync(line);
             }
-
-            if (launch.Outcome == GuiLaunchOutcome.AlreadyRunningActivated)
-            {
-                await output.WriteLineAsync("● Main Runner Control is already running.");
-                await output.WriteLineAsync("✓ Existing window restored and focused.");
-            }
-            else
-            {
-                await output.WriteLineAsync("✓ Main Runner Control opened.");
-            }
-            return 0;
+            return launch.Success ? 0 : 3;
         }
 
         if (args.Length != 1)
