@@ -117,6 +117,7 @@ public partial class MainWindow : Window
     {
         if (ActualWidth <= 0) return;
         _dashboard.CardColumnCount = RunnerResponsiveLayout.ColumnCountForWidth(ActualWidth);
+        SystemDrawerHost.MaxHeight = Math.Max(0, ActualHeight * 0.35);
         if (ControlDrawerHost.Visibility == Visibility.Visible)
             ControlDrawerHost.Width = Math.Min(400, Math.Max(0, ActualWidth - 32));
     }
