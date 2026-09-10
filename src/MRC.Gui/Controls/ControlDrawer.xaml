@@ -1,0 +1,185 @@
+<UserControl x:Class="MRC.Gui.Controls.ControlDrawer"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Focusable="False">
+    <UserControl.Resources>
+        <Style x:Key="DrawerButtonStyle" TargetType="Button">
+            <Setter Property="Height" Value="38" />
+            <Setter Property="MinWidth" Value="58" />
+            <Setter Property="Padding" Value="11,0" />
+            <Setter Property="Margin" Value="0,0,7,7" />
+            <Setter Property="Foreground" Value="#D6DDE1" />
+            <Setter Property="Background" Value="#12191D" />
+            <Setter Property="BorderBrush" Value="#39464D" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="FontFamily" Value="Cascadia Mono, Consolas" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Chrome"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="9">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Chrome" Property="BorderBrush" Value="#6B7479" />
+                                <Setter TargetName="Chrome" Property="Background" Value="#182126" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Chrome" Property="Opacity" Value="0.78" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Chrome" Property="Opacity" Value="0.30" />
+                                <Setter Property="Cursor" Value="Arrow" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="DrawerPrimaryButtonStyle" TargetType="Button" BasedOn="{StaticResource DrawerButtonStyle}">
+            <Setter Property="Foreground" Value="#241A08" />
+            <Setter Property="Background" Value="#FCC34C" />
+            <Setter Property="BorderBrush" Value="#FFD97E" />
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+
+        <Style x:Key="CounterTileStyle" TargetType="Border">
+            <Setter Property="Background" Value="#B512181C" />
+            <Setter Property="BorderBrush" Value="#354248" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="11,8" />
+            <Setter Property="Margin" Value="0,0,7,7" />
+        </Style>
+    </UserControl.Resources>
+
+    <Border Background="#F20B1013"
+            BorderBrush="#765624"
+            BorderThickness="1"
+            CornerRadius="18"
+            Padding="18">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <StackPanel Grid.Row="0" Margin="0,0,0,16">
+                <TextBlock Text="CONTROL DRAWER"
+                           Foreground="#F5F7F9"
+                           FontSize="22"
+                           FontWeight="Bold" />
+                <TextBlock Text="SEARCH • FILTER • BULK CONTROL"
+                           Foreground="#FCC34C"
+                           FontFamily="Cascadia Mono, Consolas"
+                           FontSize="10"
+                           FontWeight="SemiBold"
+                           Margin="0,4,0,0" />
+            </StackPanel>
+
+            <UniformGrid Grid.Row="1" Columns="3" Margin="0,0,-7,10">
+                <Border Style="{StaticResource CounterTileStyle}"><StackPanel><TextBlock Text="TOTAL" Foreground="#8D969B" FontSize="9" FontWeight="Bold" /><TextBlock Text="{Binding TotalCount}" Foreground="#F5F7F9" FontSize="20" FontWeight="Bold" /></StackPanel></Border>
+                <Border Style="{StaticResource CounterTileStyle}"><StackPanel><TextBlock Text="IDLE" Foreground="#8D969B" FontSize="9" FontWeight="Bold" /><TextBlock Text="{Binding IdleCount}" Foreground="#2AD98B" FontSize="20" FontWeight="Bold" /></StackPanel></Border>
+                <Border Style="{StaticResource CounterTileStyle}"><StackPanel><TextBlock Text="BUSY" Foreground="#8D969B" FontSize="9" FontWeight="Bold" /><TextBlock Text="{Binding BusyCount}" Foreground="#FFD166" FontSize="20" FontWeight="Bold" /></StackPanel></Border>
+                <Border Style="{StaticResource CounterTileStyle}"><StackPanel><TextBlock Text="OFF" Foreground="#8D969B" FontSize="9" FontWeight="Bold" /><TextBlock Text="{Binding OffCount}" Foreground="#9AA4AA" FontSize="20" FontWeight="Bold" /></StackPanel></Border>
+                <Border Style="{StaticResource CounterTileStyle}"><StackPanel><TextBlock Text="ERROR" Foreground="#8D969B" FontSize="9" FontWeight="Bold" /><TextBlock Text="{Binding ErrorCount}" Foreground="#FF7B45" FontSize="20" FontWeight="Bold" /></StackPanel></Border>
+                <Border Style="{StaticResource CounterTileStyle}"><StackPanel><TextBlock Text="TRANSITION" Foreground="#8D969B" FontSize="9" FontWeight="Bold" /><TextBlock Text="{Binding TransitionCount}" Foreground="#55AFFF" FontSize="20" FontWeight="Bold" /></StackPanel></Border>
+            </UniformGrid>
+
+            <Border Grid.Row="2"
+                    Background="#11181C"
+                    BorderBrush="#44515A"
+                    BorderThickness="1"
+                    CornerRadius="10"
+                    Height="42"
+                    Padding="12,0"
+                    Margin="0,0,0,12">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="SEARCH"
+                               Foreground="#8D969B"
+                               FontFamily="Cascadia Mono, Consolas"
+                               FontSize="9"
+                               FontWeight="Bold"
+                               VerticalAlignment="Center"
+                               Margin="0,0,10,0" />
+                    <TextBox x:Name="SearchBox"
+                             Grid.Column="1"
+                             AutomationProperties.Name="Search runners"
+                             TextChanged="SearchBox_OnTextChanged"
+                             Background="Transparent"
+                             BorderThickness="0"
+                             Foreground="#F5F7F9"
+                             CaretBrush="#FCC34C"
+                             FontSize="12"
+                             VerticalContentAlignment="Center" />
+                    <TextBlock Grid.Column="2"
+                               Text="/"
+                               Foreground="#8D969B"
+                               FontFamily="Cascadia Mono, Consolas"
+                               FontSize="11"
+                               VerticalAlignment="Center"
+                               Margin="8,0,0,0" />
+                </Grid>
+            </Border>
+
+            <WrapPanel Grid.Row="3" Margin="0,0,-7,10">
+                <Button Content="ALL" Tag="ALL" Style="{StaticResource DrawerButtonStyle}" Click="FilterButton_OnClick" />
+                <Button Content="IDLE" Tag="IDLE" Style="{StaticResource DrawerButtonStyle}" Click="FilterButton_OnClick" />
+                <Button Content="BUSY" Tag="BUSY" Style="{StaticResource DrawerButtonStyle}" Click="FilterButton_OnClick" />
+                <Button Content="OFF" Tag="OFF" Style="{StaticResource DrawerButtonStyle}" Click="FilterButton_OnClick" />
+                <Button Content="ERROR" Tag="ERROR" Style="{StaticResource DrawerButtonStyle}" Click="FilterButton_OnClick" />
+            </WrapPanel>
+
+            <Grid Grid.Row="4">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="10" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Button x:Name="TurnAllOnButton"
+                        Content="TURN ALL ON"
+                        AutomationProperties.Name="Turn all verified OFF runners on"
+                        Style="{StaticResource DrawerPrimaryButtonStyle}"
+                        Margin="0"
+                        Click="TurnAllOn_OnClick" />
+                <Button x:Name="TurnAllOffButton"
+                        Grid.Column="2"
+                        Content="TURN ALL OFF"
+                        AutomationProperties.Name="Stop all verified IDLE runners"
+                        Style="{StaticResource DrawerButtonStyle}"
+                        Foreground="#FF9B80"
+                        Background="#27140F"
+                        BorderBrush="#74432E"
+                        Margin="0"
+                        Click="TurnAllOff_OnClick" />
+            </Grid>
+
+            <Button x:Name="ManualRefreshButton"
+                    Grid.Row="5"
+                    Content="REFRESH LOCAL TRUTH"
+                    AutomationProperties.Name="Refresh runner states now"
+                    Style="{StaticResource DrawerButtonStyle}"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Bottom"
+                    Margin="0,16,0,0"
+                    Click="Refresh_OnClick" />
+        </Grid>
+    </Border>
+</UserControl>
