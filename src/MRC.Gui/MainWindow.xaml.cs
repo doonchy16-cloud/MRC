@@ -34,7 +34,7 @@ public partial class MainWindow : Window
         _refreshTimer.Interval = TimeSpan.FromSeconds(3);
         _refreshTimer.Tick += async (_, _) => await RefreshDashboardAsync();
 
-        _animationTimer.Interval = TimeSpan.FromMilliseconds(55);
+        _animationTimer.Interval = TimeSpan.FromMilliseconds(50);
         _animationTimer.Tick += (_, _) => _animationClock.Tick(DateTimeOffset.UtcNow, _dashboard.Rows);
 
         Loaded += OnLoaded;
