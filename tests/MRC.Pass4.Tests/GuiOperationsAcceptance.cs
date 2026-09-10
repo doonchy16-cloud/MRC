@@ -6,13 +6,13 @@ internal static class GuiOperationsAcceptance
     {
         var tests = new (string Name, Action Body)[]
         {
-            ("bulk ON/OFF controls exist in the native application command bar", BulkControlsExist),
+            ("bulk ON/OFF controls exist in the native control drawer", BulkControlsExist),
             ("explicit per-runner controls route through shared operations authority", PerRunnerControlsRouteSafely),
             ("BUSY force-stop remains separate and explicitly confirmed", BusyForceStopIsSecondaryAndConfirmed),
             ("TURN ALL OFF confirmation states exact IDLE stop and BUSY remain impact", BulkOffConfirmationStatesExactImpact),
             ("preview mode cannot invoke any runner lifecycle operation", PreviewModeCannotOperate),
             ("operation failures surface clear visible error feedback", OperationFailuresAreVisible),
-            ("bulk/search/filter controls occupy distinct responsive command-bar columns", OperationsLayoutIsResponsive),
+            ("bulk/search/filter controls occupy distinct responsive drawer regions", OperationsLayoutIsResponsive),
             ("inherited CI retains canonical rendered-preview evidence coverage", RenderGateExists)
         };
 
@@ -30,12 +30,15 @@ internal static class GuiOperationsAcceptance
 
     private static void BulkControlsExist()
     {
-        var xaml = Xaml(); var code = Code();
-        Require(xaml.Contains("x:Name=\"OperationsPanel\""), "Operations command bar is missing.");
-        Require(xaml.Contains("x:Name=\"TurnAllOnButton\"") && xaml.Contains("Content=\"TURN ALL ON\""), "TURN ALL ON control is missing.");
-        Require(xaml.Contains("x:Name=\"TurnAllOffButton\"") && xaml.Contains("Content=\"TURN ALL OFF\""), "TURN ALL OFF control is missing.");
-        Require(xaml.Contains("AutomationProperties.Name=\"Turn all verified OFF runners on\""), "Bulk ON accessible name is missing or no longer states verified OFF scope.");
-        Require(xaml.Contains("AutomationProperties.Name=\"Stop all verified IDLE runners\""), "Bulk OFF accessible name is missing or no longer states verified IDLE scope.");
+        var xaml = Xaml(); var drawer = DrawerXaml(); var code = Code();
+        Require(xaml.Contains("<controls:ControlDrawer x:Name=\"ControlDrawer\""), "Control drawer is not composed by MainWindow.");
+        Require(drawer.Contains("x:Name=\"TurnAllOnButton\"") && drawer.Contains("Content=\"TURN ALL ON\""), "TURN ALL ON control is missing.");
+        Require(drawer.Contains("x:Name=\"TurnAllOffButton\"") && drawer.Contains("Content=\"TURN ALL OFF\""), "TURN ALL OFF control is missing.");
+        Require(drawer.Contains("AutomationProperties.Name=\"Turn all verified OFF runners on\""), "Bulk ON accessible name is missing or no longer states verified OFF scope.");
+        Require(drawer.Contains("AutomationProperties.Name=\"Stop all verified IDLE runners\""), "Bulk OFF accessible name is missing or no longer states verified IDLE scope.");
+        Require(xaml.Contains("TurnAllOnRequested=\"TurnAllOnButton_OnClick\"")
+                && xaml.Contains("TurnAllOffRequested=\"TurnAllOffButton_OnClick\""),
+            "Control drawer bulk requests are not routed back to MainWindow authority.");
         Require(code.Contains("new RunnerOperationsService(_engine)"), "GUI does not construct the verified operations layer.");
         Require(code.Contains("TurnAllOnButton_OnClick") && code.Contains("TurnAllOffButton_OnClick"), "Bulk control handlers are missing.");
     }
@@ -130,8 +133,8 @@ internal static class GuiOperationsAcceptance
             "Force-stop helper is not independently preview/unavailable guarded.");
         Require(!CardCode().Contains("RunnerOperationsService") && !CardCode().Contains("RunnerEngine"),
             "Extracted card can directly invoke lifecycle/runtime authority.");
-        Require(code.Contains("OperationsPanel.IsEnabled = false") && code.Contains("RunnerList.IsHitTestVisible = false"),
-            "Preview mode does not visibly disable lifecycle controls.");
+        Require(code.Contains("ControlDrawer.IsEnabled = false") && code.Contains("RunnerList.IsHitTestVisible = false"),
+            "Preview mode does not visibly disable drawer and runner lifecycle controls.");
     }
 
     private static void OperationFailuresAreVisible()
@@ -144,10 +147,24 @@ internal static class GuiOperationsAcceptance
     private static void OperationsLayoutIsResponsive()
     {
         var xaml = Xaml();
-        Require(xaml.Contains("x:Name=\"OperationsPanel\" Grid.Row=\"2\""), "Command bar is not in the approved application layout.");
-        Require(xaml.Contains("Grid.Column=\"1\" Orientation=\"Horizontal\" HorizontalAlignment=\"Right\""), "Bulk operations do not have a distinct command-bar column.");
-        Require(xaml.Contains("Grid.Column=\"2\" BorderBrush=\"{StaticResource BorderBrush}\""), "Search does not have a distinct command-bar column.");
-        Require(xaml.Contains("x:Name=\"FilterPanel\" Orientation=\"Horizontal\""), "State filters are not kept in their own region.");
+        var drawer = DrawerXaml();
+        Require(xaml.Contains("x:Name=\"ControlDrawerHost\"")
+                && xaml.Contains("Width=\"400\"")
+                && xaml.Contains("HorizontalAlignment=\"Left\""),
+            "Control drawer host is missing the approved bounded left-overlay layout.");
+        Require(drawer.Contains("Grid.Row=\"2\"") && drawer.Contains("x:Name=\"SearchBox\""),
+            "Search is not isolated in its own drawer region.");
+        Require(drawer.Contains("<WrapPanel Grid.Row=\"3\"")
+                && drawer.Contains("Content=\"ALL\" Tag=\"ALL\""),
+            "State filters are not kept in their own responsive drawer region.");
+        Require(drawer.Contains("<Grid Grid.Row=\"4\">")
+                && drawer.Contains("x:Name=\"TurnAllOnButton\"")
+                && drawer.Contains("x:Name=\"TurnAllOffButton\""),
+            "Bulk operations do not occupy their own drawer region.");
+        Require(drawer.Contains("x:Name=\"ManualRefreshButton\"") && drawer.Contains("Grid.Row=\"5\""),
+            "Refresh control is not isolated in the drawer footer region.");
+        Require(Code().Contains("ControlDrawerHost.Width = Math.Min(400, Math.Max(0, ActualWidth - 32))"),
+            "Drawer width is not recomputed responsively from the current window width.");
     }
 
     private static void RenderGateExists()
@@ -163,6 +180,7 @@ internal static class GuiOperationsAcceptance
 
     private static string Xaml() => File.ReadAllText(Path.Combine(RepoRoot(), "src", "MRC.Gui", "MainWindow.xaml"));
     private static string Code() => File.ReadAllText(Path.Combine(RepoRoot(), "src", "MRC.Gui", "MainWindow.xaml.cs"));
+    private static string DrawerXaml() => File.ReadAllText(Path.Combine(RepoRoot(), "src", "MRC.Gui", "Controls", "ControlDrawer.xaml"));
     private static string CardXaml() => File.ReadAllText(Path.Combine(RepoRoot(), "src", "MRC.Gui", "Controls", "RunnerControlCard.xaml"));
     private static string CardCode() => File.ReadAllText(Path.Combine(RepoRoot(), "src", "MRC.Gui", "Controls", "RunnerControlCard.xaml.cs"));
     private static string MethodBody(string code, string methodName)
