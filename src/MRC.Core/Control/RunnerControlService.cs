@@ -207,6 +207,29 @@ internal sealed class RunnerControlService
         }
     }
 
+    public RunnerControlResult Restart(RunnerDescriptor runner)
+    {
+        var stop = StopIdle(runner);
+        if (stop.Outcome != RunnerControlOutcome.Stopped || stop.State != RunnerState.OFF)
+        {
+            return stop;
+        }
+
+        var start = Start(runner);
+        if (start.Outcome == RunnerControlOutcome.Starting && start.State == RunnerState.STARTING)
+        {
+            return new RunnerControlResult(
+                RunnerControlOutcome.Starting,
+                RunnerState.STARTING,
+                "Runner restart completed verified OFF; launch requested through run.cmd.");
+        }
+
+        return new RunnerControlResult(
+            start.Outcome,
+            start.State,
+            $"Runner restart stopped safely but could not start: {start.Message}");
+    }
+
     public RunnerControlResult ForceStopBusy(RunnerDescriptor runner, bool confirmed)
     {
         var validationError = ValidateRunner(runner);
