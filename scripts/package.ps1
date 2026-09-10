@@ -35,13 +35,17 @@ else {
 }
 $finalTarget = '0.1.0'
 
+# Bootstrap compatibility: installed v0.0.11 hard-validates manifest.channel as "stable"
+# before a candidate can activate. Only v0.0.12 uses that legacy transport channel.
+# The application itself remains truthfully precert via applicationChannel/releaseStage.
+$manifestChannel = if ($version -eq '0.0.12') { 'stable' } else { $channel }
+
 $packageName = "MRC-v$version-$Runtime"
 $stagingRoot = Join-Path $ArtifactsRoot 'staging'
 $packageRoot = Join-Path $stagingRoot $packageName
 $payloadRoot = Join-Path $packageRoot 'payload'
 $zipPath = Join-Path $ArtifactsRoot "$packageName.zip"
 $checksumPath = Join-Path $ArtifactsRoot 'SHA256SUMS.txt'
-$iconPath = Join-Path $repoRoot 'src\MRC.Gui\Assets\MRC.ico'
 
 if (Test-Path -LiteralPath $stagingRoot) {
     Remove-Item -LiteralPath $stagingRoot -Recurse -Force
@@ -49,10 +53,11 @@ if (Test-Path -LiteralPath $stagingRoot) {
 New-Item -ItemType Directory -Force -Path $payloadRoot | Out-Null
 New-Item -ItemType Directory -Force -Path $ArtifactsRoot | Out-Null
 
-& (Join-Path $repoRoot 'scripts\materialize-icon.ps1') -OutputPath $iconPath
-if (-not (Test-Path -LiteralPath $iconPath -PathType Leaf)) {
-    throw "MRC icon materialization failed: $iconPath"
-}
+$iconMaterializer = Join-Path $repoRoot 'scripts\materialize-icon.ps1'
+& $iconMaterializer
+if ($LASTEXITCODE -ne 0) { throw 'MRC icon materialization failed.' }
+$iconPath = Join-Path $repoRoot 'src\MRC.Gui\Assets\MRC.ico'
+if (-not (Test-Path -LiteralPath $iconPath -PathType Leaf)) { throw 'Materialized MRC icon is missing.' }
 
 $publishCommon = @(
     '-c', $Configuration,
@@ -83,20 +88,20 @@ foreach ($required in @('MRC.exe', 'MRC.Gui.exe')) {
     }
 }
 
-Copy-Item -LiteralPath (Join-Path $repoRoot 'scripts\install.ps1') -Destination (Join-Path $packageRoot 'install.ps1')
 Copy-Item -LiteralPath $iconPath -Destination (Join-Path $packageRoot 'MRC.ico')
+Copy-Item -LiteralPath (Join-Path $repoRoot 'scripts\install.ps1') -Destination (Join-Path $packageRoot 'install.ps1')
 
 $manifest = [ordered]@{
     product = 'Main Runner Control'
     version = $version
-    channel = $channel
+    channel = $manifestChannel
+    applicationChannel = $channel
     releaseStage = $releaseStage
     finalTarget = $finalTarget
     runtime = $Runtime
     targetMachine = 'DOONCHYSCOMPUTI'
     runnerRoot = 'D:\Git_Runners_Main'
     canonicalCommand = 'MRC'
-    iconFile = 'MRC.ico'
 }
 $manifest | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $packageRoot 'manifest.json') -Encoding utf8
 
@@ -112,8 +117,9 @@ Remove-Item -LiteralPath $stagingRoot -Recurse -Force
 
 Write-Host "Source authority version: $authorityVersion"
 Write-Host "Packaged version: $version"
+Write-Host "Application channel: $channel"
+Write-Host "Manifest transport channel: $manifestChannel"
 Write-Host "Release stage: $releaseStage"
-Write-Host "Channel: $channel"
 Write-Host "Final target: $finalTarget"
 Write-Host "Candidate package: $zipPath"
 Write-Host "Checksum authority: $checksumPath"
