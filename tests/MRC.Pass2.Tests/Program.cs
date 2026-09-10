@@ -25,7 +25,7 @@ internal static class Program
             ("start is allowed only from OFF and marks STARTING", StartOnlyFromOff),
             ("start is blocked when listener already exists", StartBlockedWhenRunning),
             ("normal stop blocks BUSY without termination", BusyStopIsProtected),
-            ("normal IDLE stop marks STOPPING and terminates exact listener tree", IdleStopIsAllowed),
+            ("normal IDLE stop reports OFF only after verified termination", IdleStopIsAllowed),
             ("final stop recheck catches a worker that appeared after first scan", FinalBusyRecheckBlocksKill),
             ("terminator re-verifies listener path before kill", TerminatorRevalidatesPath),
             ("control rejects runner directories outside its authorized root", OutsideRootControlIsBlocked),
@@ -251,9 +251,9 @@ internal static class Program
         var service = new RunnerControlService(temp.Path, new FakeProvider(Inventory(listener)), new FakeLauncher(), terminator, tracker, () => Now);
 
         var result = service.StopIdle(runner);
-        Require(result.Outcome == RunnerControlOutcome.Stopping && result.State == RunnerState.STOPPING, $"IDLE stop failed: {result}");
+        Require(result.Outcome == RunnerControlOutcome.Stopped && result.State == RunnerState.OFF, $"Verified IDLE stop must complete as OFF: {result}");
         Require(terminator.CallCount == 1 && terminator.LastListener?.ProcessId == 80, "IDLE stop did not target exact listener once.");
-        Require(tracker.Get(runner.DirectoryPath)?.Kind == RunnerTransitionKind.Stopping, "STOPPING transition was not tracked.");
+        Require(tracker.Get(runner.DirectoryPath) is null, "Verified completed stop left a stale STOPPING transition.");
     }
 
     private static void FinalBusyRecheckBlocksKill()
