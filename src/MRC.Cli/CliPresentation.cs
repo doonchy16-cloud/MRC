@@ -48,6 +48,34 @@ public static class CliPresentation
         };
     }
 
+    public static IReadOnlyList<CliLine> GuiLaunchLines(GuiLaunchResult result)
+    {
+        ArgumentNullException.ThrowIfNull(result);
+
+        var (status, statusTone, window, windowTone, finalResult, resultTone) = result.Outcome switch
+        {
+            GuiLaunchOutcome.Opened => ("OPENED", CliTone.Success, "NEW INSTANCE", CliTone.Heading, "READY", CliTone.Success),
+            GuiLaunchOutcome.AlreadyRunningActivated => ("ALREADY RUNNING", CliTone.Success, "RESTORED + FOCUSED", CliTone.Heading, "READY", CliTone.Success),
+            _ => ("FAILED", CliTone.Error, "NOT OPENED", CliTone.Error, "BLOCKED", CliTone.Error)
+        };
+
+        var lines = new List<CliLine>
+        {
+            new("MRC // GUI CONTROL", CliTone.Heading),
+            Field("Version: ", BuildInfo.Version, CliTone.Metadata),
+            Field("Status: ", status, statusTone),
+            Field("Window: ", window, windowTone),
+            Field("Result: ", finalResult, resultTone)
+        };
+
+        if (!string.IsNullOrWhiteSpace(result.Message))
+        {
+            lines.Add(Field("Detail: ", result.Message.Trim(), result.Success ? CliTone.Secondary : CliTone.Error));
+        }
+
+        return lines;
+    }
+
     public static IReadOnlyList<CliLine> HelpLines()
     {
         return new[]
