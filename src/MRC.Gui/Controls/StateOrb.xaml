@@ -1,0 +1,56 @@
+<UserControl x:Class="MRC.Gui.Controls.StateOrb"
+             x:Name="Root"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:runtime="clr-namespace:MRC.Core.Runtime;assembly=MRC.Core"
+             Width="32"
+             Height="32"
+             IsHitTestVisible="False">
+    <Grid>
+        <Ellipse Fill="#0B1114"
+                 Stroke="#5A666B"
+                 StrokeThickness="1" />
+
+        <Ellipse x:Name="Halo"
+                 Width="22"
+                 Height="22"
+                 Opacity="{Binding Intensity, ElementName=Root}">
+            <Ellipse.OpacityMask>
+                <RadialGradientBrush>
+                    <GradientStop Color="#FFFFFFFF" Offset="0" />
+                    <GradientStop Color="#88FFFFFF" Offset="0.42" />
+                    <GradientStop Color="#00FFFFFF" Offset="1" />
+                </RadialGradientBrush>
+            </Ellipse.OpacityMask>
+            <Ellipse.Style>
+                <Style TargetType="Ellipse">
+                    <Setter Property="Fill" Value="#9AA4AA" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding State, ElementName=Root}" Value="{x:Static runtime:RunnerState.OFF}">
+                            <Setter Property="Fill" Value="#9AA4AA" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding State, ElementName=Root}" Value="{x:Static runtime:RunnerState.IDLE}">
+                            <Setter Property="Fill" Value="#2AD98B" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding State, ElementName=Root}" Value="{x:Static runtime:RunnerState.BUSY}">
+                            <Setter Property="Fill" Value="#FFD166" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding State, ElementName=Root}" Value="{x:Static runtime:RunnerState.STARTING}">
+                            <Setter Property="Fill" Value="#55AFFF" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding State, ElementName=Root}" Value="{x:Static runtime:RunnerState.STOPPING}">
+                            <Setter Property="Fill" Value="#BA92FF" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding State, ElementName=Root}" Value="{x:Static runtime:RunnerState.ERROR}">
+                            <Setter Property="Fill" Value="#FF7B45" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Ellipse.Style>
+        </Ellipse>
+
+        <Ellipse Width="6"
+                 Height="6"
+                 Fill="{Binding ElementName=Halo, Path=Fill}" />
+    </Grid>
+</UserControl>

@@ -2,6 +2,7 @@
              x:Name="Root"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:MRC.Gui.Controls"
              xmlns:runtime="clr-namespace:MRC.Core.Runtime;assembly=MRC.Core"
              Height="150"
              MinWidth="330"
@@ -31,14 +32,11 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <Border Width="30" Height="30" CornerRadius="15" Background="#0A1013" BorderBrush="#445057" BorderThickness="1" VerticalAlignment="Top">
-                    <Ellipse Width="8"
-                             Height="8"
-                             Fill="{StaticResource ReplicaOffBrush}"
-                             Opacity="{Binding Row.AnimationIntensity, ElementName=Root}"
-                             HorizontalAlignment="Center"
-                             VerticalAlignment="Center" />
-                </Border>
+                <controls:StateOrb Grid.Column="0"
+                                   State="{Binding Row.State, ElementName=Root}"
+                                   Intensity="{Binding Row.AnimationIntensity, ElementName=Root}"
+                                   HorizontalAlignment="Left"
+                                   VerticalAlignment="Top" />
 
                 <StackPanel Grid.Column="1" Margin="4,-2,10,0" VerticalAlignment="Top">
                     <TextBlock Text="{Binding Row.RunnerName, ElementName=Root}"

@@ -32,12 +32,31 @@
             <Setter.Value><DropShadowEffect Color="#000000" BlurRadius="12" ShadowDepth="2" Opacity="0.28" /></Setter.Value>
         </Setter>
         <Style.Triggers>
+            <DataTrigger Binding="{Binding Row.State, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="{x:Static runtime:RunnerState.OFF}">
+                <Setter Property="BorderBrush" Value="#44515A" />
+                <Setter Property="Background" Value="#E812181C" />
+                <Setter Property="Effect"><Setter.Value><DropShadowEffect Color="#748087" BlurRadius="12" ShadowDepth="0" Opacity="0.10" /></Setter.Value></Setter>
+            </DataTrigger>
             <DataTrigger Binding="{Binding Row.State, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="{x:Static runtime:RunnerState.IDLE}">
                 <Setter Property="BorderBrush" Value="#397652" />
                 <Setter Property="Background" Value="#EB111A17" />
+                <Setter Property="Effect"><Setter.Value><DropShadowEffect Color="#2AD98B" BlurRadius="18" ShadowDepth="0" Opacity="0.18" /></Setter.Value></Setter>
             </DataTrigger>
             <DataTrigger Binding="{Binding Row.State, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="{x:Static runtime:RunnerState.BUSY}">
                 <Setter Property="BorderBrush" Value="#6E5A2C" />
+                <Setter Property="Effect"><Setter.Value><DropShadowEffect Color="#FFD166" BlurRadius="17" ShadowDepth="0" Opacity="0.16" /></Setter.Value></Setter>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Row.State, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="{x:Static runtime:RunnerState.STARTING}">
+                <Setter Property="BorderBrush" Value="#35668B" />
+                <Setter Property="Effect"><Setter.Value><DropShadowEffect Color="#55AFFF" BlurRadius="16" ShadowDepth="0" Opacity="0.15" /></Setter.Value></Setter>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Row.State, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="{x:Static runtime:RunnerState.STOPPING}">
+                <Setter Property="BorderBrush" Value="#604A80" />
+                <Setter Property="Effect"><Setter.Value><DropShadowEffect Color="#BA92FF" BlurRadius="16" ShadowDepth="0" Opacity="0.15" /></Setter.Value></Setter>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Row.State, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="{x:Static runtime:RunnerState.ERROR}">
+                <Setter Property="BorderBrush" Value="#834326" />
+                <Setter Property="Effect"><Setter.Value><DropShadowEffect Color="#FF7B45" BlurRadius="17" ShadowDepth="0" Opacity="0.18" /></Setter.Value></Setter>
             </DataTrigger>
         </Style.Triggers>
     </Style>
