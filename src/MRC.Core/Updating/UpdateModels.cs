@@ -7,6 +7,12 @@ public enum UpdateOutcome
     Failed
 }
 
+public enum UpdateCheckOutcome
+{
+    UpdateAvailable,
+    UpToDate
+}
+
 public enum UpdateProgressStage
 {
     Resolve = 0,
@@ -39,6 +45,11 @@ public sealed record UpdateResult(
     string Message,
     Version? PreviousVersion = null,
     Version? CurrentVersion = null);
+
+public sealed record UpdateCheckResult(
+    UpdateCheckOutcome Outcome,
+    Version CurrentVersion,
+    Version AvailableVersion);
 
 public interface IUpdateReleaseSource
 {
