@@ -60,7 +60,8 @@ function Invoke-MrcPreview {
     Write-Host "PREVIEW VERIFIED  ${Width}x${Height}  $outputPath  $($file.Length) bytes"
 }
 
-# Current default canvas plus the large-window and minimum-size acceptance viewports.
+# Current default canvas, responsive-large, minimum-size, and maximized-display acceptance viewports.
 Invoke-MrcPreview -FileName 'MRC-v0.0.13-1200x760.png' -Width 1200 -Height 760
 Invoke-MrcPreview -FileName 'MRC-v0.0.13-1180x760.png' -Width 1180 -Height 760
 Invoke-MrcPreview -FileName 'MRC-v0.0.13-900x560.png' -Width 900 -Height 560
+Invoke-MrcPreview -FileName 'MRC-v0.0.13-2048x1222.png' -Width 2048 -Height 1222
