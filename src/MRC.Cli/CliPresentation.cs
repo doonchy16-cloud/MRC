@@ -136,7 +136,7 @@ public static class CliPresentation
         var segments = new List<CliSegment>();
         if (progress.Percent is int value)
         {
-            segments.Add(new CliSegment($"[{value,3}%] ", CliTone.Secondary));
+            segments.AddRange(CliProgressBarFormatter.Format(value, tone).Segments);
         }
         segments.Add(new CliSegment(progress.Stage.ToString(), tone));
         segments.Add(new CliSegment(" • ", CliTone.Secondary));
