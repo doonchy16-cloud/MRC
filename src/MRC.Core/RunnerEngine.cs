@@ -8,6 +8,7 @@ public sealed class RunnerEngine
 {
     private readonly string _root;
     private readonly IProcessSnapshotProvider _processProvider;
+    private readonly IRunnerServiceEvidenceProvider _serviceEvidenceProvider;
     private readonly RunnerTransitionTracker _transitions;
     private readonly RunnerControlService _control;
     private readonly Func<DateTimeOffset> _clock;
@@ -24,6 +25,7 @@ public sealed class RunnerEngine
         _root = MrcConstants.RunnerRoot;
         _clock = () => DateTimeOffset.UtcNow;
         _processProvider = new WindowsProcessSnapshotProvider();
+        _serviceEvidenceProvider = new WindowsRunnerServiceEvidenceProvider();
         _transitions = new RunnerTransitionTracker();
         var launcher = new WindowsRunnerLauncher();
         var pathReader = new WindowsProcessPathReader();
@@ -36,6 +38,7 @@ public sealed class RunnerEngine
             launcher,
             terminator,
             forceTerminator,
+            _serviceEvidenceProvider,
             _transitions,
             _clock);
     }
@@ -46,12 +49,15 @@ public sealed class RunnerEngine
         IRunnerLauncher launcher,
         IRunnerProcessTerminator terminator,
         Func<DateTimeOffset> clock)
+        : this(
+            root,
+            processProvider,
+            launcher,
+            terminator,
+            null,
+            EmptyRunnerServiceEvidenceProvider.Instance,
+            clock)
     {
-        _root = RunnerPath.Normalize(root);
-        _clock = clock;
-        _processProvider = processProvider;
-        _transitions = new RunnerTransitionTracker();
-        _control = new RunnerControlService(_root, _processProvider, launcher, terminator, _transitions, _clock);
     }
 
     internal RunnerEngine(
@@ -61,10 +67,30 @@ public sealed class RunnerEngine
         IRunnerProcessTerminator terminator,
         IRunnerForceProcessTerminator forceTerminator,
         Func<DateTimeOffset> clock)
+        : this(
+            root,
+            processProvider,
+            launcher,
+            terminator,
+            forceTerminator,
+            EmptyRunnerServiceEvidenceProvider.Instance,
+            clock)
+    {
+    }
+
+    internal RunnerEngine(
+        string root,
+        IProcessSnapshotProvider processProvider,
+        IRunnerLauncher launcher,
+        IRunnerProcessTerminator terminator,
+        IRunnerForceProcessTerminator? forceTerminator,
+        IRunnerServiceEvidenceProvider serviceEvidenceProvider,
+        Func<DateTimeOffset> clock)
     {
         _root = RunnerPath.Normalize(root);
         _clock = clock;
         _processProvider = processProvider;
+        _serviceEvidenceProvider = serviceEvidenceProvider ?? throw new ArgumentNullException(nameof(serviceEvidenceProvider));
         _transitions = new RunnerTransitionTracker();
         _control = new RunnerControlService(
             _root,
@@ -72,6 +98,7 @@ public sealed class RunnerEngine
             launcher,
             terminator,
             forceTerminator,
+            _serviceEvidenceProvider,
             _transitions,
             _clock);
     }
@@ -143,7 +170,8 @@ public sealed class RunnerEngine
             snapshots.Add(new RunnerSnapshot(runner, state, ErrorFor(runner, association, transition, state)));
         }
 
-        var analysis = RunnerProcessInventoryAnalyzer.Analyze(_root, discovered, inventory);
+        var services = SafeServiceEvidence();
+        var analysis = RunnerProcessInventoryAnalyzer.Analyze(_root, discovered, inventory, services);
         var findings = analysis.ObservedProcesses
             .Where(process => process.Ownership != RunnerProcessOwnershipKind.Managed)
             .Select(process => new RunnerSystemFinding(
@@ -167,6 +195,18 @@ public sealed class RunnerEngine
 
     public RunnerControlResult ForceStopBusy(RunnerDescriptor runner, bool confirmed) =>
         _control.ForceStopBusy(runner, confirmed);
+
+    private IReadOnlyList<RunnerServiceEvidence> SafeServiceEvidence()
+    {
+        try
+        {
+            return _serviceEvidenceProvider.Inspect();
+        }
+        catch
+        {
+            return Array.Empty<RunnerServiceEvidence>();
+        }
+    }
 
     private static string? ErrorFor(
         RunnerDescriptor runner,
