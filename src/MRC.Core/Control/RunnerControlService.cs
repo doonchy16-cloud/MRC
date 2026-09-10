@@ -10,6 +10,7 @@ internal sealed class RunnerControlService
     private readonly IRunnerLauncher _launcher;
     private readonly IRunnerProcessTerminator _terminator;
     private readonly IRunnerForceProcessTerminator? _forceTerminator;
+    private readonly IRunnerServiceEvidenceProvider _serviceEvidenceProvider;
     private readonly RunnerTransitionTracker _transitions;
     private readonly Func<DateTimeOffset> _clock;
 
@@ -20,7 +21,15 @@ internal sealed class RunnerControlService
         IRunnerProcessTerminator terminator,
         RunnerTransitionTracker transitions,
         Func<DateTimeOffset> clock)
-        : this(authorizedRoot, processProvider, launcher, terminator, null, transitions, clock)
+        : this(
+            authorizedRoot,
+            processProvider,
+            launcher,
+            terminator,
+            null,
+            EmptyRunnerServiceEvidenceProvider.Instance,
+            transitions,
+            clock)
     {
     }
 
@@ -32,12 +41,54 @@ internal sealed class RunnerControlService
         IRunnerForceProcessTerminator? forceTerminator,
         RunnerTransitionTracker transitions,
         Func<DateTimeOffset> clock)
+        : this(
+            authorizedRoot,
+            processProvider,
+            launcher,
+            terminator,
+            forceTerminator,
+            EmptyRunnerServiceEvidenceProvider.Instance,
+            transitions,
+            clock)
+    {
+    }
+
+    public RunnerControlService(
+        string authorizedRoot,
+        IProcessSnapshotProvider processProvider,
+        IRunnerLauncher launcher,
+        IRunnerProcessTerminator terminator,
+        IRunnerServiceEvidenceProvider serviceEvidenceProvider,
+        RunnerTransitionTracker transitions,
+        Func<DateTimeOffset> clock)
+        : this(
+            authorizedRoot,
+            processProvider,
+            launcher,
+            terminator,
+            null,
+            serviceEvidenceProvider,
+            transitions,
+            clock)
+    {
+    }
+
+    public RunnerControlService(
+        string authorizedRoot,
+        IProcessSnapshotProvider processProvider,
+        IRunnerLauncher launcher,
+        IRunnerProcessTerminator terminator,
+        IRunnerForceProcessTerminator? forceTerminator,
+        IRunnerServiceEvidenceProvider serviceEvidenceProvider,
+        RunnerTransitionTracker transitions,
+        Func<DateTimeOffset> clock)
     {
         _authorizedRoot = RunnerPath.Normalize(authorizedRoot);
         _processProvider = processProvider;
         _launcher = launcher;
         _terminator = terminator;
         _forceTerminator = forceTerminator;
+        _serviceEvidenceProvider = serviceEvidenceProvider ?? throw new ArgumentNullException(nameof(serviceEvidenceProvider));
         _transitions = transitions;
         _clock = clock;
     }
@@ -71,6 +122,12 @@ internal sealed class RunnerControlService
         if (observation.State != RunnerState.OFF)
         {
             return new RunnerControlResult(RunnerControlOutcome.NotOff, observation.State, "Runner start is allowed only from OFF.");
+        }
+
+        var ownershipError = UnattributedOwnershipError(runner, observation.Inventory);
+        if (ownershipError is not null)
+        {
+            return Error(runner, ownershipError);
         }
 
         try
@@ -224,15 +281,46 @@ internal sealed class RunnerControlService
     {
         try
         {
-            var association = RunnerProcessAssociator.Associate(runner, _processProvider.Capture());
+            var inventory = _processProvider.Capture();
+            var association = RunnerProcessAssociator.AssociateExact(runner, inventory);
             var state = RunnerStateEvaluator.Evaluate(runner, association, null, _clock());
-            return new Observation(state, association, association.Error);
+            return new Observation(state, association, association.Error, inventory);
         }
         catch (Exception ex)
         {
             var association = new RunnerProcessAssociation(null, Array.Empty<ProcessSnapshot>(), ex.Message);
-            return new Observation(RunnerState.ERROR, association, ex.Message);
+            var inventory = new ProcessInventory(Array.Empty<ProcessSnapshot>(), false, ex.Message);
+            return new Observation(RunnerState.ERROR, association, ex.Message, inventory);
         }
+    }
+
+    private string? UnattributedOwnershipError(RunnerDescriptor runner, ProcessInventory inventory)
+    {
+        IReadOnlyList<RunnerServiceEvidence> services;
+        try
+        {
+            services = _serviceEvidenceProvider.Inspect();
+        }
+        catch (Exception ex)
+        {
+            return $"Runner-service ownership inspection failed closed before start: {ex.Message}";
+        }
+
+        var analysis = RunnerProcessInventoryAnalyzer.Analyze(
+            _authorizedRoot,
+            new[] { runner },
+            inventory,
+            services);
+        var unresolved = analysis.ObservedProcesses
+            .Where(process => process.Ownership == RunnerProcessOwnershipKind.Unattributed
+                              && string.IsNullOrWhiteSpace(process.ExecutablePath))
+            .ToArray();
+
+        if (unresolved.Length == 0) return null;
+
+        var detail = string.Join("; ", unresolved.Select(process =>
+            $"PID {process.ProcessId} {process.ProcessName}: {process.Reason}"));
+        return $"Runner start blocked because runner-process ownership remains unattributed. {detail}";
     }
 
     private string? ValidateRunner(RunnerDescriptor runner)
@@ -270,5 +358,6 @@ internal sealed class RunnerControlService
     private sealed record Observation(
         RunnerState State,
         RunnerProcessAssociation Association,
-        string? Error);
+        string? Error,
+        ProcessInventory Inventory);
 }
