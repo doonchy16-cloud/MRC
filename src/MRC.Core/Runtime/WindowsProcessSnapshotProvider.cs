@@ -55,8 +55,19 @@ internal sealed class WindowsProcessSnapshotProvider : IProcessSnapshotProvider
 
     private static string? Combine(string? first, string? second)
     {
-        if (string.IsNullOrWhiteSpace(first)) return second;
-        if (string.IsNullOrWhiteSpace(second)) return first;
-        return first + " | " + second;
+        var normalizedFirst = Normalize(first);
+        var normalizedSecond = Normalize(second);
+
+        if (normalizedFirst is null) return normalizedSecond;
+        if (normalizedSecond is null) return normalizedFirst;
+        if (string.Equals(normalizedFirst, normalizedSecond, StringComparison.OrdinalIgnoreCase))
+        {
+            return normalizedFirst;
+        }
+
+        return normalizedFirst + " | " + normalizedSecond;
     }
+
+    private static string? Normalize(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }
