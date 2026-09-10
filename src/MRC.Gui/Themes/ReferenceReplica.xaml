@@ -1,5 +1,6 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:runtime="clr-namespace:MRC.Core.Runtime;assembly=MRC.Core">
     <Color x:Key="ReplicaBackgroundColor">#090E0F</Color>
     <Color x:Key="ReplicaCardColor">#12181C</Color>
     <Color x:Key="ReplicaAmberColor">#FCC34C</Color>
@@ -15,6 +16,92 @@
     <SolidColorBrush x:Key="ReplicaCardBrush" Color="{StaticResource ReplicaCardColor}" />
     <SolidColorBrush x:Key="ReplicaAmberBrush" Color="{StaticResource ReplicaAmberColor}" />
     <SolidColorBrush x:Key="ReplicaIdleBrush" Color="{StaticResource ReplicaIdleColor}" />
+    <SolidColorBrush x:Key="ReplicaBusyBrush" Color="{StaticResource ReplicaBusyColor}" />
+    <SolidColorBrush x:Key="ReplicaOffBrush" Color="{StaticResource ReplicaOffColor}" />
+    <SolidColorBrush x:Key="ReplicaErrorBrush" Color="{StaticResource ReplicaErrorColor}" />
     <SolidColorBrush x:Key="ReplicaHeroWhiteBrush" Color="{StaticResource ReplicaHeroWhiteColor}" />
     <SolidColorBrush x:Key="ReplicaMutedBrush" Color="{StaticResource ReplicaMutedColor}" />
+
+    <Style x:Key="ReplicaCardSurfaceStyle" TargetType="Border">
+        <Setter Property="Background" Value="#E812181C" />
+        <Setter Property="BorderBrush" Value="#44515A" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="16" />
+        <Setter Property="Margin" Value="11" />
+        <Setter Property="Effect">
+            <Setter.Value><DropShadowEffect Color="#000000" BlurRadius="12" ShadowDepth="2" Opacity="0.28" /></Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding Row.State, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="{x:Static runtime:RunnerState.IDLE}">
+                <Setter Property="BorderBrush" Value="#397652" />
+                <Setter Property="Background" Value="#EB111A17" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Row.State, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="{x:Static runtime:RunnerState.BUSY}">
+                <Setter Property="BorderBrush" Value="#6E5A2C" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="ReplicaActionButtonBaseStyle" TargetType="Button">
+        <Setter Property="Height" Value="46" />
+        <Setter Property="Padding" Value="8,0" />
+        <Setter Property="FontFamily" Value="Cascadia Mono, Consolas" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Foreground" Value="#E7ECEF" />
+        <Setter Property="Background" Value="#11191D" />
+        <Setter Property="BorderBrush" Value="#39474E" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Chrome" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="9">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Chrome" Property="BorderBrush" Value="#6A7479" /></Trigger>
+                        <Trigger Property="IsPressed" Value="True"><Setter TargetName="Chrome" Property="Opacity" Value="0.78" /></Trigger>
+                        <Trigger Property="IsEnabled" Value="False"><Setter TargetName="Chrome" Property="Opacity" Value="0.30" /><Setter Property="Cursor" Value="Arrow" /></Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="ReplicaPrimaryActionButtonStyle" TargetType="Button" BasedOn="{StaticResource ReplicaActionButtonBaseStyle}">
+        <Setter Property="Foreground" Value="#241A08" />
+        <Setter Property="Background" Value="{StaticResource ReplicaAmberBrush}" />
+        <Setter Property="BorderBrush" Value="#FFD77B" />
+    </Style>
+
+    <Style x:Key="ReplicaSecondaryActionButtonStyle" TargetType="Button" BasedOn="{StaticResource ReplicaActionButtonBaseStyle}">
+        <Setter Property="Background" Value="#0E1518" />
+        <Setter Property="BorderBrush" Value="#334047" />
+    </Style>
+
+    <Style x:Key="ReplicaDetailsButtonStyle" TargetType="Button" BasedOn="{StaticResource ReplicaActionButtonBaseStyle}">
+        <Setter Property="Height" Value="28" />
+        <Setter Property="Width" Value="28" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Foreground" Value="{StaticResource ReplicaMutedBrush}" />
+        <Setter Property="Background" Value="#0C1215" />
+        <Setter Property="BorderBrush" Value="#364249" />
+    </Style>
+
+    <Style x:Key="ReplicaStateBadgeStyle" TargetType="Border">
+        <Setter Property="Background" Value="#11191C" />
+        <Setter Property="BorderBrush" Value="#47535A" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="TextElement.Foreground" Value="{StaticResource ReplicaOffBrush}" />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding Row.State, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="{x:Static runtime:RunnerState.IDLE}"><Setter Property="BorderBrush" Value="#24734F" /><Setter Property="Background" Value="#102A1E" /><Setter Property="TextElement.Foreground" Value="{StaticResource ReplicaIdleBrush}" /></DataTrigger>
+            <DataTrigger Binding="{Binding Row.State, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="{x:Static runtime:RunnerState.BUSY}"><Setter Property="BorderBrush" Value="#7A6527" /><Setter Property="Background" Value="#2A230E" /><Setter Property="TextElement.Foreground" Value="{StaticResource ReplicaBusyBrush}" /></DataTrigger>
+            <DataTrigger Binding="{Binding Row.State, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="{x:Static runtime:RunnerState.ERROR}"><Setter Property="BorderBrush" Value="#7A3F24" /><Setter Property="Background" Value="#2A160D" /><Setter Property="TextElement.Foreground" Value="{StaticResource ReplicaErrorBrush}" /></DataTrigger>
+        </Style.Triggers>
+    </Style>
 </ResourceDictionary>

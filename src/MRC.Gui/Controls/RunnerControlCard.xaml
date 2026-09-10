@@ -1,0 +1,131 @@
+<UserControl x:Class="MRC.Gui.Controls.RunnerControlCard"
+             x:Name="Root"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:runtime="clr-namespace:MRC.Core.Runtime;assembly=MRC.Core"
+             Height="150"
+             MinWidth="330"
+             FontFamily="Segoe UI"
+             Foreground="{StaticResource ReplicaHeroWhiteBrush}">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/MRC.Gui;component/Themes/ReferenceReplica.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Border Style="{StaticResource ReplicaCardSurfaceStyle}" Padding="19" ToolTip="{Binding Row.DirectoryPath, ElementName=Root}">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="46" />
+            </Grid.RowDefinitions>
+
+            <Grid Margin="0,0,0,11">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="34" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="28" />
+                    <ColumnDefinition Width="8" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <Border Width="30" Height="30" CornerRadius="15" Background="#0A1013" BorderBrush="#445057" BorderThickness="1" VerticalAlignment="Top">
+                    <Ellipse Width="8" Height="8" Fill="{StaticResource ReplicaOffBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
+
+                <StackPanel Grid.Column="1" Margin="4,-2,10,0" VerticalAlignment="Top">
+                    <TextBlock Text="{Binding Row.RunnerName, ElementName=Root}"
+                               AutomationProperties.Name="{Binding Row.RunnerName, ElementName=Root}"
+                               Foreground="{StaticResource ReplicaHeroWhiteBrush}"
+                               FontSize="17"
+                               FontWeight="Bold"
+                               TextTrimming="CharacterEllipsis" />
+                    <TextBlock Margin="0,3,0,0"
+                               Foreground="{StaticResource ReplicaMutedBrush}"
+                               FontFamily="Cascadia Mono, Consolas"
+                               FontSize="10"
+                               TextTrimming="CharacterEllipsis">
+                        <Run Text="REPO  " /><Run Text="{Binding Row.RepositoryName, ElementName=Root}" />
+                    </TextBlock>
+                    <TextBlock Margin="0,2,0,0"
+                               Foreground="#667279"
+                               FontFamily="Cascadia Mono, Consolas"
+                               FontSize="9"
+                               Text="{Binding Row.DirectoryPath, ElementName=Root}"
+                               TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+
+                <Button x:Name="CardDetailsAffordance"
+                        Grid.Column="2"
+                        Width="28"
+                        Height="28"
+                        Padding="0"
+                        Content="⋯"
+                        ToolTip="DETAILS"
+                        AutomationProperties.Name="Open runner diagnostics"
+                        IsEnabled="{Binding Row.CanShowDetails, ElementName=Root}"
+                        Click="Details_OnClick"
+                        Style="{StaticResource ReplicaDetailsButtonStyle}" />
+
+                <Border Grid.Column="4"
+                        Height="25"
+                        MinWidth="48"
+                        Padding="9,0"
+                        VerticalAlignment="Top"
+                        Style="{StaticResource ReplicaStateBadgeStyle}">
+                    <TextBlock Text="{Binding Row.StateText, ElementName=Root}"
+                               FontFamily="Cascadia Mono, Consolas"
+                               FontSize="9"
+                               FontWeight="Bold"
+                               VerticalAlignment="Center" />
+                </Border>
+            </Grid>
+
+            <Grid x:Name="ThreeSlotActionRail" Grid.Row="1" Height="46">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="10" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="10" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Button Grid.Column="0" Height="46" Click="Primary_OnClick" AutomationProperties.Name="Primary runner lifecycle action">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource ReplicaPrimaryActionButtonStyle}">
+                            <Setter Property="Content" Value="START" />
+                            <Setter Property="IsEnabled" Value="{Binding Row.CanStart, ElementName=Root}" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Row.State, ElementName=Root}" Value="{x:Static runtime:RunnerState.BUSY}">
+                                    <Setter Property="Content" Value="FORCE STOP" />
+                                    <Setter Property="IsEnabled" Value="True" />
+                                    <Setter Property="Foreground" Value="#FFD4B8" />
+                                    <Setter Property="Background" Value="#29170E" />
+                                    <Setter Property="BorderBrush" Value="#B96631" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+
+                <Button Grid.Column="2"
+                        Height="46"
+                        Content="STOP"
+                        IsEnabled="{Binding Row.CanStop, ElementName=Root}"
+                        Click="Stop_OnClick"
+                        AutomationProperties.Name="Stop idle runner"
+                        Style="{StaticResource ReplicaSecondaryActionButtonStyle}" />
+
+                <Button Grid.Column="4"
+                        Height="46"
+                        Content="RESTART"
+                        IsEnabled="{Binding Row.CanRestart, ElementName=Root}"
+                        Click="Restart_OnClick"
+                        AutomationProperties.Name="Restart idle runner"
+                        Style="{StaticResource ReplicaSecondaryActionButtonStyle}" />
+            </Grid>
+        </Grid>
+    </Border>
+</UserControl>
