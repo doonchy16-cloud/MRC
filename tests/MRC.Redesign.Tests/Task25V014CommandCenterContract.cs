@@ -76,7 +76,8 @@ internal static class Task25V014CommandCenterContract
                 && xaml.Contains("IsEnabled=\"{Binding CanShowDetails}\"", StringComparison.Ordinal)
                 && xaml.Contains("Click=\"RunnerDetails_OnClick\"", StringComparison.Ordinal),
             "Runner card DETAILS path is missing or not bound to diagnostic authority.");
-        Require(xaml.Contains("MinHeight=\"38\"", StringComparison.Ordinal),
+        Require(xaml.Contains("Property=\"MinHeight\" Value=\"38\"", StringComparison.Ordinal)
+                || xaml.Contains("MinHeight=\"38\"", StringComparison.Ordinal),
             "Runner card controls are missing a readable minimum hit-target height.");
     }
 
