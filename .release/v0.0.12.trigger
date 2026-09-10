@@ -1,4 +1,4 @@
 MRC v0.0.12 pre-cert release trigger
 Automated full gate required before publication.
 Final certification remains gated on Main-PC acceptance and Owner visual review.
-Retry: duplicate-release precheck removed; gh release create remains duplicate-safe.
+Repair: legacy v0.0.11 bootstrap manifest compatibility bridge; replace existing v0.0.12 ZIP/checksum only after full gate GREEN.
