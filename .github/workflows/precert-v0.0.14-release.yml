@@ -97,7 +97,7 @@ jobs:
 
           Write-Host "RELEASE PACKAGE VERIFIED SHA256=$actual"
 
-      - name: Publish or replace v0.0.14 pre-cert release assets
+      - name: Publish or replace exact-head v0.0.14 pre-cert release assets
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
@@ -109,22 +109,32 @@ jobs:
             'artifacts/v0.0.14/MRC-v0.0.14-2048x1222.png',
             'artifacts/v0.0.14/MRC-v0.0.14-1200x760.png',
             'artifacts/v0.0.14/MRC-v0.0.14-1180x760.png',
-            'artifacts/v0.0.14/MRC-v0.0.14-900x560.png'
+            'artifacts/v0.0.14/MRC-v0.0.14-900x560.png',
+            'artifacts/v0.0.14/MRC-v0.0.14-900x560-busy.png'
           )
           foreach ($asset in $assets) {
             if (-not (Test-Path -LiteralPath $asset -PathType Leaf)) { throw "Release asset missing: $asset" }
           }
 
-          $notes = "PRE-CERTIFICATION BUILD. Final target remains v0.1.0. v0.0.14 hardens managed-runner control reliability and verified START/STOP/RESTART lifecycle behavior; improves external/system ownership correlation while unattributed evidence remains fail-closed; adds rich semantic bare-MRC launch output, a width-aware Help terminal table, truthful updater progress bars driven only by real updater percentages, and a responsive native Command Center with fresh 2048x1222, 1200x760, 1180x760, and 900x560 visual evidence. v0.0.13 remains immutable historical pre-cert evidence. Final certification remains HOLD until repeated real Main-PC lifecycle verification and Owner terminal/visual review reach 10.0/10 in every applicable category."
+          $notes = "PRE-CERTIFICATION BUILD. Final target remains v0.1.0. v0.0.14 hardens managed-runner control reliability and verified START/STOP/RESTART lifecycle behavior; improves external/system ownership correlation while unattributed evidence remains fail-closed; adds rich semantic bare-MRC launch output, a width-aware Help terminal table, truthful updater progress bars driven only by real updater percentages, and a responsive reference-first native Command Center. Fresh evidence includes 2048x1222, 1200x760, 1180x760, 900x560, and a dedicated 900x560 BUSY action-fit frame proving FORCE STOP remains fully visible at minimum width. v0.0.13 remains immutable historical pre-cert evidence. Final certification remains HOLD until repeated real Main-PC lifecycle verification and Owner terminal/visual review reach 10.0/10 in every applicable category."
 
           gh release view v0.0.14 *> $null
           if ($LASTEXITCODE -eq 0) {
+            gh release edit v0.0.14 --target "$env:GITHUB_SHA" --title "MRC v0.0.14 Control + Command Center Pre-Cert Build" --notes $notes --prerelease
+            if ($LASTEXITCODE -ne 0) { throw 'Failed to retarget/update v0.0.14 release metadata.' }
             gh release upload v0.0.14 $assets --clobber
             if ($LASTEXITCODE -ne 0) { throw 'Failed to replace v0.0.14 release assets.' }
-            gh release edit v0.0.14 --title "MRC v0.0.14 Control + Command Center Pre-Cert Build" --notes $notes --prerelease
-            if ($LASTEXITCODE -ne 0) { throw 'Failed to update v0.0.14 release metadata.' }
           }
           else {
             gh release create v0.0.14 $assets --target "$env:GITHUB_SHA" --title "MRC v0.0.14 Control + Command Center Pre-Cert Build" --notes $notes --prerelease
             if ($LASTEXITCODE -ne 0) { throw 'Failed to create v0.0.14 prerelease.' }
           }
+
+          $publishedTarget = gh api "repos/$env:GITHUB_REPOSITORY/git/ref/tags/v0.0.14" --jq '.object.sha'
+          if ($LASTEXITCODE -ne 0) { throw 'Failed to verify published v0.0.14 tag target.' }
+          $publishedTarget = ([string]$publishedTarget).Trim()
+          if ($publishedTarget -ne $env:GITHUB_SHA) {
+            throw "Published v0.0.14 tag target mismatch. Expected $env:GITHUB_SHA, got $publishedTarget."
+          }
+
+          Write-Host "RELEASE TARGET VERIFIED v0.0.14 -> $publishedTarget"
