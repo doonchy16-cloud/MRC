@@ -15,6 +15,8 @@ internal static class Task8GuiContract
         var xamlPath = Path.Combine(repoRoot, "src", "MRC.Gui", "MainWindow.xaml");
         Require(File.Exists(xamlPath), $"MainWindow.xaml was not found at {xamlPath}.");
         var xaml = File.ReadAllText(xamlPath);
+        var headerXaml = File.ReadAllText(Path.Combine(repoRoot, "src", "MRC.Gui", "Controls", "HeroHeader.xaml"));
+        var headerCode = File.ReadAllText(Path.Combine(repoRoot, "src", "MRC.Gui", "Controls", "HeroHeader.xaml.cs"));
 
         Require(xaml.Contains("Width=\"1200\"", StringComparison.Ordinal)
                 && xaml.Contains("Height=\"760\"", StringComparison.Ordinal)
@@ -45,8 +47,11 @@ internal static class Task8GuiContract
                 && xaml.Contains("TRANSITION", StringComparison.Ordinal),
             "Command Center does not expose all six runtime counters.");
 
-        Require(xaml.Contains("AUTHORIZED", StringComparison.Ordinal),
-            "Command Center header does not expose authorization state.");
+        Require(xaml.Contains("<controls:HeroHeader", StringComparison.Ordinal)
+                && headerXaml.Contains("x:Name=\"LiveInventoryPill\"", StringComparison.Ordinal)
+                && headerXaml.Contains("Authorized", StringComparison.Ordinal)
+                && headerCode.Contains("DependencyProperty AuthorizedProperty", StringComparison.Ordinal),
+            "Command Center header does not expose typed authorization state.");
         Require(xaml.Contains("Background=\"#071015\"", StringComparison.OrdinalIgnoreCase),
             "Reference-first near-black control-room background authority is missing.");
         Require(xaml.Contains("x:Name=\"AmbientGlowLayer\"", StringComparison.Ordinal),
