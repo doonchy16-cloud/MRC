@@ -288,6 +288,67 @@ public partial class MainWindow : Window
         RenderBulkResult("TURN ALL OFF", result);
     }
 
+    private async void RunnerStart_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (!TryGetCardRow(sender, out var row) || !row.CanStart || _operations is null) return;
+        await ExecuteCardOperationAsync(row, "START", () => _operations.Start(row.Runner));
+    }
+
+    private async void RunnerStop_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (!TryGetCardRow(sender, out var row) || !row.CanStop || _operations is null) return;
+        await ExecuteCardOperationAsync(row, "STOP", () => _operations.StopIdle(row.Runner));
+    }
+
+    private async void RunnerRestart_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (!TryGetCardRow(sender, out var row) || !row.CanRestart || _operations is null) return;
+        await ExecuteCardOperationAsync(row, "RESTART", () => _operations.Restart(row.Runner));
+    }
+
+    private void RunnerDetails_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (!TryGetCardRow(sender, out var row) || !row.CanShowDetails) return;
+        var dialog = new DiagnosticDialog(row) { Owner = this };
+        dialog.ShowDialog();
+    }
+
+    private bool TryGetCardRow(object sender, out RunnerRowViewModel row)
+    {
+        row = null!;
+        if (_previewMode || _operationInProgress) return false;
+        if (sender is not Button { CommandParameter: RunnerRowViewModel candidate }) return false;
+        row = candidate;
+        return true;
+    }
+
+    private async Task ExecuteCardOperationAsync(
+        RunnerRowViewModel row,
+        string operation,
+        Func<RunnerControlResult> action)
+    {
+        if (_operations is null || _operationInProgress) return;
+
+        RunnerControlResult result;
+        BeginOperation($"{row.RunnerName} • {operation} • applying verified control…");
+        try
+        {
+            result = await Task.Run(action);
+        }
+        catch (Exception ex)
+        {
+            RenderOperationException($"{row.RunnerName} {operation}", ex);
+            return;
+        }
+        finally
+        {
+            EndOperation();
+        }
+
+        await RefreshDashboardAsync();
+        RenderControlResult(row, result);
+    }
+
     private async void RunnerPrimaryControl_OnClick(object sender, RoutedEventArgs e)
     {
         if (_previewMode || _operations is null || _operationInProgress) return;
