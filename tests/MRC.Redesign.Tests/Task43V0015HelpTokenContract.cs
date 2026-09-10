@@ -15,7 +15,7 @@ internal static class Task43V0015HelpTokenContract
             "Option token is not rendered in cyan heading tone.");
 
         var bare = lines.Single(item => item.Text.StartsWith("MRC", StringComparison.Ordinal)
-                                       && item.Text.TrimEnd() == "MRC");
+                                       && item.Text.Contains("Open or focus the GUI", StringComparison.Ordinal));
         Require(bare.Segments.Any(segment => segment.Text.TrimEnd() == "MRC" && segment.Tone == CliTone.Command),
             "Bare MRC command is not rendered in command tone.");
 
