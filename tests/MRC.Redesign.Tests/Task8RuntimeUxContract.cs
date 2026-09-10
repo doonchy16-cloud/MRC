@@ -81,9 +81,11 @@ internal static class Task8RuntimeUxContract
 
         var mainWindowXamlPath = Path.Combine(repoRoot, "src", "MRC.Gui", "MainWindow.xaml");
         var mainWindowXaml = File.ReadAllText(mainWindowXamlPath);
-        Require(mainWindowXaml.Contains("{Binding SystemFindingsSummary}", StringComparison.Ordinal)
-                && mainWindowXaml.Contains("HasSystemFindings", StringComparison.Ordinal),
-            "System findings strip is not bound to the dedicated findings model.");
+        Require(mainWindowXaml.Contains("x:Name=\"SystemFindingsPanel\"", StringComparison.Ordinal)
+                && mainWindowXaml.Contains("{Binding SystemFindingsSummary}", StringComparison.Ordinal),
+            "Separate SYSTEM findings surface is not bound to the dedicated findings summary.");
+        Require(mainWindowXaml.Contains("x:Name=\"RunnerCardSurface\"", StringComparison.Ordinal),
+            "Managed runner cards are not visually separated from system findings.");
     }
 
     private static void VerifyCustomDiagnosticDialogContract()
@@ -108,15 +110,17 @@ internal static class Task8RuntimeUxContract
 
         var mainWindowPath = Path.Combine(repoRoot, "src", "MRC.Gui", "MainWindow.xaml.cs");
         var source = File.ReadAllText(mainWindowPath);
-        var errorBranchStart = source.IndexOf("if (row.State == RunnerState.ERROR)", StringComparison.Ordinal);
-        var nextBranch = source.IndexOf("if (row.State is not RunnerState.OFF", errorBranchStart + 1, StringComparison.Ordinal);
-        Require(errorBranchStart >= 0 && nextBranch > errorBranchStart,
-            "Could not locate the ERROR-row control branch in MainWindow.");
-        var errorBranch = source[errorBranchStart..nextBranch];
-        Require(errorBranch.Contains("DiagnosticDialog", StringComparison.Ordinal),
-            "ERROR-row details do not open DiagnosticDialog.");
-        Require(!errorBranch.Contains("MessageBox.Show", StringComparison.Ordinal),
-            "ERROR-row details still use a generic Windows MessageBox.");
+        var detailsStart = source.IndexOf("private void RunnerDetails_OnClick", StringComparison.Ordinal);
+        var nextMethod = source.IndexOf("private bool TryGetCardRow", detailsStart + 1, StringComparison.Ordinal);
+        Require(detailsStart >= 0 && nextMethod > detailsStart,
+            "Could not locate the explicit v0.0.14 DETAILS card handler.");
+        var detailsHandler = source[detailsStart..nextMethod];
+        Require(detailsHandler.Contains("CanShowDetails", StringComparison.Ordinal),
+            "DETAILS handler does not honor state-derived diagnostics authority.");
+        Require(detailsHandler.Contains("DiagnosticDialog", StringComparison.Ordinal),
+            "DETAILS handler does not open DiagnosticDialog.");
+        Require(!detailsHandler.Contains("MessageBox.Show", StringComparison.Ordinal),
+            "DETAILS handler still uses a generic Windows MessageBox.");
     }
 
     private static void Require(bool condition, string message)
