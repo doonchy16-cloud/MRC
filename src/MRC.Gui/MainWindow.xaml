@@ -217,9 +217,10 @@
 
             <Border Grid.Column="2" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Background="{StaticResource PanelBrush}" Height="32" Padding="8,0">
                 <Grid>
-                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                    <TextBlock Text="/" Foreground="{StaticResource RunnerBrush}" FontSize="12" VerticalAlignment="Center" Margin="0,0,6,0" />
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                    <TextBlock Text="SEARCH" Foreground="{StaticResource MutedBrush}" FontSize="10" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,8,0" />
                     <TextBox x:Name="SearchBox" Grid.Column="1" AutomationProperties.Name="Search runners by runner name repository or folder" TextChanged="SearchBox_OnTextChanged" Background="Transparent" BorderThickness="0" Foreground="{StaticResource LabelBrush}" CaretBrush="{StaticResource RunnerBrush}" VerticalContentAlignment="Center" FontFamily="Cascadia Mono, Consolas" FontSize="11" />
+                    <TextBlock Grid.Column="2" Text="/" Foreground="{StaticResource MutedBrush}" FontSize="11" VerticalAlignment="Center" Margin="8,0,0,0" ToolTip="Press / to focus search" AutomationProperties.Name="Press slash to focus search" />
                 </Grid>
             </Border>
             <Button Grid.Column="3" x:Name="ManualRefreshButton" AutomationProperties.Name="Refresh runner states now" Content="[ ↻ ]" Click="ManualRefreshButton_OnClick" Style="{StaticResource TerminalButtonStyle}" Margin="6,0,0,0" />
@@ -272,10 +273,11 @@
                     </Style.Triggers>
                 </Style>
             </Border.Style>
-            <StackPanel Orientation="Horizontal">
+            <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                 <TextBlock Text="⚠ SYSTEM // " Foreground="{StaticResource BusyBrush}" FontSize="10" FontWeight="Bold" />
-                <TextBlock x:Name="SystemFindingsValue" Text="{Binding SystemFindingsSummary}" ToolTip="{Binding SystemFindingsSummary}" Foreground="{StaticResource SecondaryBrush}" FontSize="10" TextTrimming="CharacterEllipsis" />
-            </StackPanel>
+                <TextBlock x:Name="SystemFindingsValue" Grid.Column="1" Text="{Binding SystemFindingsSummary}" ToolTip="{Binding SystemFindingsSummary}" Foreground="{StaticResource SecondaryBrush}" FontSize="10" TextTrimming="CharacterEllipsis" />
+            </Grid>
         </Border>
 
         <!-- prompt-like operational footer -->
