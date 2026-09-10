@@ -71,10 +71,15 @@ internal static class Task9AnimationContract
 
     private static void VerifyIntensityIsRendered()
     {
-        var cardXaml = File.ReadAllText(Path.Combine(
-            Directory.GetCurrentDirectory(), "src", "MRC.Gui", "Controls", "RunnerControlCard.xaml"));
-        Require(cardXaml.Contains("Opacity=\"{Binding Row.AnimationIntensity, ElementName=Root}\"", StringComparison.Ordinal),
-            "Extracted runner card does not render the shared AnimationIntensity signal through its active state indicator.");
+        var controlsRoot = Path.Combine(Directory.GetCurrentDirectory(), "src", "MRC.Gui", "Controls");
+        var cardXaml = File.ReadAllText(Path.Combine(controlsRoot, "RunnerControlCard.xaml"));
+        var orbXaml = File.ReadAllText(Path.Combine(controlsRoot, "StateOrb.xaml"));
+
+        Require(cardXaml.Contains("<controls:StateOrb", StringComparison.Ordinal)
+                && cardXaml.Contains("Intensity=\"{Binding Row.AnimationIntensity, ElementName=Root}\"", StringComparison.Ordinal),
+            "Extracted runner card does not route the shared AnimationIntensity signal into its active StateOrb indicator.");
+        Require(orbXaml.Contains("Opacity=\"{Binding Intensity, ElementName=Root}\"", StringComparison.Ordinal),
+            "StateOrb does not render its shared Intensity input through the luminous halo.");
     }
 
     private static void VerifyStaticStates()
