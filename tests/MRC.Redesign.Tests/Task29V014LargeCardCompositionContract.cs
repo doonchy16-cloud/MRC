@@ -5,35 +5,32 @@ internal static class Task29V014LargeCardCompositionContract
     [ModuleInitializer]
     internal static void Run()
     {
-        VerifyLargeCardsUseTheirHeightIntentionally();
-        Console.WriteLine("PASS  Task29 v0.0.14 large-screen card composition");
+        VerifyCurrentCardsUseTheirHeightIntentionally();
+        Console.WriteLine("PASS  Task29 v0.0.14 card-height intent preserved through v0.0.15 compact component");
     }
 
-    private static void VerifyLargeCardsUseTheirHeightIntentionally()
+    private static void VerifyCurrentCardsUseTheirHeightIntentionally()
     {
-        var xaml = File.ReadAllText(Path.Combine(
-            Directory.GetCurrentDirectory(), "src", "MRC.Gui", "MainWindow.xaml"));
+        var root = Directory.GetCurrentDirectory();
+        var windowXaml = File.ReadAllText(Path.Combine(root, "src", "MRC.Gui", "MainWindow.xaml"));
+        var cardXaml = File.ReadAllText(Path.Combine(root, "src", "MRC.Gui", "Controls", "RunnerControlCard.xaml"));
 
-        var cardTemplateStart = xaml.IndexOf("<Border Style=\"{StaticResource RunnerCardStyle}\"", StringComparison.Ordinal);
-        Require(cardTemplateStart >= 0, "Runner card template is missing.");
-        var cardTemplateEnd = xaml.IndexOf("</DataTemplate>", cardTemplateStart, StringComparison.Ordinal);
-        Require(cardTemplateEnd > cardTemplateStart, "Runner card template could not be isolated.");
-        var cardTemplate = xaml[cardTemplateStart..cardTemplateEnd];
+        Require(windowXaml.Contains("<controls:RunnerControlCard", StringComparison.Ordinal)
+                && windowXaml.Contains("Row=\"{Binding}\"", StringComparison.Ordinal)
+                && windowXaml.Contains("ActionRequested=\"RunnerControlCard_OnActionRequested\"", StringComparison.Ordinal),
+            "Runner-card command center is not composed through the extracted current card component.");
 
-        Require(cardTemplate.Contains("<RowDefinition Height=\"Auto\" />", StringComparison.Ordinal)
-                && cardTemplate.Contains("<RowDefinition Height=\"*\" />", StringComparison.Ordinal),
-            "Large runner cards still use only Auto rows, leaving stretched card height as dead space.");
+        Require(cardXaml.Contains("Height=\"150\"", StringComparison.Ordinal),
+            "Current runner card does not preserve the locked compact 150 px reference height.");
+        Require(cardXaml.Contains("<RowDefinition Height=\"*\" />", StringComparison.Ordinal)
+                && cardXaml.Contains("<RowDefinition Height=\"46\" />", StringComparison.Ordinal),
+            "Compact runner card does not intentionally allocate flexible identity space above the fixed action rail.");
 
-        var actionsStart = cardTemplate.IndexOf("<Grid Grid.Row=\"1\"", StringComparison.Ordinal);
-        Require(actionsStart >= 0, "Runner-card action rail is missing.");
-        var actionsEnd = cardTemplate.IndexOf(">", actionsStart, StringComparison.Ordinal);
-        Require(actionsEnd > actionsStart, "Runner-card action rail opening tag could not be isolated.");
-        var actionOpeningTag = cardTemplate[actionsStart..(actionsEnd + 1)];
-        Require(actionOpeningTag.Contains("VerticalAlignment=\"Bottom\"", StringComparison.Ordinal),
-            "Runner-card action rail is not anchored to the bottom of flexible card height.");
-
-        Require(cardTemplate.Contains("Margin=\"0,14,0,0\"", StringComparison.Ordinal),
-            "Runner-card action rail lacks deliberate separation from identity content.");
+        Require(cardXaml.Contains("x:Name=\"ThreeSlotActionRail\"", StringComparison.Ordinal)
+                && cardXaml.Contains("Grid.Row=\"1\" Height=\"46\"", StringComparison.Ordinal),
+            "Compact runner-card action rail is not fixed to the locked 46 px lower row.");
+        Require(cardXaml.Contains("<Grid Margin=\"0,0,0,11\">", StringComparison.Ordinal),
+            "Compact runner-card identity region lacks deliberate separation from the action rail.");
     }
 
     private static void Require(bool condition, string message)
