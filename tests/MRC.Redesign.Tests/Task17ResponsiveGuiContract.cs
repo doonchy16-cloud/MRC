@@ -1,37 +1,36 @@
 using System.Runtime.CompilerServices;
-using System.Text.RegularExpressions;
 
 internal static class Task17ResponsiveGuiContract
 {
     [ModuleInitializer]
     internal static void Run()
     {
-        VerifyLargeScreenResponsiveness();
+        VerifyAdaptiveCardResponsiveness();
         VerifySearchSemantics();
         VerifyBoundedSystemStrip();
         VerifyLargeScreenPreviewEvidence();
-        Console.WriteLine("PASS  Task17 responsive large-screen composition + search/system-strip semantics");
+        Console.WriteLine("PASS  Task17 adaptive command-center responsiveness + search/system-strip semantics");
     }
 
-    private static void VerifyLargeScreenResponsiveness()
+    private static void VerifyAdaptiveCardResponsiveness()
     {
         var root = Directory.GetCurrentDirectory();
         var code = File.ReadAllText(Path.Combine(root, "src", "MRC.Gui", "MainWindow.xaml.cs"));
-        var compactCode = Regex.Replace(code, @"\s+", " ");
+        var xaml = File.ReadAllText(Path.Combine(root, "src", "MRC.Gui", "MainWindow.xaml"));
+        var dashboard = File.ReadAllText(Path.Combine(root, "src", "MRC.Gui", "Presentation", "RunnerDashboardViewModel.cs"));
 
-        Require(code.Contains("ApplyResponsiveScale", StringComparison.Ordinal),
-            "MainWindow has no responsive scaling authority for large windows.");
+        Require(code.Contains("ApplyResponsiveLayout", StringComparison.Ordinal),
+            "MainWindow has no adaptive layout authority for v0.0.14.");
         Require(code.Contains("SizeChanged", StringComparison.Ordinal),
-            "Responsive scale is not recomputed when the window size changes.");
-        Require(code.Contains("Math.Clamp", StringComparison.Ordinal)
-                && code.Contains("ActualWidth / 1200d", StringComparison.Ordinal)
-                && code.Contains("ActualHeight / 760d", StringComparison.Ordinal),
-            "Responsive scale is not derived from the approved 1200x760 baseline.");
-        Require(code.Contains("RootSurface.LayoutTransform", StringComparison.Ordinal)
-                && code.Contains("new ScaleTransform(scale, scale)", StringComparison.Ordinal),
-            "Responsive scale is not applied centrally to the terminal surface.");
-        Require(compactCode.Contains("1d, 1.5d", StringComparison.Ordinal),
-            "Responsive scale must stay bounded between 1.0x and 1.5x.");
+            "Adaptive layout is not recomputed when the window size changes.");
+        Require(code.Contains("_dashboard.CardColumnCount", StringComparison.Ordinal),
+            "Window width does not drive the card-column count.");
+        Require(dashboard.Contains("CardColumnCount", StringComparison.Ordinal),
+            "Dashboard exposes no adaptive card-column state.");
+        Require(xaml.Contains("<UniformGrid Columns=\"{Binding CardColumnCount}\"", StringComparison.Ordinal),
+            "Runner-card surface is not bound to adaptive column count.");
+        Require(!code.Contains("RootSurface.LayoutTransform", StringComparison.Ordinal),
+            "Superseded whole-surface scaling remains active in v0.0.14.");
     }
 
     private static void VerifySearchSemantics()
@@ -56,11 +55,9 @@ internal static class Task17ResponsiveGuiContract
 
         Require(xaml.Contains("x:Name=\"SystemFindingsPanel\"", StringComparison.Ordinal),
             "SYSTEM findings panel is missing.");
-        Require(xaml.Contains("<Grid.ColumnDefinitions><ColumnDefinition Width=\"Auto\" /><ColumnDefinition Width=\"*\" /></Grid.ColumnDefinitions>", StringComparison.Ordinal),
-            "SYSTEM strip does not allocate a bounded star column for long evidence.");
-        Require(xaml.Contains("x:Name=\"SystemFindingsValue\" Grid.Column=\"1\"", StringComparison.Ordinal)
+        Require(xaml.Contains("x:Name=\"SystemFindingsValue\"", StringComparison.Ordinal)
                 && xaml.Contains("TextTrimming=\"CharacterEllipsis\"", StringComparison.Ordinal),
-            "SYSTEM evidence is not constrained to an ellipsizing bounded column.");
+            "SYSTEM evidence is not constrained to an ellipsizing bounded presentation.");
     }
 
     private static void VerifyLargeScreenPreviewEvidence()
@@ -70,7 +67,7 @@ internal static class Task17ResponsiveGuiContract
 
         Require(script.Contains("MRC-v0.0.13-2048x1222.png", StringComparison.Ordinal)
                 && script.Contains("-Width 2048 -Height 1222", StringComparison.Ordinal),
-            "Preview pipeline does not cover the large-screen 2048x1222 acceptance viewport.");
+            "Inherited preview pipeline does not cover the large-screen 2048x1222 acceptance viewport.");
     }
 
     private static void Require(bool condition, string message)
