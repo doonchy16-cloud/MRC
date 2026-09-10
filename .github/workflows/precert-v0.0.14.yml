@@ -1,0 +1,43 @@
+name: MRC v0.0.14 Pre-Cert Development
+
+on:
+  push:
+    branches: [ precert-v0.0.14 ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    name: v0.0.14 Full Regression Gate
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup .NET from global.json
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Run redesign and v0.0.14 acceptance harness
+        shell: pwsh
+        run: ./scripts/verify-redesign.ps1
+
+      - name: Run PASS4 operations and updater regression
+        shell: pwsh
+        run: ./scripts/verify-pass4.ps1
+
+      - name: Run PASS3 presentation regression
+        shell: pwsh
+        run: ./scripts/verify-pass3.ps1
+
+      - name: Run PASS2 runtime regression
+        shell: pwsh
+        run: ./scripts/verify-pass2.ps1
+
+      - name: Run PASS1 foundation and distribution regression
+        shell: pwsh
+        run: ./scripts/verify-pass1.ps1
