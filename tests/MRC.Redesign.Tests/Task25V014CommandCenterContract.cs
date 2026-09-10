@@ -62,19 +62,19 @@ internal static class Task25V014CommandCenterContract
 
         Require(xaml.Contains("Content=\"START\"", StringComparison.Ordinal)
                 && xaml.Contains("IsEnabled=\"{Binding CanStart}\"", StringComparison.Ordinal)
-                && xaml.Contains("Click=\"RunnerStartButton_OnClick\"", StringComparison.Ordinal),
+                && xaml.Contains("Click=\"RunnerStart_OnClick\"", StringComparison.Ordinal),
             "Runner card START is not an explicit state-authorized core control.");
         Require(xaml.Contains("Content=\"STOP\"", StringComparison.Ordinal)
                 && xaml.Contains("IsEnabled=\"{Binding CanStop}\"", StringComparison.Ordinal)
-                && xaml.Contains("Click=\"RunnerStopButton_OnClick\"", StringComparison.Ordinal),
+                && xaml.Contains("Click=\"RunnerStop_OnClick\"", StringComparison.Ordinal),
             "Runner card STOP is not an explicit state-authorized core control.");
         Require(xaml.Contains("Content=\"RESTART\"", StringComparison.Ordinal)
                 && xaml.Contains("IsEnabled=\"{Binding CanRestart}\"", StringComparison.Ordinal)
-                && xaml.Contains("Click=\"RunnerRestartButton_OnClick\"", StringComparison.Ordinal),
+                && xaml.Contains("Click=\"RunnerRestart_OnClick\"", StringComparison.Ordinal),
             "Runner card RESTART is not an explicit state-authorized core control.");
         Require(xaml.Contains("Content=\"DETAILS\"", StringComparison.Ordinal)
                 && xaml.Contains("IsEnabled=\"{Binding CanShowDetails}\"", StringComparison.Ordinal)
-                && xaml.Contains("Click=\"RunnerDetailsButton_OnClick\"", StringComparison.Ordinal),
+                && xaml.Contains("Click=\"RunnerDetails_OnClick\"", StringComparison.Ordinal),
             "Runner card DETAILS path is missing or not bound to diagnostic authority.");
         Require(xaml.Contains("MinHeight=\"38\"", StringComparison.Ordinal),
             "Runner card controls are missing a readable minimum hit-target height.");
