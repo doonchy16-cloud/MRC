@@ -66,7 +66,8 @@ internal static class Task32V014ReferenceRecoveryContract
                 || xaml.Contains("MinHeight=\"44\"", StringComparison.Ordinal),
             "Runner lifecycle controls are still too small; 44 px minimum control height is required.");
         Require(xaml.Contains("x:Key=\"StartButtonStyle\"", StringComparison.Ordinal)
-                && xaml.Contains("Background=\"{StaticResource AmberActionBrush}\"", StringComparison.Ordinal),
+                && (xaml.Contains("Background=\"{StaticResource AmberActionBrush}\"", StringComparison.Ordinal)
+                    || xaml.Contains("Property=\"Background\" Value=\"{StaticResource AmberActionBrush}\"", StringComparison.Ordinal)),
             "START is not rendered as the warm primary action.");
         Require(xaml.Contains("Text=\"{Binding RunnerName}\"", StringComparison.Ordinal)
                 && xaml.Contains("FontSize=\"19\"", StringComparison.Ordinal),
