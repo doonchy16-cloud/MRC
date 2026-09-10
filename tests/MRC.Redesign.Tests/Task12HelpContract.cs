@@ -7,7 +7,7 @@ internal static class Task12HelpContract
     internal static void Run()
     {
         VerifyHelpLayoutAndSemanticHierarchy();
-        Console.WriteLine("PASS  Task12 v0.0.13 help layout and semantic hierarchy");
+        Console.WriteLine("PASS  Task12 help layout and semantic hierarchy");
     }
 
     private static void VerifyHelpLayoutAndSemanticHierarchy()
@@ -15,29 +15,34 @@ internal static class Task12HelpContract
         var lines = CliPresentation.HelpLines();
         Require(lines.Count >= 10, $"Help presentation is unexpectedly sparse: {lines.Count} lines.");
 
+        var header = lines.SingleOrDefault(line =>
+            line.Text.Contains("COMMAND", StringComparison.Ordinal)
+            && line.Text.Contains("ALIASES", StringComparison.Ordinal)
+            && line.Text.Contains("DESCRIPTION", StringComparison.Ordinal));
+        Require(header is not null, "Help table header is missing COMMAND / ALIASES / DESCRIPTION.");
+
         var version = lines.SingleOrDefault(line => line.Text.Contains("MRC --version", StringComparison.Ordinal));
         Require(version is not null, "Help does not present canonical MRC --version.");
         Require(version!.Text.Contains("Show installed version information", StringComparison.Ordinal),
             "Version description is still orphaned onto a separate line.");
-        Require(version.Text.Length <= 100, $"Version help row is too wide: {version.Text.Length} characters.");
-        Require(version.Segments.Any(segment => segment.Text.Contains("MRC --version", StringComparison.Ordinal) && segment.Tone == CliTone.Heading),
+        Require(version.Text.Length <= CliTableFormatter.DefaultWidth,
+            $"Version help row is too wide: {version.Text.Length} characters.");
+        Require(version.Segments.Any(segment => segment.Text.Trim().Equals("MRC --version", StringComparison.Ordinal) && segment.Tone == CliTone.Heading),
             "Canonical --version command is not visually primary.");
+        Require(version.Segments.Any(segment => segment.Text.Contains("MRC -v", StringComparison.Ordinal)
+                                                && segment.Text.Contains("MRC -version", StringComparison.Ordinal)
+                                                && segment.Tone == CliTone.Secondary),
+            "Version aliases are not subordinate in the ALIASES column.");
         Require(version.Segments.Any(segment => segment.Text.Contains("Show installed version information", StringComparison.Ordinal) && segment.Tone == CliTone.Normal),
             "Version help description is not ordinary white prose.");
-
-        var versionAliases = lines.SingleOrDefault(line => line.Text.Contains("-v", StringComparison.Ordinal)
-                                                           && line.Text.Contains("-version", StringComparison.Ordinal)
-                                                           && !line.Text.Contains("--version", StringComparison.Ordinal));
-        Require(versionAliases is not null, "Version aliases are not presented separately from the canonical command.");
-        Require(versionAliases!.Segments.All(segment => segment.Tone is CliTone.Normal or CliTone.Secondary),
-            "Version aliases are too visually dominant.");
 
         foreach (var canonical in new[] { "--help", "--doctor", "--diagnose", "--update", "--check" })
         {
             var row = lines.SingleOrDefault(line => line.Text.Contains($"MRC {canonical}", StringComparison.Ordinal));
             Require(row is not null, $"Help is missing canonical MRC {canonical}.");
-            Require(row!.Text.Length <= 100, $"Help row for {canonical} is too wide: {row.Text.Length} characters.");
-            Require(row.Segments.Any(segment => segment.Text.Contains($"MRC {canonical}", StringComparison.Ordinal) && segment.Tone == CliTone.Heading),
+            Require(row!.Text.Length <= CliTableFormatter.DefaultWidth,
+                $"Help row for {canonical} is too wide: {row.Text.Length} characters.");
+            Require(row.Segments.Any(segment => segment.Text.Trim().Equals($"MRC {canonical}", StringComparison.Ordinal) && segment.Tone == CliTone.Heading),
                 $"Canonical {canonical} is not visually primary.");
         }
 
