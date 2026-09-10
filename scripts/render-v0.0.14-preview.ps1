@@ -16,7 +16,8 @@ function Invoke-MrcPreview {
     param(
         [Parameter(Mandatory)][string]$FileName,
         [Parameter(Mandatory)][int]$Width,
-        [Parameter(Mandatory)][int]$Height
+        [Parameter(Mandatory)][int]$Height,
+        [string]$FocusState
     )
 
     $outputPath = Join-Path $OutputDir $FileName
@@ -24,7 +25,13 @@ function Invoke-MrcPreview {
 
     Push-Location $repoRoot
     try {
-        & dotnet run --project $project -c Release -- $outputPath $Width $Height
+        if ([string]::IsNullOrWhiteSpace($FocusState)) {
+            & dotnet run --project $project -c Release -- $outputPath $Width $Height
+        }
+        else {
+            & dotnet run --project $project -c Release -- $outputPath $Width $Height $FocusState
+        }
+
         if ($LASTEXITCODE -ne 0) {
             throw "v0.0.14 preview renderer failed with exit code $LASTEXITCODE for ${Width}x${Height}."
         }
@@ -60,8 +67,9 @@ function Invoke-MrcPreview {
     Write-Host "PREVIEW VERIFIED  ${Width}x${Height}  $outputPath  $($file.Length) bytes"
 }
 
-# V0.0.14 acceptance viewports: maximized, default, near-default, and minimum.
+# V0.0.14 acceptance viewports: maximized, default, near-default, minimum, plus minimum BUSY action evidence.
 Invoke-MrcPreview -FileName 'MRC-v0.0.14-2048x1222.png' -Width 2048 -Height 1222
 Invoke-MrcPreview -FileName 'MRC-v0.0.14-1200x760.png' -Width 1200 -Height 760
 Invoke-MrcPreview -FileName 'MRC-v0.0.14-1180x760.png' -Width 1180 -Height 760
 Invoke-MrcPreview -FileName 'MRC-v0.0.14-900x560.png' -Width 900 -Height 560
+Invoke-MrcPreview -FileName 'MRC-v0.0.14-900x560-busy.png' -Width 900 -Height 560 -FocusState 'BUSY'
