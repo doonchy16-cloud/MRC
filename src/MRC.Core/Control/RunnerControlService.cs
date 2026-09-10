@@ -136,7 +136,8 @@ internal sealed class RunnerControlService
         switch (termination.Outcome)
         {
             case RunnerTerminationOutcome.Terminated:
-                return new RunnerControlResult(RunnerControlOutcome.Stopping, RunnerState.STOPPING, termination.Message);
+                _transitions.Clear(runner.DirectoryPath);
+                return new RunnerControlResult(RunnerControlOutcome.Stopped, RunnerState.OFF, termination.Message);
             case RunnerTerminationOutcome.BusyNow:
                 _transitions.Clear(runner.DirectoryPath);
                 return new RunnerControlResult(RunnerControlOutcome.BusyProtected, RunnerState.BUSY, termination.Message);
