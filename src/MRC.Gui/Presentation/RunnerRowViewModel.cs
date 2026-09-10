@@ -32,6 +32,12 @@ public sealed class RunnerRowViewModel : INotifyPropertyChanged
     public RunnerState State => _state;
     public string StateText => _state.ToString();
     public string? Error => _error;
+
+    public bool CanStart => _state == RunnerState.OFF;
+    public bool CanStop => _state == RunnerState.IDLE;
+    public bool CanRestart => _state == RunnerState.IDLE;
+    public bool CanShowDetails => _state is RunnerState.BUSY or RunnerState.ERROR;
+
     public string ControlText => _state switch
     {
         RunnerState.OFF => "ON",
@@ -89,6 +95,10 @@ public sealed class RunnerRowViewModel : INotifyPropertyChanged
             OnPropertyChanged(nameof(State));
             OnPropertyChanged(nameof(StateText));
             OnPropertyChanged(nameof(ControlText));
+            OnPropertyChanged(nameof(CanStart));
+            OnPropertyChanged(nameof(CanStop));
+            OnPropertyChanged(nameof(CanRestart));
+            OnPropertyChanged(nameof(CanShowDetails));
         }
         if (errorChanged) OnPropertyChanged(nameof(Error));
     }
