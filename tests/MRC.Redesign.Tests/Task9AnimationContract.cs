@@ -71,19 +71,10 @@ internal static class Task9AnimationContract
 
     private static void VerifyIntensityIsRendered()
     {
-        var xaml = File.ReadAllText(Path.Combine(
-            Directory.GetCurrentDirectory(), "src", "MRC.Gui", "MainWindow.xaml"));
-        var glyphBinding = "Text=\"{Binding Glyph}\"";
-        var glyphStart = xaml.IndexOf(glyphBinding, StringComparison.Ordinal);
-        Require(glyphStart >= 0, "Runner glyph TextBlock was not found in MainWindow.xaml.");
-
-        var elementStart = xaml.LastIndexOf("<TextBlock", glyphStart, StringComparison.Ordinal);
-        var elementEnd = xaml.IndexOf("/>", glyphStart, StringComparison.Ordinal);
-        Require(elementStart >= 0 && elementEnd > glyphStart, "Runner glyph TextBlock markup could not be isolated.");
-
-        var glyphElement = xaml[elementStart..(elementEnd + 2)];
-        Require(glyphElement.Contains("Opacity=\"{Binding AnimationIntensity}\"", StringComparison.Ordinal),
-            "Runner glyph does not render the shared AnimationIntensity signal through Opacity binding.");
+        var cardXaml = File.ReadAllText(Path.Combine(
+            Directory.GetCurrentDirectory(), "src", "MRC.Gui", "Controls", "RunnerControlCard.xaml"));
+        Require(cardXaml.Contains("Opacity=\"{Binding Row.AnimationIntensity, ElementName=Root}\"", StringComparison.Ordinal),
+            "Extracted runner card does not render the shared AnimationIntensity signal through its active state indicator.");
     }
 
     private static void VerifyStaticStates()
