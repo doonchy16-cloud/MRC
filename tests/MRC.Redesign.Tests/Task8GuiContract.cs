@@ -16,11 +16,11 @@ internal static class Task8GuiContract
         Require(File.Exists(xamlPath), $"MainWindow.xaml was not found at {xamlPath}.");
         var xaml = File.ReadAllText(xamlPath);
 
-        Require(xaml.Contains("Width=\"1180\"", StringComparison.Ordinal)
+        Require(xaml.Contains("Width=\"1200\"", StringComparison.Ordinal)
                 && xaml.Contains("Height=\"760\"", StringComparison.Ordinal)
                 && xaml.Contains("MinWidth=\"900\"", StringComparison.Ordinal)
                 && xaml.Contains("MinHeight=\"560\"", StringComparison.Ordinal),
-            "Terminal console does not preserve the locked default/minimum window geometry.");
+            "Terminal console does not preserve the v0.0.13 default/minimum window geometry.");
 
         Require(xaml.Contains("Cascadia Mono", StringComparison.OrdinalIgnoreCase)
                 && xaml.Contains("Consolas", StringComparison.OrdinalIgnoreCase),
@@ -37,10 +37,10 @@ internal static class Task8GuiContract
         Require(xaml.Contains("x:Name=\"TerminalStatusFooter\"", StringComparison.Ordinal),
             "Prompt-style terminal status footer is missing.");
 
-        Require(xaml.Contains("<Setter Property=\"Height\" Value=\"32\"", StringComparison.Ordinal),
-            "Runner rows are not locked to the 30–34px compact target (32px expected).");
-        Require(!xaml.Contains("<Setter Property=\"Height\" Value=\"42\"", StringComparison.Ordinal),
-            "Legacy 42px runner rows are still present.");
+        Require(xaml.Contains("<Setter Property=\"Height\" Value=\"40\"", StringComparison.Ordinal),
+            "Runner rows do not use the enlarged v0.0.13 40px readability target.");
+        Require(!xaml.Contains("<Setter Property=\"Height\" Value=\"32\"", StringComparison.Ordinal),
+            "Legacy 32px runner rows are still present after v0.0.13 enlargement.");
 
         Require(xaml.Contains("TOTAL", StringComparison.Ordinal)
                 && xaml.Contains("IDLE", StringComparison.Ordinal)
