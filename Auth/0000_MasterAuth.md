@@ -8,6 +8,8 @@
 **Runner root authority:** `D:\Git_Runners_Main` only
 
 > **V0.0.12 redesign amendment:** `Auth/0011_Redesign.md` is Owner-approved and supersedes any conflicting pre-redesign detail in `0000_MasterAuth.md` through `0010_Passes.md` for v0.0.12 and subsequent pre-certification work. All non-conflicting safety/scope authority remains in force.
+>
+> **V0.0.13 CLI-color amendment:** `Auth/0012_V0013.md` is Owner-approved and governs segmented CLI coloring for v0.0.13 and later: human-readable labels are white; dynamic values/results/status tokens use their semantically appropriate colors; redirected output remains plain text.
 
 ## 1. Purpose
 MRC is a small Windows utility for discovering, viewing, starting, and safely stopping the GitHub Actions self-hosted runners that belong to the authorized Main-PC under the single authorized runner root `D:\Git_Runners_Main`.
@@ -105,6 +107,8 @@ Primary palette:
 
 Labels/headings are white. Runner/repository identity is cyan. States use state-fitting semantic colors.
 
+For CLI output beginning with v0.0.13, label/value coloring is tokenized: labels are white while values/results/status tokens carry their deserving semantic colors. See `0012_V0013.md`.
+
 The v0.0.12 terminal/PowerShell shell redesign in `0011_Redesign.md` supersedes the rejected dashboard presentation while preserving this semantic palette unless explicitly changed by the Owner.
 
 ## 8. Locked Animation Language
@@ -121,6 +125,8 @@ Behavior:
 - ERROR: frozen `!`, orange.
 
 Use one shared UI animation timer, never a separate timer per row.
+
+The v0.0.12 state-specific terminal animation and shared-intensity amendment in `0011_Redesign.md` supersedes conflicting frame details here.
 
 ## 9. Canonical CLI
 One PATH command: `MRC`.
