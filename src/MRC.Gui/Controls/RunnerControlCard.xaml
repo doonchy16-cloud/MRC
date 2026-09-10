@@ -32,7 +32,12 @@
                 </Grid.ColumnDefinitions>
 
                 <Border Width="30" Height="30" CornerRadius="15" Background="#0A1013" BorderBrush="#445057" BorderThickness="1" VerticalAlignment="Top">
-                    <Ellipse Width="8" Height="8" Fill="{StaticResource ReplicaOffBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    <Ellipse Width="8"
+                             Height="8"
+                             Fill="{StaticResource ReplicaOffBrush}"
+                             Opacity="{Binding Row.AnimationIntensity, ElementName=Root}"
+                             HorizontalAlignment="Center"
+                             VerticalAlignment="Center" />
                 </Border>
 
                 <StackPanel Grid.Column="1" Margin="4,-2,10,0" VerticalAlignment="Top">
