@@ -41,3 +41,14 @@ jobs:
       - name: Run PASS1 foundation and distribution regression
         shell: pwsh
         run: ./scripts/verify-pass1.ps1
+
+      - name: Render v0.0.13 GUI previews
+        shell: pwsh
+        run: ./scripts/render-v0.0.13-preview.ps1
+
+      - name: Upload v0.0.13 GUI evidence
+        uses: actions/upload-artifact@v6
+        with:
+          name: MRC-v0.0.13-gui-previews
+          path: artifacts/v0.0.13
+          if-no-files-found: error
