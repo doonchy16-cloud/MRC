@@ -159,7 +159,7 @@ internal static class LayoutAcceptance
         foreach (var marker in new[]
                  {
                      "Text=\"{Binding Row.RunnerName, ElementName=Root}\"",
-                     "Text=\"{Binding Row.RepositoryName, ElementName=Root}\"",
+                     "Text=\"{Binding Row.RepositoryName, ElementName=Root, Mode=OneWay}\"",
                      "Text=\"{Binding Row.StateText, ElementName=Root}\""
                  })
             Require(card.Contains(marker), $"Stable extracted-card binding '{marker}' is missing.");
