@@ -28,6 +28,7 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         Icon = BitmapFrame.Create(new Uri("pack://application:,,,/MRC.Gui;component/Assets/MRC.ico", UriKind.Absolute));
+        VersionValue.Text = $"v{BuildInfo.Version} // PRE-CERT";
         DataContext = _dashboard;
         RunnerList.Loaded += (_, _) => ApplyRunnerScrollBarStyle();
 
@@ -57,8 +58,8 @@ public partial class MainWindow : Window
         BoundaryValue.Text = "AUTHORIZED";
         BoundaryValue.Foreground = BrushFromHex("#39E58C");
         BoundaryDot.Fill = BrushFromHex("#39E58C");
-        SetBoundaryDetails("Deterministic v0.0.12 visual preview data — controls shown but runtime operation disabled.");
-        RefreshStatusValue.Text = $"v0.0.12 preview • {_dashboard.TotalCount} runners • operations disabled in render mode";
+        SetBoundaryDetails($"Deterministic v{BuildInfo.Version} visual preview data — controls shown but runtime operation disabled.");
+        RefreshStatusValue.Text = $"v{BuildInfo.Version} preview • {_dashboard.TotalCount} runners • operations disabled in render mode";
         OperationsPanel.IsEnabled = false;
         RunnerList.IsHitTestVisible = false;
         _animationClock.Tick(DateTimeOffset.UtcNow, _dashboard.Rows);
