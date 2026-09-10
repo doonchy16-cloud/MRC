@@ -6,6 +6,7 @@ public enum RunnerControlOutcome
 {
     Starting,
     Stopping,
+    Stopped,
     ForceStopping,
     ConfirmationRequired,
     BusyProtected,
