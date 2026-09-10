@@ -8,7 +8,7 @@ internal static class Task32V014ReferenceRecoveryContract
         VerifyResponsiveReferenceLayout();
         VerifyReferenceVisualHierarchy();
         VerifyRunnerControlModules();
-        Console.WriteLine("PASS  Task32 v0.0.14 reference-first GUI recovery preserved through v0.0.15 card extraction");
+        Console.WriteLine("PASS  Task32 v0.0.14 reference-first GUI recovery preserved through v0.0.15 component extraction");
     }
 
     private static void VerifyResponsiveReferenceLayout()
@@ -38,19 +38,23 @@ internal static class Task32V014ReferenceRecoveryContract
 
     private static void VerifyReferenceVisualHierarchy()
     {
-        var xaml = File.ReadAllText(Path.Combine(
-            Directory.GetCurrentDirectory(), "src", "MRC.Gui", "MainWindow.xaml"));
+        var root = Directory.GetCurrentDirectory();
+        var xaml = File.ReadAllText(Path.Combine(root, "src", "MRC.Gui", "MainWindow.xaml"));
+        var header = File.ReadAllText(Path.Combine(root, "src", "MRC.Gui", "Controls", "HeroHeader.xaml"));
 
         Require(xaml.Contains("x:Key=\"AmberActionBrush\"", StringComparison.Ordinal),
             "Reference-first GUI is missing the warm amber primary-action authority.");
         Require(xaml.Contains("x:Name=\"AmbientGlowLayer\"", StringComparison.Ordinal),
             "Reference-first GUI is missing the dimensional ambient glow layer.");
-        Require(xaml.Contains("Text=\"LOCAL-FIRST RUNNER CONTROL\"", StringComparison.Ordinal),
+        Require(xaml.Contains("<controls:HeroHeader", StringComparison.Ordinal)
+                && header.Contains("Text=\"MAIN PC • LOCAL-FIRST CONTROL\"", StringComparison.Ordinal),
             "Header is missing the approved local-control context eyebrow.");
-        Require(xaml.Contains("Text=\"MAIN RUNNER CONTROL\" FontSize=\"34\"", StringComparison.Ordinal),
+        Require(header.Contains("Text=\"MAIN RUNNER CONTROL\"", StringComparison.Ordinal)
+                && header.Contains("FontSize=\"52\"", StringComparison.Ordinal),
             "Main application title is not visually dominant enough.");
-        Require(xaml.Contains("Text=\"CONTROL AUTHORIZED\"", StringComparison.Ordinal),
-            "Authorization pill is not expressed as a first-class control-ready state.");
+        Require(header.Contains("x:Name=\"LiveInventoryPill\"", StringComparison.Ordinal)
+                && header.Contains("Text=\"{Binding InventoryText, ElementName=Root}\"", StringComparison.Ordinal),
+            "Authorization/inventory pill is not expressed as a first-class truthful live state.");
         Require(xaml.Contains("x:Key=\"CounterCardStyle\"", StringComparison.Ordinal)
                 && xaml.Contains("FontSize=\"24\"", StringComparison.Ordinal),
             "Counter modules remain too visually restrained for the reference hierarchy.");
