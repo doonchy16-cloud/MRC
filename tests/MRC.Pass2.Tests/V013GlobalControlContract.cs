@@ -23,6 +23,12 @@ internal static class V013GlobalControlContract
 
         VerifiedStopMustReturnOffAndClearTransition();
         Console.WriteLine("PASS  V013 P0-D control reports OFF only after verified stop");
+
+        ProvenExternalServiceMustNotBlockManagedStartAndMustClassifyExternal();
+        Console.WriteLine("PASS  V013 P0-E proven external service ownership is shared with control/runtime");
+
+        GenuinelyUnattributedRunnerMustBlockManagedStart();
+        Console.WriteLine("PASS  V013 P0-F unattributed runner evidence remains fail-closed for start");
     }
 
     private static void UnrelatedUnresolvedRunnerProcessMustNotPoisonOffManagedRunner()
@@ -156,6 +162,80 @@ internal static class V013GlobalControlContract
             "Verified completed stop left a stale STOPPING transition behind.");
     }
 
+    private static void ProvenExternalServiceMustNotBlockManagedStartAndMustClassifyExternal()
+    {
+        using var temp = new TempDirectory();
+        CreateRunner(temp.Path, "runner-a", "RunnerA", "https://github.com/example/RepoA");
+        var runner = RunnerDiscovery.Discover(temp.Path).Single();
+        var unresolvedSystemListener = new ProcessSnapshot(
+            9001,
+            7000,
+            "Runner.Listener",
+            null,
+            "Access is denied.",
+            0);
+        var inventory = Inventory(unresolvedSystemListener);
+        var services = new FixedServiceEvidenceProvider(
+            new RunnerServiceEvidence(
+                "actions.runner.doonchy16-cloud-Lotto_engine.Lotto_MainPC_Runner",
+                @"\"C:\actions-runner-lotto-mainpc\bin\RunnerService.exe\"",
+                7000));
+
+        var analysis = RunnerProcessInventoryAnalyzer.Analyze(temp.Path, new[] { runner }, inventory, services.Inspect());
+        var external = analysis.ObservedProcesses.Single(process => process.ProcessId == 9001);
+        Require(external.Ownership == RunnerProcessOwnershipKind.External,
+            $"Service-correlated inaccessible listener should be EXTERNAL, got {external.Ownership}: {external.Reason}");
+
+        var launcher = new RecordingLauncher();
+        var control = new RunnerControlService(
+            temp.Path,
+            new FixedProvider(inventory),
+            launcher,
+            new NoopTerminator(),
+            services,
+            new RunnerTransitionTracker(),
+            () => Now);
+        var start = control.Start(runner);
+
+        Require(start.Outcome == RunnerControlOutcome.Starting,
+            $"Proven external service evidence incorrectly blocked unrelated managed start: {start.Outcome}: {start.Message}");
+        Require(launcher.CallCount == 1,
+            "Proven external service evidence prevented the managed runner's run.cmd launch.");
+    }
+
+    private static void GenuinelyUnattributedRunnerMustBlockManagedStart()
+    {
+        using var temp = new TempDirectory();
+        CreateRunner(temp.Path, "runner-a", "RunnerA", "https://github.com/example/RepoA");
+        var runner = RunnerDiscovery.Discover(temp.Path).Single();
+        var unresolved = new ProcessSnapshot(
+            9101,
+            7100,
+            "Runner.Listener",
+            null,
+            "Access is denied.",
+            0);
+        var launcher = new RecordingLauncher();
+        var control = new RunnerControlService(
+            temp.Path,
+            new FixedProvider(Inventory(unresolved)),
+            launcher,
+            new NoopTerminator(),
+            new FixedServiceEvidenceProvider(),
+            new RunnerTransitionTracker(),
+            () => Now);
+
+        var start = control.Start(runner);
+
+        Require(start.Outcome == RunnerControlOutcome.Error,
+            $"Genuinely unattributed runner evidence must fail closed before start, got {start.Outcome}.");
+        Require(launcher.CallCount == 0,
+            "Managed runner was launched while unresolved runner ownership remained genuinely unattributed.");
+        Require(start.Message.Contains("unattributed", StringComparison.OrdinalIgnoreCase)
+                || start.Message.Contains("ownership", StringComparison.OrdinalIgnoreCase),
+            $"Blocked start did not explain ownership uncertainty: {start.Message}");
+    }
+
     private static ProcessInventory Inventory(params ProcessSnapshot[] processes) =>
         new(processes, true, null);
 
@@ -213,10 +293,16 @@ internal static class V013GlobalControlContract
             throw new InvalidOperationException("Launcher must not be reached by this contract.");
     }
 
+    private sealed class RecordingLauncher : IRunnerLauncher
+    {
+        public int CallCount { get; private set; }
+        public void Launch(RunnerDescriptor runner) => CallCount++;
+    }
+
     private sealed class NoopTerminator : IRunnerProcessTerminator
     {
         public RunnerTerminationResult Terminate(RunnerDescriptor runner, ProcessSnapshot listener) =>
-            throw new InvalidOperationException("Terminator must not be reached by refresh-only contract.");
+            throw new InvalidOperationException("Terminator must not be reached by this contract.");
     }
 
     private sealed class FixedTerminator : IRunnerProcessTerminator
@@ -224,6 +310,13 @@ internal static class V013GlobalControlContract
         private readonly RunnerTerminationResult _result;
         public FixedTerminator(RunnerTerminationResult result) => _result = result;
         public RunnerTerminationResult Terminate(RunnerDescriptor runner, ProcessSnapshot listener) => _result;
+    }
+
+    private sealed class FixedServiceEvidenceProvider : IRunnerServiceEvidenceProvider
+    {
+        private readonly IReadOnlyList<RunnerServiceEvidence> _services;
+        public FixedServiceEvidenceProvider(params RunnerServiceEvidence[] services) => _services = services;
+        public IReadOnlyList<RunnerServiceEvidence> Inspect() => _services;
     }
 
     private sealed class FakeGracefulShutdown : IRunnerGracefulShutdown
