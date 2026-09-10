@@ -9,6 +9,7 @@ using System.Windows.Threading;
 using MRC.Core;
 using MRC.Core.Control;
 using MRC.Core.Runtime;
+using MRC.Gui.Controls;
 using MRC.Gui.Presentation;
 
 namespace MRC.Gui;
@@ -276,6 +277,32 @@ public partial class MainWindow : Window
         RenderBulkResult("TURN ALL OFF", result);
     }
 
+    private async void RunnerControlCard_OnActionRequested(
+        object? sender,
+        RunnerCardActionRequestedEventArgs e)
+    {
+        if (_previewMode || _operations is null || _operationInProgress) return;
+
+        switch (e.Action)
+        {
+            case RunnerCardAction.Start when e.Row.CanStart:
+                await ExecuteCardOperationAsync(e.Row, "START", () => _operations.Start(e.Row.Runner));
+                break;
+            case RunnerCardAction.Stop when e.Row.CanStop:
+                await ExecuteCardOperationAsync(e.Row, "STOP", () => _operations.StopIdle(e.Row.Runner));
+                break;
+            case RunnerCardAction.Restart when e.Row.CanRestart:
+                await ExecuteCardOperationAsync(e.Row, "RESTART", () => _operations.Restart(e.Row.Runner));
+                break;
+            case RunnerCardAction.ForceStop when e.Row.State == RunnerState.BUSY:
+                await ExecuteForceStopAsync(e.Row);
+                break;
+            case RunnerCardAction.Details:
+                new DiagnosticDialog(e.Row) { Owner = this }.ShowDialog();
+                break;
+        }
+    }
+
     private async void RunnerStart_OnClick(object sender, RoutedEventArgs e)
     {
         if (!TryGetCardRow(sender, out var row) || !row.CanStart || _operations is null) return;
@@ -342,6 +369,12 @@ public partial class MainWindow : Window
         if (_previewMode || _operations is null || _operationInProgress) return;
         if (sender is not Button { CommandParameter: RunnerRowViewModel row }) return;
         if (row.State != RunnerState.BUSY) return;
+        await ExecuteForceStopAsync(row);
+    }
+
+    private async Task ExecuteForceStopAsync(RunnerRowViewModel row)
+    {
+        if (_previewMode || _operations is null || _operationInProgress || row.State != RunnerState.BUSY) return;
 
         RunnerControlResult preflight;
         try
