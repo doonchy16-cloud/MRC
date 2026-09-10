@@ -127,7 +127,7 @@ public static class CliPresentation
                     new CliSegment($" {repair.Description} • ", CliTone.Normal),
                     new CliSegment(repair.Id, CliTone.Secondary),
                     new CliSegment(" • Risk: ", CliTone.Normal),
-                    new CliSegment(repair.Risk.ToString(), repair.Risk == DoctorRepairRisk.Low ? CliTone.Success : CliTone.Warning),
+                    new CliSegment(repair.Risk.ToString(), repair.Risk == DoctorRepairRisk.Automatic ? CliTone.Success : CliTone.Warning),
                     new CliSegment(" • ", CliTone.Secondary),
                     new CliSegment(repair.Message, CliTone.Normal)));
             }
