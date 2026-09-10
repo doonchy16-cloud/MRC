@@ -16,6 +16,7 @@ internal sealed class WindowsProcessSnapshotProvider : IProcessSnapshotProvider
             return new ProcessInventory(Array.Empty<ProcessSnapshot>(), false, $"Process enumeration failed: {ex.Message}");
         }
 
+        var fallbackParents = WindowsNativeProcess.CaptureParentProcessIds();
         var snapshots = new List<ProcessSnapshot>(processes.Length);
         foreach (var process in processes)
         {
@@ -44,9 +45,24 @@ internal sealed class WindowsProcessSnapshotProvider : IProcessSnapshotProvider
                 }
 
                 WindowsNativeProcess.TryGetImagePath(processId, out var executablePath, out var pathError);
-                WindowsNativeProcess.TryGetParentProcessId(processId, out var parentProcessId, out var parentError);
-                var error = Combine(pathError, parentError);
-                snapshots.Add(new ProcessSnapshot(processId, parentProcessId, processName, executablePath, error, sessionId));
+                var handleParentSucceeded = WindowsNativeProcess.TryGetParentProcessId(
+                    processId,
+                    out var handleParentProcessId,
+                    out var handleParentError);
+                var parentEvidence = ParentProcessEvidence.Resolve(
+                    processId,
+                    handleParentSucceeded,
+                    handleParentProcessId,
+                    handleParentError,
+                    fallbackParents);
+                var error = Combine(pathError, parentEvidence.Error);
+                snapshots.Add(new ProcessSnapshot(
+                    processId,
+                    parentEvidence.ParentProcessId,
+                    processName,
+                    executablePath,
+                    error,
+                    sessionId));
             }
         }
 
