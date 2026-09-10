@@ -55,19 +55,31 @@ internal static class LayoutAcceptance
     private static void CanonicalRegions()
     {
         var x = Xaml();
+        var drawer = DrawerXaml();
+
         foreach (var marker in new[]
                  {
-                     "MAIN RUNNER CONTROL", "HOST", "ROOT", "TOTAL", "IDLE", "BUSY", "OFF", "ERROR",
-                     "TRANSITION", "FilterPanel", "SearchBox", "RunnerCardSurface", "RunnerList",
-                     "SystemFindingsPanel", "RefreshStatusValue"
+                     "MAIN RUNNER CONTROL", "HOST", "ROOT", "RunnerCardSurface", "RunnerList",
+                     "SystemFindingsPanel", "RefreshStatusValue", "ControlDrawerHost"
                  })
-            Require(x.Contains(marker, StringComparison.OrdinalIgnoreCase), $"Command Center marker '{marker}' is missing.");
+            Require(x.Contains(marker, StringComparison.OrdinalIgnoreCase), $"Primary Command Center marker '{marker}' is missing.");
+
+        foreach (var marker in new[]
+                 {
+                     "TOTAL", "IDLE", "BUSY", "OFF", "ERROR", "TRANSITION", "SearchBox",
+                     "TURN ALL ON", "TURN ALL OFF", "REFRESH LOCAL TRUTH"
+                 })
+            Require(drawer.Contains(marker, StringComparison.OrdinalIgnoreCase), $"Control Drawer marker '{marker}' is missing.");
+
+        foreach (var filter in new[] { "ALL", "IDLE", "BUSY", "OFF", "ERROR" })
+            Require(drawer.Contains($"Tag=\"{filter}\"", StringComparison.Ordinal), $"Control Drawer filter '{filter}' is missing.");
 
         Require(!x.Contains("RunnerTableSurface", StringComparison.Ordinal),
             "Superseded runner table surface remains active.");
-        Require(x.Contains("Content=\"TURN ALL ON\"", StringComparison.Ordinal)
-                && x.Contains("Content=\"TURN ALL OFF\"", StringComparison.Ordinal),
-            "Native bulk controls are missing.");
+        Require(x.Contains("<controls:ControlDrawer x:Name=\"ControlDrawer\"", StringComparison.Ordinal)
+                && x.Contains("TurnAllOnRequested=\"TurnAllOnButton_OnClick\"", StringComparison.Ordinal)
+                && x.Contains("TurnAllOffRequested=\"TurnAllOffButton_OnClick\"", StringComparison.Ordinal),
+            "MainWindow does not compose and route the secondary control drawer.");
         Require(x.Contains("<controls:RunnerControlCard", StringComparison.Ordinal)
                 && x.Contains("ActionRequested=\"RunnerControlCard_OnActionRequested\"", StringComparison.Ordinal),
             "Command center no longer composes the active extracted runner card.");
@@ -156,17 +168,27 @@ internal static class LayoutAcceptance
     private static void AccessibilitySignals()
     {
         var x = Xaml();
+        var drawer = DrawerXaml();
+        var drawerCode = DrawerCode();
         var card = CardXaml();
         var code = CodeBehind();
-        Require(x.Contains("AutomationProperties.Name") && card.Contains("AutomationProperties.Name"),
-            "Accessible automation names are missing from window/card composition.");
+        Require(x.Contains("AutomationProperties.Name")
+                && drawer.Contains("AutomationProperties.Name")
+                && card.Contains("AutomationProperties.Name"),
+            "Accessible automation names are missing from window/drawer/card composition.");
         foreach (var filter in new[] { "ALL", "IDLE", "BUSY", "OFF", "ERROR" })
-            Require(x.Contains($"Tag=\"{filter}\""), $"Filter {filter} must be directly selectable.");
-        Require(x.Contains("Text=\"SEARCH\"", StringComparison.Ordinal)
-                && x.Contains("ToolTip=\"Press / to focus search\"", StringComparison.Ordinal),
-            "Search label or keyboard-shortcut help is missing.");
-        Require(code.Contains("SearchBox.Focus()", StringComparison.Ordinal),
-            "Slash shortcut does not actually focus search.");
+            Require(drawer.Contains($"Tag=\"{filter}\""), $"Filter {filter} must be directly selectable.");
+        Require(drawer.Contains("Text=\"SEARCH\"", StringComparison.Ordinal)
+                && drawer.Contains("ToolTip=\"Press / to focus search\"", StringComparison.Ordinal),
+            "Search label or keyboard-shortcut help is missing from the control drawer.");
+        Require(code.Contains("Key.OemQuestion", StringComparison.Ordinal)
+                && code.Contains("OpenControlDrawer(focusSearch: true)", StringComparison.Ordinal)
+                && code.Contains("ControlDrawer.FocusSearch()", StringComparison.Ordinal),
+            "Slash shortcut does not open the drawer and delegate search focus.");
+        Require(drawerCode.Contains("public void FocusSearch()", StringComparison.Ordinal)
+                && drawerCode.Contains("SearchBox.Focus()", StringComparison.Ordinal)
+                && drawerCode.Contains("SearchBox.SelectAll()", StringComparison.Ordinal),
+            "ControlDrawer focus delegation does not actually focus and select the search field.");
     }
 
     private static void SystemFindingsSeparation()
@@ -215,6 +237,8 @@ internal static class LayoutAcceptance
 
     private static string Xaml()=>File.ReadAllText(Path.Combine(RepoRoot(),"src","MRC.Gui","MainWindow.xaml"));
     private static string CodeBehind()=>File.ReadAllText(Path.Combine(RepoRoot(),"src","MRC.Gui","MainWindow.xaml.cs"));
+    private static string DrawerXaml()=>File.ReadAllText(Path.Combine(RepoRoot(),"src","MRC.Gui","Controls","ControlDrawer.xaml"));
+    private static string DrawerCode()=>File.ReadAllText(Path.Combine(RepoRoot(),"src","MRC.Gui","Controls","ControlDrawer.xaml.cs"));
     private static string CardXaml()=>File.ReadAllText(Path.Combine(RepoRoot(),"src","MRC.Gui","Controls","RunnerControlCard.xaml"));
     private static string CardCode()=>File.ReadAllText(Path.Combine(RepoRoot(),"src","MRC.Gui","Controls","RunnerControlCard.xaml.cs"));
     private static string OrbXaml()=>File.ReadAllText(Path.Combine(RepoRoot(),"src","MRC.Gui","Controls","StateOrb.xaml"));
