@@ -43,11 +43,24 @@ internal static class Task26V014HelpTableContract
         string descriptionFragment)
     {
         var row = lines.SingleOrDefault(line =>
-            line.Segments.Any(segment =>
-                segment.Tone == CliTone.Heading
-                && segment.Text.Trim().Equals(canonical, StringComparison.Ordinal)));
+            line.Text.StartsWith(canonical, StringComparison.Ordinal));
         Require(row is not null, $"Help is missing canonical command row '{canonical}'.");
+
         Require(row!.Segments.Any(segment =>
+                segment.Tone == CliTone.Command
+                && segment.Text == "MRC"),
+            $"Help row '{canonical}' does not preserve the yellow MRC command token.");
+
+        if (!canonical.Equals("MRC", StringComparison.Ordinal))
+        {
+            var option = canonical["MRC ".Length..];
+            Require(row.Segments.Any(segment =>
+                    segment.Tone == CliTone.Heading
+                    && segment.Text.Equals(option, StringComparison.Ordinal)),
+                $"Help row '{canonical}' does not preserve the cyan option token '{option}'.");
+        }
+
+        Require(row.Segments.Any(segment =>
                 segment.Tone == CliTone.Normal
                 && segment.Text.Contains(descriptionFragment, StringComparison.OrdinalIgnoreCase)),
             $"Help row '{canonical}' is missing its white description content.");
