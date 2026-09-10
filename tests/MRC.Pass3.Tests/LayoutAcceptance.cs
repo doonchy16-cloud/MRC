@@ -87,8 +87,8 @@ internal static class LayoutAcceptance
                 && dashboard.Contains("Math.Clamp(value, 1, 4)", StringComparison.Ordinal)
                 && code.Contains("ApplyResponsiveLayout", StringComparison.Ordinal)
                 && code.Contains("RunnerResponsiveLayout.ColumnCountForWidth(ActualWidth)", StringComparison.Ordinal)
-                && responsive.Contains("MinimumCardSlotWidth = 470", StringComparison.Ordinal)
-                && responsive.Contains("Math.Clamp(columns, 1, 4)", StringComparison.Ordinal),
+                && responsive.Contains("MinimumCardSlotWidth = ReferenceReplicaMetrics.MinimumCardSlotWidth", StringComparison.Ordinal)
+                && responsive.Contains("ReferenceReplicaMetrics.ColumnCountForWidth(windowWidth)", StringComparison.Ordinal),
             "Safe-width 1-through-4 responsive layout authority is incomplete.");
         Require(x.Contains("Text=\"{Binding RunnerName}\"", StringComparison.Ordinal)
                 && x.Contains("FontSize=\"19\"", StringComparison.Ordinal),
