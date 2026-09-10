@@ -40,9 +40,9 @@ internal static class LayoutAcceptance
         var x = Xaml();
         foreach (var color in new[]
                  {
-                     "#080D12", "#0D141C", "#111B25", "#223141", "#F4F7FA", "#AAB6C3",
-                     "#708091", "#35D9FF", "#76CFE8", "#8BAFD1", "#C792EA", "#39E58C",
-                     "#FFD166", "#FF6676", "#FF8A3D", "#4CA7FF", "#B48CFF"
+                     "#071015", "#0B141B", "#111C25", "#253542", "#F7F9FB", "#B2BDC7",
+                     "#728391", "#43DDF8", "#73CFE4", "#8FB1CC", "#D09AF4", "#35E08A",
+                     "#FFD166", "#FF6474", "#FF934F", "#55AFFF", "#BA92FF", "#FFC857"
                  })
             Require(x.Contains(color, StringComparison.OrdinalIgnoreCase), $"Command Center palette color {color} is missing.");
 
@@ -77,23 +77,32 @@ internal static class LayoutAcceptance
         var dashboard = File.ReadAllText(Path.Combine(RepoRoot(), "src", "MRC.Gui", "Presentation", "RunnerDashboardViewModel.cs"));
 
         Require(x.Contains("x:Key=\"RunnerCardStyle\"", StringComparison.Ordinal)
-                && x.Contains("CornerRadius=\"14\"", StringComparison.Ordinal),
+                && (x.Contains("Property=\"CornerRadius\" Value=\"14\"", StringComparison.Ordinal)
+                    || x.Contains("CornerRadius=\"14\"", StringComparison.Ordinal)),
             "Purpose-built runner card surface is missing.");
         Require(x.Contains("<UniformGrid Columns=\"{Binding CardColumnCount}\"", StringComparison.Ordinal),
             "Runner cards are not hosted in the adaptive multi-column panel.");
         Require(dashboard.Contains("CardColumnCount", StringComparison.Ordinal)
+                && dashboard.Contains("Math.Clamp(value, 1, 4)", StringComparison.Ordinal)
                 && code.Contains("ApplyResponsiveLayout", StringComparison.Ordinal)
-                && code.Contains("ActualWidth >= 1650", StringComparison.Ordinal)
-                && code.Contains("ActualWidth >= 1080", StringComparison.Ordinal),
-            "1/2/3-column responsive layout authority is incomplete.");
+                && code.Contains("ActualWidth >= 1600", StringComparison.Ordinal)
+                && code.Contains("? 4", StringComparison.Ordinal)
+                && code.Contains("ActualWidth >= 1100", StringComparison.Ordinal)
+                && code.Contains("? 3", StringComparison.Ordinal)
+                && code.Contains("ActualWidth >= 800", StringComparison.Ordinal)
+                && code.Contains("? 2", StringComparison.Ordinal),
+            "4/3/2/1 responsive layout authority is incomplete.");
         Require(x.Contains("Text=\"{Binding RunnerName}\"", StringComparison.Ordinal)
-                && x.Contains("FontSize=\"18\"", StringComparison.Ordinal),
-            "Runner identity is not presented at the enlarged card hierarchy.");
+                && x.Contains("FontSize=\"19\"", StringComparison.Ordinal),
+            "Runner identity is not presented at the reference-first card hierarchy.");
         Require(x.Contains("TextTrimming=\"CharacterEllipsis\"", StringComparison.Ordinal),
             "Long identity text must ellipsize.");
-        Require(x.Contains("Property=\"MinHeight\" Value=\"38\"", StringComparison.Ordinal)
-                || x.Contains("MinHeight=\"38\"", StringComparison.Ordinal),
-            "Card action controls do not preserve the minimum readable hit-target height.");
+        Require(x.Contains("Property=\"MinHeight\" Value=\"44\"", StringComparison.Ordinal)
+                || x.Contains("MinHeight=\"44\"", StringComparison.Ordinal),
+            "Card action controls do not preserve the 44 px reference hit-target height.");
+        Require(x.Contains("Property=\"MaxHeight\" Value=\"210\"", StringComparison.Ordinal)
+                || x.Contains("MaxHeight=\"210\"", StringComparison.Ordinal),
+            "Runner cards are not bounded against giant large-screen stretching.");
         Require(!code.Contains("RootSurface.LayoutTransform", StringComparison.Ordinal),
             "Superseded whole-window scaling remains active.");
     }
