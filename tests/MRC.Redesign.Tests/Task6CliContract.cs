@@ -74,7 +74,7 @@ internal static class Task6CliContract
 
         var expectedNames = new[]
         {
-            "Normal", "Heading", "Success", "Warning", "Error", "Path", "Metadata", "Secondary"
+            "Normal", "Heading", "Success", "Warning", "Error", "Path", "Metadata", "Secondary", "Command"
         };
         Require(Enum.GetNames(toneType!).SequenceEqual(expectedNames),
             $"CliTone values are wrong: {string.Join(", ", Enum.GetNames(toneType!))}.");
@@ -93,7 +93,8 @@ internal static class Task6CliContract
             ["Error"] = ConsoleColor.Red,
             ["Path"] = ConsoleColor.Cyan,
             ["Metadata"] = ConsoleColor.Magenta,
-            ["Secondary"] = ConsoleColor.DarkGray
+            ["Secondary"] = ConsoleColor.DarkGray,
+            ["Command"] = ConsoleColor.Yellow
         };
 
         foreach (var pair in expected)
