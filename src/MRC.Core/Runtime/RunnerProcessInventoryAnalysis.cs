@@ -43,6 +43,7 @@ internal static class RunnerProcessInventoryAnalyzer
                 processById,
                 servicesByPid,
                 out var managedRunnerPath,
+                out var serviceName,
                 out var reason);
             observed.Add(new RunnerObservedProcess(
                 process.ProcessId,
@@ -53,7 +54,8 @@ internal static class RunnerProcessInventoryAnalyzer
                 ownership,
                 managedRunnerPath,
                 reason,
-                process.InspectionError));
+                process.InspectionError,
+                serviceName));
         }
 
         return new RunnerProcessInventoryAnalysis(observed);
@@ -66,9 +68,11 @@ internal static class RunnerProcessInventoryAnalyzer
         IReadOnlyDictionary<int, ProcessSnapshot> processById,
         IReadOnlyDictionary<int, RunnerServiceEvidence> servicesByPid,
         out string? managedRunnerPath,
+        out string? serviceName,
         out string reason)
     {
         managedRunnerPath = null;
+        serviceName = null;
 
         if (string.IsNullOrWhiteSpace(process.ExecutablePath))
         {
@@ -79,6 +83,7 @@ internal static class RunnerProcessInventoryAnalyzer
                 && serviceExecutable is not null
                 && !IsUnderRoot(serviceExecutable, authorizedRoot))
             {
+                serviceName = relatedService.Name;
                 reason = $"Runner process is owned by Windows service '{relatedService.Name}' whose executable is outside the authorized managed-runner root: {serviceExecutable}.";
                 return RunnerProcessOwnershipKind.External;
             }
