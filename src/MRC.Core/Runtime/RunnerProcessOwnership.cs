@@ -1,13 +1,13 @@
 namespace MRC.Core.Runtime;
 
-internal enum RunnerProcessOwnershipKind
+public enum RunnerProcessOwnershipKind
 {
-    Managed = 0,
-    External = 1,
-    Unattributed = 2
+    Managed,
+    External,
+    Unattributed
 }
 
-internal sealed record RunnerObservedProcess(
+public sealed record RunnerObservedProcess(
     int ProcessId,
     int? ParentProcessId,
     int? SessionId,
@@ -16,4 +16,5 @@ internal sealed record RunnerObservedProcess(
     RunnerProcessOwnershipKind Ownership,
     string? ManagedRunnerPath,
     string Reason,
-    string? InspectionError);
+    string? InspectionError,
+    string? ServiceName = null);
