@@ -61,7 +61,7 @@ public partial class MainWindow : Window
         UpdateHeroTruth(true);
         SetBoundaryDetails($"Deterministic v{BuildInfo.Version} visual preview data — controls shown but runtime operation disabled.");
         RefreshStatusValue.Text = $"v{BuildInfo.Version} preview • {_dashboard.TotalCount} runners • operations disabled in render mode";
-        OperationsPanel.IsEnabled = false;
+        ControlDrawer.IsEnabled = false;
         RunnerList.IsHitTestVisible = false;
         _animationClock.Tick(DateTimeOffset.UtcNow, _dashboard.Rows);
     }
@@ -80,7 +80,7 @@ public partial class MainWindow : Window
             {
                 _engine = new RunnerEngine();
                 _operations = new RunnerOperationsService(_engine);
-                OperationsPanel.IsEnabled = true;
+                ControlDrawer.IsEnabled = true;
                 RunnerList.IsHitTestVisible = true;
                 await RefreshDashboardAsync();
                 _refreshTimer.Start();
@@ -90,7 +90,7 @@ public partial class MainWindow : Window
             {
                 _engine = null;
                 _operations = null;
-                OperationsPanel.IsEnabled = false;
+                ControlDrawer.IsEnabled = false;
                 RunnerList.IsHitTestVisible = false;
                 UpdateHeroTruth(false);
                 RefreshStatusValue.Text = $"Engine unavailable • {ex.Message}";
@@ -100,7 +100,7 @@ public partial class MainWindow : Window
         else
         {
             _dashboard.ApplySnapshots(Array.Empty<RunnerSnapshot>());
-            OperationsPanel.IsEnabled = false;
+            ControlDrawer.IsEnabled = false;
             RunnerList.IsHitTestVisible = false;
             RefreshStatusValue.Text = $"CONTROL BLOCKED • {fence.Code}";
             RefreshStatusValue.Foreground = BrushFromHex("#FF8A3D");
@@ -117,24 +117,49 @@ public partial class MainWindow : Window
     {
         if (ActualWidth <= 0) return;
         _dashboard.CardColumnCount = RunnerResponsiveLayout.ColumnCountForWidth(ActualWidth);
+        if (ControlDrawerHost.Visibility == Visibility.Visible)
+            ControlDrawerHost.Width = Math.Min(400, Math.Max(0, ActualWidth - 32));
     }
 
     private void MainWindow_OnPreviewKeyDown(object sender, KeyEventArgs e)
     {
-        if (SearchBox.IsKeyboardFocusWithin || Keyboard.Modifiers != ModifierKeys.None) return;
-        if (e.Key is not Key.OemQuestion and not Key.Divide) return;
+        if (Keyboard.Modifiers != ModifierKeys.None) return;
 
-        SearchBox.Focus();
-        SearchBox.SelectAll();
+        if (e.Key == Key.Escape && ControlDrawerHost.Visibility == Visibility.Visible)
+        {
+            CloseControlDrawer();
+            e.Handled = true;
+            return;
+        }
+
+        if (e.Key is not Key.OemQuestion and not Key.Divide) return;
+        if (ControlDrawer.IsKeyboardFocusWithin) return;
+
+        OpenControlDrawer(focusSearch: true);
         e.Handled = true;
     }
 
     private void HeroHeader_OnMenuRequested(object sender, RoutedEventArgs e) => OpenControlDrawer();
 
-    private void OpenControlDrawer()
+    private void OpenControlDrawer(bool focusSearch = false)
     {
-        SearchBox.Focus();
-        SearchBox.SelectAll();
+        ControlDrawerHost.Visibility = Visibility.Visible;
+        DrawerScrim.Visibility = Visibility.Visible;
+        ControlDrawerHost.Width = Math.Min(400, Math.Max(0, ActualWidth - 32));
+        if (focusSearch) ControlDrawer.FocusSearch();
+    }
+
+    private void CloseControlDrawer()
+    {
+        ControlDrawerHost.Visibility = Visibility.Collapsed;
+        DrawerScrim.Visibility = Visibility.Collapsed;
+        RunnerList.Focus();
+    }
+
+    private void DrawerScrim_OnClick(object sender, RoutedEventArgs e)
+    {
+        CloseControlDrawer();
+        e.Handled = true;
     }
 
     private void ApplyRunnerScrollBarStyle()
@@ -202,24 +227,6 @@ public partial class MainWindow : Window
         finally
         {
             _refreshInProgress = false;
-        }
-    }
-
-    private void SearchBox_OnTextChanged(object sender, TextChangedEventArgs e)
-    {
-        _dashboard.SearchText = SearchBox.Text;
-    }
-
-    private void FilterButton_OnClick(object sender, RoutedEventArgs e)
-    {
-        if (sender is not Button { Tag: string tag } || !Enum.TryParse<RunnerFilter>(tag, out var filter)) return;
-        _dashboard.SelectedFilter = filter;
-
-        foreach (var button in FilterPanel.Children.OfType<Button>())
-        {
-            var isSelected = string.Equals(button.Tag as string, tag, StringComparison.OrdinalIgnoreCase);
-            button.BorderBrush = BrushFromHex(isSelected ? "#35D9FF" : "#263342");
-            button.Foreground = BrushFromHex(isSelected ? "#F4F7FA" : "#AAB6C3");
         }
     }
 
@@ -437,9 +444,8 @@ public partial class MainWindow : Window
     {
         _operationInProgress = true;
         _refreshTimer.Stop();
-        OperationsPanel.IsEnabled = false;
+        ControlDrawer.IsEnabled = false;
         RunnerList.IsHitTestVisible = false;
-        ManualRefreshButton.IsEnabled = false;
         RefreshStatusValue.Text = message;
         RefreshStatusValue.Foreground = BrushFromHex("#AAB6C3");
     }
@@ -448,9 +454,8 @@ public partial class MainWindow : Window
     {
         _operationInProgress = false;
         var canOperate = !_previewMode && _operations is not null;
-        OperationsPanel.IsEnabled = canOperate;
+        ControlDrawer.IsEnabled = canOperate;
         RunnerList.IsHitTestVisible = canOperate;
-        ManualRefreshButton.IsEnabled = true;
         if (canOperate) _refreshTimer.Start();
     }
 
