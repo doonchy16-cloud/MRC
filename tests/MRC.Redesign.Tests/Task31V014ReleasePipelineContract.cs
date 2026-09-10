@@ -50,6 +50,9 @@ internal static class Task31V014ReleasePipelineContract
             "v0.0.14",
             "--prerelease",
             "gh release edit v0.0.14 --target \"$env:GITHUB_SHA\"",
+            "gh api --method PATCH \"repos/$env:GITHUB_REPOSITORY/git/refs/tags/v0.0.14\"",
+            "-f \"sha=$env:GITHUB_SHA\"",
+            "-F \"force=false\"",
             "git/ref/tags/v0.0.14",
             "$publishedTarget -ne $env:GITHUB_SHA"
         })
@@ -72,6 +75,9 @@ internal static class Task31V014ReleasePipelineContract
         Require(workflow.Contains("--target \"$env:GITHUB_SHA\"", StringComparison.Ordinal)
                 && workflow.Contains("$publishedTarget", StringComparison.Ordinal),
             "Existing v0.0.14 prerelease can be refreshed without proving that its tag follows the exact candidate HEAD.");
+        Require(workflow.Contains("-F \"force=false\"", StringComparison.Ordinal)
+                && !workflow.Contains("-F \"force=true\"", StringComparison.Ordinal),
+            "v0.0.14 tag movement must fail closed rather than force a non-fast-forward rewrite.");
     }
 
     private static void Require(bool condition, string message)
