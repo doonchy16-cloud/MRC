@@ -194,16 +194,8 @@ public sealed class CliDispatcher
 
     private static async Task WriteHelpAsync(TextWriter output)
     {
-        await output.WriteLineAsync("Main Runner Control (MRC)");
-        await output.WriteLineAsync();
-        await output.WriteLineAsync("Usage:");
-        await output.WriteLineAsync("  MRC                         Open the GUI");
-        await output.WriteLineAsync("  MRC -v | -version | --version");
-        await output.WriteLineAsync("                              Show installed version information");
-        await output.WriteLineAsync("  MRC -h | -help | --help    Show this help");
-        await output.WriteLineAsync("  MRC -doctor | --doctor     Find issues and apply verified automatic low-risk repairs");
-        await output.WriteLineAsync("  MRC -diagnose | --diagnose Run deep read-only runner/process diagnostics");
-        await output.WriteLineAsync("  MRC -update | --update     Resolve, verify, and atomically activate an allowed release");
+        var renderer = new CliRenderer(output);
+        foreach (var line in CliPresentation.HelpLines()) await renderer.WriteLineAsync(line);
     }
 
     private static async Task WriteUnknownAsync(TextWriter error, string option)
