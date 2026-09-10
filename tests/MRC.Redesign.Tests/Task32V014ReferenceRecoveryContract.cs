@@ -41,11 +41,15 @@ internal static class Task32V014ReferenceRecoveryContract
         var root = Directory.GetCurrentDirectory();
         var xaml = File.ReadAllText(Path.Combine(root, "src", "MRC.Gui", "MainWindow.xaml"));
         var header = File.ReadAllText(Path.Combine(root, "src", "MRC.Gui", "Controls", "HeroHeader.xaml"));
+        var ambient = File.ReadAllText(Path.Combine(root, "src", "MRC.Gui", "Controls", "AmbientBackground.xaml"));
 
         Require(xaml.Contains("x:Key=\"AmberActionBrush\"", StringComparison.Ordinal),
             "Reference-first GUI is missing the warm amber primary-action authority.");
-        Require(xaml.Contains("x:Name=\"AmbientGlowLayer\"", StringComparison.Ordinal),
-            "Reference-first GUI is missing the dimensional ambient glow layer.");
+        Require(xaml.Contains("<controls:AmbientBackground Panel.ZIndex=\"0\"", StringComparison.Ordinal)
+                && ambient.Contains("x:Name=\"CoolHaze\"", StringComparison.Ordinal)
+                && ambient.Contains("x:Name=\"LowerRightAmberBloom\"", StringComparison.Ordinal)
+                && ambient.Contains("x:Name=\"OuterVignette\"", StringComparison.Ordinal),
+            "Reference-first GUI is missing the dedicated dimensional ambient background hierarchy.");
         Require(xaml.Contains("<controls:HeroHeader", StringComparison.Ordinal)
                 && header.Contains("Text=\"MAIN PC • LOCAL-FIRST CONTROL\"", StringComparison.Ordinal),
             "Header is missing the approved local-control context eyebrow.");
