@@ -82,7 +82,10 @@ public static class CliPresentation
     {
         var lines = new List<CliLine>
         {
-            new("MRC // COMMAND REFERENCE", CliTone.Heading),
+            new CliLine(
+                CliTone.Heading,
+                new CliSegment("MRC", CliTone.Command),
+                new CliSegment(" // COMMAND REFERENCE", CliTone.Heading)),
             new(string.Empty, CliTone.Normal)
         };
 

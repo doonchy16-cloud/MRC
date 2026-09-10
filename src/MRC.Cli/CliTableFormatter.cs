@@ -37,12 +37,13 @@ public static class CliTableFormatter
             var command = row.Command.Trim();
             var aliases = string.Join(", ", row.Aliases.Where(alias => !string.IsNullOrWhiteSpace(alias)).Select(alias => alias.Trim()));
             var wrapped = Wrap(row.Description, descriptionWidth);
+            var segments = new List<CliSegment>(CommandSegments(command, CommandWidth + GapWidth))
+            {
+                new(aliases.PadRight(AliasWidth + GapWidth), CliTone.Secondary),
+                new(wrapped[0], CliTone.Normal)
+            };
 
-            lines.Add(new CliLine(
-                CliTone.Heading,
-                new CliSegment(command.PadRight(CommandWidth + GapWidth), CliTone.Heading),
-                new CliSegment(aliases.PadRight(AliasWidth + GapWidth), CliTone.Secondary),
-                new CliSegment(wrapped[0], CliTone.Normal)));
+            lines.Add(new CliLine(CliTone.Heading, segments.ToArray()));
 
             foreach (var continuation in wrapped.Skip(1))
             {
@@ -54,6 +55,27 @@ public static class CliTableFormatter
         }
 
         return lines;
+    }
+
+    private static IReadOnlyList<CliSegment> CommandSegments(string command, int paddedWidth)
+    {
+        var trimmed = command.Trim();
+        if (trimmed == "MRC")
+            return new[] { new CliSegment("MRC".PadRight(paddedWidth), CliTone.Command) };
+
+        const string prefix = "MRC ";
+        if (!trimmed.StartsWith(prefix, StringComparison.Ordinal))
+            return new[] { new CliSegment(trimmed.PadRight(paddedWidth), CliTone.Heading) };
+
+        var option = trimmed[prefix.Length..];
+        var used = prefix.Length + option.Length;
+        return new[]
+        {
+            new CliSegment("MRC", CliTone.Command),
+            new CliSegment(" ", CliTone.Normal),
+            new CliSegment(option, CliTone.Heading),
+            new CliSegment(new string(' ', Math.Max(0, paddedWidth - used)), CliTone.Normal)
+        };
     }
 
     private static IReadOnlyList<string> Wrap(string text, int width)

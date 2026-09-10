@@ -9,7 +9,8 @@ public enum CliTone
     Error = 4,
     Path = 5,
     Metadata = 6,
-    Secondary = 7
+    Secondary = 7,
+    Command = 8
 }
 
 public static class CliPalette
@@ -24,6 +25,7 @@ public static class CliPalette
         CliTone.Path => ConsoleColor.Cyan,
         CliTone.Metadata => ConsoleColor.Magenta,
         CliTone.Secondary => ConsoleColor.DarkGray,
+        CliTone.Command => ConsoleColor.Yellow,
         _ => ConsoleColor.White
     };
 }
