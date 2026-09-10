@@ -256,8 +256,6 @@
         <Grid Margin="22" Panel.ZIndex="1">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
@@ -268,42 +266,7 @@
                                  Margin="2,0,2,18"
                                  MenuRequested="HeroHeader_OnMenuRequested" />
 
-            <UniformGrid Grid.Row="1" Columns="6" Margin="0,0,0,16">
-                <Border Style="{StaticResource CounterCardStyle}"><StackPanel><TextBlock Text="TOTAL" Foreground="{StaticResource MutedBrush}" FontSize="10" FontWeight="Bold" /><TextBlock Text="{Binding TotalCount}" Foreground="{StaticResource CountBrush}" FontSize="24" FontWeight="Bold" /></StackPanel></Border>
-                <Border Style="{StaticResource CounterCardStyle}"><StackPanel><TextBlock Text="IDLE" Foreground="{StaticResource MutedBrush}" FontSize="10" FontWeight="Bold" /><TextBlock Text="{Binding IdleCount}" Foreground="{StaticResource IdleBrush}" FontSize="24" FontWeight="Bold" /></StackPanel></Border>
-                <Border Style="{StaticResource CounterCardStyle}"><StackPanel><TextBlock Text="BUSY" Foreground="{StaticResource MutedBrush}" FontSize="10" FontWeight="Bold" /><TextBlock Text="{Binding BusyCount}" Foreground="{StaticResource BusyBrush}" FontSize="24" FontWeight="Bold" /></StackPanel></Border>
-                <Border Style="{StaticResource CounterCardStyle}"><StackPanel><TextBlock Text="OFF" Foreground="{StaticResource MutedBrush}" FontSize="10" FontWeight="Bold" /><TextBlock Text="{Binding OffCount}" Foreground="{StaticResource OffBrush}" FontSize="24" FontWeight="Bold" /></StackPanel></Border>
-                <Border Style="{StaticResource CounterCardStyle}"><StackPanel><TextBlock Text="ERROR" Foreground="{StaticResource MutedBrush}" FontSize="10" FontWeight="Bold" /><TextBlock Text="{Binding ErrorCount}" Foreground="{StaticResource ErrorBrush}" FontSize="24" FontWeight="Bold" /></StackPanel></Border>
-                <Border Style="{StaticResource CounterCardStyle}" Margin="0"><StackPanel><TextBlock Text="TRANSITION" Foreground="{StaticResource MutedBrush}" FontSize="10" FontWeight="Bold" /><TextBlock Text="{Binding TransitionCount}" Foreground="{StaticResource StartingBrush}" FontSize="24" FontWeight="Bold" /></StackPanel></Border>
-            </UniformGrid>
-
-            <Grid x:Name="OperationsPanel" Grid.Row="2" Margin="0,0,0,14" IsEnabled="False">
-                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" MinWidth="160" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                <StackPanel x:Name="FilterPanel" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button Content="ALL" Tag="ALL" AutomationProperties.Name="Show all runners" Style="{StaticResource FilterButtonStyle}" Click="FilterButton_OnClick" />
-                    <Button Content="IDLE" Tag="IDLE" AutomationProperties.Name="Show idle runners" Style="{StaticResource FilterButtonStyle}" Click="FilterButton_OnClick" />
-                    <Button Content="BUSY" Tag="BUSY" AutomationProperties.Name="Show busy runners" Style="{StaticResource FilterButtonStyle}" Click="FilterButton_OnClick" />
-                    <Button Content="OFF" Tag="OFF" AutomationProperties.Name="Show off runners" Style="{StaticResource FilterButtonStyle}" Click="FilterButton_OnClick" />
-                    <Button Content="ERROR" Tag="ERROR" AutomationProperties.Name="Show error runners" Style="{StaticResource FilterButtonStyle}" Click="FilterButton_OnClick" />
-                </StackPanel>
-
-                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="10,0,10,0">
-                    <Button x:Name="TurnAllOnButton" AutomationProperties.Name="Turn all verified OFF runners on" Content="TURN ALL ON" Click="TurnAllOnButton_OnClick" Style="{StaticResource BulkOnButtonStyle}" />
-                    <Button x:Name="TurnAllOffButton" AutomationProperties.Name="Stop all verified IDLE runners" Content="TURN ALL OFF" Click="TurnAllOffButton_OnClick" Style="{StaticResource BulkOffButtonStyle}" />
-                </StackPanel>
-
-                <Border Grid.Column="2" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Background="#0E1820" CornerRadius="9" MinHeight="38" Padding="11,0">
-                    <Grid>
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                        <TextBlock Text="SEARCH" Foreground="{StaticResource MutedBrush}" FontSize="10" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,10,0" />
-                        <TextBox x:Name="SearchBox" Grid.Column="1" AutomationProperties.Name="Search runners" ToolTip="Press / to focus search" TextChanged="SearchBox_OnTextChanged" Background="Transparent" BorderThickness="0" Foreground="{StaticResource LabelBrush}" CaretBrush="{StaticResource RunnerBrush}" FontSize="12" VerticalContentAlignment="Center" />
-                        <TextBlock Grid.Column="2" Text="/" Foreground="{StaticResource MutedBrush}" FontFamily="Cascadia Mono, Consolas" FontSize="12" VerticalAlignment="Center" Margin="8,0,0,0" />
-                    </Grid>
-                </Border>
-                <Button Grid.Column="3" x:Name="ManualRefreshButton" AutomationProperties.Name="Refresh runner states now" Content="↻" Click="ManualRefreshButton_OnClick" Style="{StaticResource ApplicationButtonStyle}" Margin="7,0,0,0" MinWidth="46" />
-            </Grid>
-
-            <Border x:Name="RunnerCardSurface" Grid.Row="3" Background="#66070D12" BorderBrush="#182733" BorderThickness="1" CornerRadius="16" Padding="5" ClipToBounds="True">
+            <Border x:Name="RunnerCardSurface" Grid.Row="1" Background="#66070D12" BorderBrush="#182733" BorderThickness="1" CornerRadius="16" Padding="5" ClipToBounds="True">
                 <ListBox x:Name="RunnerList"
                          AutomationProperties.Name="Managed runner command cards"
                          ItemsSource="{Binding VisibleRows}"
@@ -327,7 +290,7 @@
                 </ListBox>
             </Border>
 
-            <Border x:Name="SystemFindingsPanel" Grid.Row="4" Margin="0,12,0,0" Padding="12,9" Background="#101820" BorderBrush="#304253" BorderThickness="1" CornerRadius="9">
+            <Border x:Name="SystemFindingsPanel" Grid.Row="2" Margin="0,12,0,0" Padding="12,9" Background="#101820" BorderBrush="#304253" BorderThickness="1" CornerRadius="9">
                 <Grid>
                     <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                     <TextBlock Text="SYSTEM" Foreground="{StaticResource BusyBrush}" FontSize="10" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,11,0" />
@@ -335,11 +298,32 @@
                 </Grid>
             </Border>
 
-            <Grid Grid.Row="5" Margin="3,10,3,0">
+            <Grid Grid.Row="3" Margin="3,10,3,0">
                 <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                 <TextBlock x:Name="RefreshStatusValue" Text="Waiting for runner state…" Foreground="{StaticResource SecondaryBrush}" FontSize="11" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
                 <TextBlock Grid.Column="1" Text="20 FPS UI • 3s runtime refresh" Foreground="{StaticResource MutedBrush}" FontFamily="Cascadia Mono, Consolas" FontSize="10" VerticalAlignment="Center" Margin="12,0,0,0" />
             </Grid>
         </Grid>
+
+        <Button x:Name="DrawerScrim"
+                Panel.ZIndex="10"
+                Visibility="Collapsed"
+                Background="#99000000"
+                BorderThickness="0"
+                Focusable="False"
+                Click="DrawerScrim_OnClick" />
+
+        <Border x:Name="ControlDrawerHost"
+                Panel.ZIndex="11"
+                Width="400"
+                Margin="16"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Stretch"
+                Visibility="Collapsed">
+            <controls:ControlDrawer x:Name="ControlDrawer"
+                                    TurnAllOnRequested="TurnAllOnButton_OnClick"
+                                    TurnAllOffRequested="TurnAllOffButton_OnClick"
+                                    RefreshRequested="ManualRefreshButton_OnClick" />
+        </Border>
     </Grid>
 </Window>
