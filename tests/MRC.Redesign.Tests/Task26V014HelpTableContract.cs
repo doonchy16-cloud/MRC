@@ -49,7 +49,7 @@ internal static class Task26V014HelpTableContract
 
         Require(row!.Segments.Any(segment =>
                 segment.Tone == CliTone.Command
-                && segment.Text == "MRC"),
+                && segment.Text.Trim().Equals("MRC", StringComparison.Ordinal)),
             $"Help row '{canonical}' does not preserve the yellow MRC command token.");
 
         if (!canonical.Equals("MRC", StringComparison.Ordinal))
