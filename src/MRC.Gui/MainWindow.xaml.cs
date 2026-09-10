@@ -59,7 +59,7 @@ public partial class MainWindow : Window
         ApplyResponsiveLayout();
         MachineValue.Text = "MAIN-PC";
         RootValue.Text = MrcConstants.RunnerRoot;
-        BoundaryValue.Text = "AUTHORIZED";
+        BoundaryValue.Text = "CONTROL AUTHORIZED";
         BoundaryValue.Foreground = BrushFromHex("#39E58C");
         BoundaryDot.Fill = BrushFromHex("#39E58C");
         SetBoundaryDetails($"Deterministic v{BuildInfo.Version} visual preview data — controls shown but runtime operation disabled.");
@@ -119,11 +119,13 @@ public partial class MainWindow : Window
     {
         if (ActualWidth <= 0) return;
 
-        _dashboard.CardColumnCount = ActualWidth >= 1650
-            ? 3
-            : ActualWidth >= 1080
-                ? 2
-                : 1;
+        _dashboard.CardColumnCount = ActualWidth >= 1600
+            ? 4
+            : ActualWidth >= 1100
+                ? 3
+                : ActualWidth >= 800
+                    ? 2
+                    : 1;
     }
 
     private void MainWindow_OnPreviewKeyDown(object sender, KeyEventArgs e)
@@ -159,7 +161,7 @@ public partial class MainWindow : Window
     {
         MachineValue.Text = string.IsNullOrWhiteSpace(fence.MachineName) ? "UNKNOWN" : fence.MachineName;
         RootValue.Text = MrcConstants.RunnerRoot;
-        BoundaryValue.Text = fence.IsAuthorized ? "AUTHORIZED" : $"BLOCKED — {fence.Code}";
+        BoundaryValue.Text = fence.IsAuthorized ? "CONTROL AUTHORIZED" : $"CONTROL BLOCKED — {fence.Code}";
         var boundaryBrush = BrushFromHex(fence.IsAuthorized ? "#39E58C" : "#FF8A3D");
         BoundaryValue.Foreground = boundaryBrush;
         BoundaryDot.Fill = boundaryBrush;
