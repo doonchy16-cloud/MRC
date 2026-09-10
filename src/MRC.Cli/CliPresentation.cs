@@ -76,26 +76,30 @@ public static class CliPresentation
         return lines;
     }
 
-    public static IReadOnlyList<CliLine> HelpLines()
+    public static IReadOnlyList<CliLine> HelpLines() => HelpLines(CliTableFormatter.DefaultWidth);
+
+    public static IReadOnlyList<CliLine> HelpLines(int width)
     {
-        return new[]
+        var lines = new List<CliLine>
         {
-            new CliLine("Main Runner Control (MRC)", CliTone.Heading),
-            new CliLine(string.Empty, CliTone.Normal),
-            new CliLine("Commands", CliTone.Heading),
-            Command("MRC", "Open or focus the GUI"),
-            Command("MRC --version", "Show installed version information"),
-            Alias("    aliases: MRC -v, MRC -version"),
-            Command("MRC --help", "Show this help"),
-            Alias("    aliases: MRC -h, MRC -help"),
-            Command("MRC --doctor", "Find issues and apply verified automatic low-risk repairs"),
-            Alias("    alias: MRC -doctor"),
-            Command("MRC --diagnose", "Run deep read-only runner/process diagnostics"),
-            Alias("    alias: MRC -diagnose"),
-            Command("MRC --update", "Resolve, verify, and atomically activate an allowed release"),
-            Alias("    alias: MRC -update"),
-            Command("MRC --check", "Check for an available update without installing it")
+            new("MRC // COMMAND REFERENCE", CliTone.Heading),
+            new(string.Empty, CliTone.Normal)
         };
+
+        lines.AddRange(CliTableFormatter.Format(
+            new[]
+            {
+                new CliTableRow("MRC", Array.Empty<string>(), "Open or focus the GUI"),
+                new CliTableRow("MRC --version", new[] { "MRC -v", "MRC -version" }, "Show installed version information"),
+                new CliTableRow("MRC --help", new[] { "MRC -h", "MRC -help" }, "Show this help"),
+                new CliTableRow("MRC --doctor", new[] { "MRC -doctor" }, "Find issues and apply verified automatic low-risk repairs"),
+                new CliTableRow("MRC --diagnose", new[] { "MRC -diagnose" }, "Run deep read-only runner/process diagnostics"),
+                new CliTableRow("MRC --update", new[] { "MRC -update" }, "Resolve, verify, and atomically activate an allowed release"),
+                new CliTableRow("MRC --check", new[] { "MRC -check" }, "Check for an available update without installing it")
+            },
+            width));
+
+        return lines;
     }
 
     public static IReadOnlyList<CliLine> UpdateCheckLines(UpdateCheckResult result)
@@ -344,14 +348,6 @@ public static class CliPresentation
 
         return lines;
     }
-
-    private static CliLine Command(string command, string description) =>
-        new(
-            CliTone.Heading,
-            new CliSegment($"  {command,-22}", CliTone.Heading),
-            new CliSegment(description, CliTone.Normal));
-
-    private static CliLine Alias(string text) => new(text, CliTone.Secondary);
 
     private static CliLine Field(string label, string value, CliTone valueTone) =>
         new(
