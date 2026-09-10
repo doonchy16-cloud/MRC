@@ -6,7 +6,7 @@ internal static class Task31V014ReleasePipelineContract
     internal static void Run()
     {
         VerifyReleaseWorkflow();
-        Console.WriteLine("PASS  Task31 v0.0.14 release pipeline packages verifies and publishes only the precert candidate");
+        Console.WriteLine("PASS  Task31 v0.0.14 release pipeline packages verifies and publishes only the exact precert candidate");
     }
 
     private static void VerifyReleaseWorkflow()
@@ -45,9 +45,13 @@ internal static class Task31V014ReleasePipelineContract
             "MRC-v0.0.14-1200x760.png",
             "MRC-v0.0.14-1180x760.png",
             "MRC-v0.0.14-900x560.png",
+            "MRC-v0.0.14-900x560-busy.png",
             "gh release",
             "v0.0.14",
-            "--prerelease"
+            "--prerelease",
+            "gh release edit v0.0.14 --target \"$env:GITHUB_SHA\"",
+            "git/ref/tags/v0.0.14",
+            "$publishedTarget -ne $env:GITHUB_SHA"
         })
         {
             Require(workflow.Contains(marker, StringComparison.Ordinal),
@@ -65,6 +69,9 @@ internal static class Task31V014ReleasePipelineContract
                 && workflow.Contains("payload\\MRC.Gui.exe", StringComparison.Ordinal)
                 && workflow.Contains("MRC.ico", StringComparison.Ordinal),
             "v0.0.14 release workflow does not verify executable/icon package authority.");
+        Require(workflow.Contains("--target \"$env:GITHUB_SHA\"", StringComparison.Ordinal)
+                && workflow.Contains("$publishedTarget", StringComparison.Ordinal),
+            "Existing v0.0.14 prerelease can be refreshed without proving that its tag follows the exact candidate HEAD.");
     }
 
     private static void Require(bool condition, string message)
