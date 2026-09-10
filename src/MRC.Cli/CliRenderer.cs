@@ -14,19 +14,29 @@ public sealed class CliRenderer
 
     public bool ColorEnabled { get; }
 
-    public async Task WriteLineAsync(string text, CliTone tone)
+    public Task WriteLineAsync(string text, CliTone tone) =>
+        WriteLineAsync(new CliLine(text, tone));
+
+    public async Task WriteLineAsync(CliLine line)
     {
+        ArgumentNullException.ThrowIfNull(line);
+
         if (!ColorEnabled)
         {
-            await _writer.WriteLineAsync(text);
+            await _writer.WriteLineAsync(line.Text);
             return;
         }
 
         var previous = Console.ForegroundColor;
         try
         {
-            Console.ForegroundColor = CliPalette.ColorFor(tone);
-            await _writer.WriteLineAsync(text);
+            foreach (var segment in line.Segments)
+            {
+                Console.ForegroundColor = CliPalette.ColorFor(segment.Tone);
+                await _writer.WriteAsync(segment.Text);
+            }
+
+            await _writer.WriteLineAsync();
         }
         finally
         {
