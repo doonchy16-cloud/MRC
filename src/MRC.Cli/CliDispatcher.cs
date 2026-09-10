@@ -119,7 +119,7 @@ public sealed class CliDispatcher
             var renderer = new CliRenderer(output);
             foreach (var line in CliPresentation.DiagnoseLines(report))
             {
-                await renderer.WriteLineAsync(line.Text, line.Tone);
+                await renderer.WriteLineAsync(line);
             }
             return 0;
         }
@@ -149,7 +149,7 @@ public sealed class CliDispatcher
             var progress = new ImmediateProgress<UpdateProgress>(updateProgress =>
             {
                 var line = CliPresentation.UpdateProgressLine(updateProgress);
-                outputRenderer.WriteLineAsync(line.Text, line.Tone).GetAwaiter().GetResult();
+                outputRenderer.WriteLineAsync(line).GetAwaiter().GetResult();
             });
             var result = await _updateRunner(progress, CancellationToken.None);
             await outputRenderer.WriteLineAsync(
@@ -183,13 +183,13 @@ public sealed class CliDispatcher
     {
         var installLocation = AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
         var renderer = new CliRenderer(output);
-        foreach (var line in CliPresentation.VersionLines(installLocation)) await renderer.WriteLineAsync(line.Text, line.Tone);
+        foreach (var line in CliPresentation.VersionLines(installLocation)) await renderer.WriteLineAsync(line);
     }
 
     private static async Task WriteDoctorAsync(TextWriter output, DoctorReport report)
     {
         var renderer = new CliRenderer(output);
-        foreach (var line in CliPresentation.DoctorLines(report)) await renderer.WriteLineAsync(line.Text, line.Tone);
+        foreach (var line in CliPresentation.DoctorLines(report)) await renderer.WriteLineAsync(line);
     }
 
     private static async Task WriteHelpAsync(TextWriter output)
