@@ -122,6 +122,7 @@
                     <TextBox x:Name="SearchBox"
                              Grid.Column="1"
                              AutomationProperties.Name="Search runners"
+                             ToolTip="Press / to focus search"
                              TextChanged="SearchBox_OnTextChanged"
                              Background="Transparent"
                              BorderThickness="0"
