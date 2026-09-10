@@ -6,7 +6,7 @@ internal static class GuiVisualPolishAcceptance
     {
         var tests = new (string Name, Action Body)[]
         {
-            ("disabled operation buttons preserve terminal custom chrome", DisabledButtonsPreserveDarkChrome),
+            ("disabled operation buttons preserve native custom chrome", DisabledButtonsPreserveDarkChrome),
             ("runner scrollbar uses an explicit dark custom template", RunnerScrollbarUsesDarkTemplate)
         };
         var failures = 0;
@@ -24,11 +24,14 @@ internal static class GuiVisualPolishAcceptance
     private static void DisabledButtonsPreserveDarkChrome()
     {
         var xaml = Xaml();
-        Require(xaml.Contains("x:Key=\"TerminalButtonTemplate\"", StringComparison.Ordinal), "Terminal custom button template is missing.");
-        Require(xaml.Contains("Background=\"{TemplateBinding Background}\"", StringComparison.Ordinal), "Terminal button template does not preserve style background.");
-        Require(xaml.Contains("Property=\"IsEnabled\" Value=\"False\"", StringComparison.Ordinal), "Terminal button template does not explicitly handle disabled state.");
-        Require(xaml.Contains("Template\" Value=\"{StaticResource TerminalButtonTemplate}\"", StringComparison.Ordinal), "Terminal button family does not use the custom template.");
-        Require(xaml.Contains("BasedOn=\"{StaticResource TerminalButtonStyle}\"", StringComparison.Ordinal), "Bulk/row controls do not inherit terminal button chrome.");
+        Require(xaml.Contains("x:Key=\"ApplicationButtonStyle\"", StringComparison.Ordinal), "Native application button style is missing.");
+        Require(xaml.Contains("Background=\"{TemplateBinding Background}\"", StringComparison.Ordinal), "Application button template does not preserve style background.");
+        Require(xaml.Contains("Property=\"IsEnabled\" Value=\"False\"", StringComparison.Ordinal), "Application button template does not explicitly handle disabled state.");
+        Require(xaml.Contains("CornerRadius=\"8\"", StringComparison.Ordinal), "Application buttons do not preserve the approved rounded native chrome.");
+        Require(xaml.Contains("BasedOn=\"{StaticResource ApplicationButtonStyle}\"", StringComparison.Ordinal), "Bulk/card controls do not inherit native application button chrome.");
+        Require(xaml.Contains("x:Key=\"CardActionButtonStyle\"", StringComparison.Ordinal)
+                && xaml.Contains("BasedOn=\"{StaticResource CardActionButtonStyle}\"", StringComparison.Ordinal),
+            "Runner card actions do not share a dedicated consistent action family.");
     }
 
     private static void RunnerScrollbarUsesDarkTemplate()
@@ -38,7 +41,7 @@ internal static class GuiVisualPolishAcceptance
         Require(app.Contains("x:Key=\"DarkScrollBarStyle\"", StringComparison.Ordinal), "Explicit dark scrollbar style is missing.");
         Require(app.Contains("x:Name=\"PART_Track\"", StringComparison.Ordinal), "Dark scrollbar template does not provide WPF PART_Track.");
         Require(app.Contains("x:Key=\"DarkScrollThumbTemplate\"", StringComparison.Ordinal), "Dark scrollbar thumb template is missing.");
-        Require(code.Contains("ApplyRunnerScrollBarStyle", StringComparison.Ordinal) && code.Contains("DarkScrollBarStyle", StringComparison.Ordinal), "Runner ListView does not apply the explicit dark scrollbar template at runtime.");
+        Require(code.Contains("ApplyRunnerScrollBarStyle", StringComparison.Ordinal) && code.Contains("DarkScrollBarStyle", StringComparison.Ordinal), "Runner card list does not apply the explicit dark scrollbar template at runtime.");
     }
 
     private static string Xaml() => File.ReadAllText(Path.Combine(RepoRoot(), "src", "MRC.Gui", "MainWindow.xaml"));
