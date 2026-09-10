@@ -27,7 +27,7 @@ internal static class GuiVisualPolishAcceptance
         Require(xaml.Contains("x:Key=\"ApplicationButtonStyle\"", StringComparison.Ordinal), "Native application button style is missing.");
         Require(xaml.Contains("Background=\"{TemplateBinding Background}\"", StringComparison.Ordinal), "Application button template does not preserve style background.");
         Require(xaml.Contains("Property=\"IsEnabled\" Value=\"False\"", StringComparison.Ordinal), "Application button template does not explicitly handle disabled state.");
-        Require(xaml.Contains("CornerRadius=\"8\"", StringComparison.Ordinal), "Application buttons do not preserve the approved rounded native chrome.");
+        Require(xaml.Contains("CornerRadius=\"9\"", StringComparison.Ordinal), "Application buttons do not preserve the reference-recovery rounded native chrome.");
         Require(xaml.Contains("BasedOn=\"{StaticResource ApplicationButtonStyle}\"", StringComparison.Ordinal), "Bulk/card controls do not inherit native application button chrome.");
         Require(xaml.Contains("x:Key=\"CardActionButtonStyle\"", StringComparison.Ordinal)
                 && xaml.Contains("BasedOn=\"{StaticResource CardActionButtonStyle}\"", StringComparison.Ordinal),
