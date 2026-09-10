@@ -17,6 +17,7 @@ internal static class Task8GuiContract
         var xaml = File.ReadAllText(xamlPath);
         var headerXaml = File.ReadAllText(Path.Combine(repoRoot, "src", "MRC.Gui", "Controls", "HeroHeader.xaml"));
         var headerCode = File.ReadAllText(Path.Combine(repoRoot, "src", "MRC.Gui", "Controls", "HeroHeader.xaml.cs"));
+        var ambientXaml = File.ReadAllText(Path.Combine(repoRoot, "src", "MRC.Gui", "Controls", "AmbientBackground.xaml"));
 
         Require(xaml.Contains("Width=\"1200\"", StringComparison.Ordinal)
                 && xaml.Contains("Height=\"760\"", StringComparison.Ordinal)
@@ -54,7 +55,9 @@ internal static class Task8GuiContract
             "Command Center header does not expose typed authorization state.");
         Require(xaml.Contains("Background=\"#071015\"", StringComparison.OrdinalIgnoreCase),
             "Reference-first near-black control-room background authority is missing.");
-        Require(xaml.Contains("x:Name=\"AmbientGlowLayer\"", StringComparison.Ordinal),
+        Require(xaml.Contains("<controls:AmbientBackground Panel.ZIndex=\"0\"", StringComparison.Ordinal)
+                && ambientXaml.Contains("x:Name=\"NearBlackBase\"", StringComparison.Ordinal)
+                && ambientXaml.Contains("x:Name=\"LowerRightAmberBloom\"", StringComparison.Ordinal),
             "Reference-first dimensional ambient layer is missing.");
         Require((xaml.Contains("CornerRadius=\"14\"", StringComparison.Ordinal)
                  || xaml.Contains("Property=\"CornerRadius\" Value=\"14\"", StringComparison.Ordinal))
