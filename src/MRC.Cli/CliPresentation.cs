@@ -70,6 +70,26 @@ public static class CliPresentation
         };
     }
 
+    public static IReadOnlyList<CliLine> UpdateCheckLines(UpdateCheckResult result)
+    {
+        ArgumentNullException.ThrowIfNull(result);
+        var status = result.Outcome == UpdateCheckOutcome.UpdateAvailable
+            ? "UPDATE AVAILABLE"
+            : "UP TO DATE";
+        var statusTone = result.Outcome == UpdateCheckOutcome.UpdateAvailable
+            ? CliTone.Heading
+            : CliTone.Success;
+
+        return new[]
+        {
+            new CliLine("MRC Update Check", CliTone.Heading),
+            Field("Current: ", result.CurrentVersion.ToString(), CliTone.Metadata),
+            Field("Available: ", result.AvailableVersion.ToString(), CliTone.Metadata),
+            Field("Status: ", status, statusTone),
+            new CliLine("No changes were made.", CliTone.Secondary)
+        };
+    }
+
     public static CliLine UpdateProgressLine(UpdateProgress progress)
     {
         ArgumentNullException.ThrowIfNull(progress);
