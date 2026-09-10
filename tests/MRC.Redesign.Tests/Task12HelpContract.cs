@@ -27,8 +27,10 @@ internal static class Task12HelpContract
             "Version description is still orphaned onto a separate line.");
         Require(version.Text.Length <= CliTableFormatter.DefaultWidth,
             $"Version help row is too wide: {version.Text.Length} characters.");
-        Require(version.Segments.Any(segment => segment.Text.Trim().Equals("MRC --version", StringComparison.Ordinal) && segment.Tone == CliTone.Heading),
-            "Canonical --version command is not visually primary.");
+        Require(version.Segments.Any(segment => segment.Text == "MRC" && segment.Tone == CliTone.Command)
+                && version.Segments.Any(segment => segment.Text.Contains("--version", StringComparison.Ordinal)
+                                                   && segment.Tone == CliTone.Heading),
+            "Canonical --version command no longer has yellow MRC + cyan option visual primacy.");
         Require(version.Segments.Any(segment => segment.Text.Contains("MRC -v", StringComparison.Ordinal)
                                                 && segment.Text.Contains("MRC -version", StringComparison.Ordinal)
                                                 && segment.Tone == CliTone.Secondary),
@@ -42,8 +44,10 @@ internal static class Task12HelpContract
             Require(row is not null, $"Help is missing canonical MRC {canonical}.");
             Require(row!.Text.Length <= CliTableFormatter.DefaultWidth,
                 $"Help row for {canonical} is too wide: {row.Text.Length} characters.");
-            Require(row.Segments.Any(segment => segment.Text.Trim().Equals($"MRC {canonical}", StringComparison.Ordinal) && segment.Tone == CliTone.Heading),
-                $"Canonical {canonical} is not visually primary.");
+            Require(row.Segments.Any(segment => segment.Text == "MRC" && segment.Tone == CliTone.Command)
+                    && row.Segments.Any(segment => segment.Text.Contains(canonical, StringComparison.Ordinal)
+                                                   && segment.Tone == CliTone.Heading),
+                $"Canonical {canonical} no longer has yellow MRC + cyan option visual primacy.");
         }
 
         var doctor = lines.Single(line => line.Text.Contains("MRC --doctor", StringComparison.Ordinal));
