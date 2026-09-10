@@ -55,7 +55,6 @@ New-Item -ItemType Directory -Force -Path $ArtifactsRoot | Out-Null
 
 $iconMaterializer = Join-Path $repoRoot 'scripts\materialize-icon.ps1'
 & $iconMaterializer
-if ($LASTEXITCODE -ne 0) { throw 'MRC icon materialization failed.' }
 $iconPath = Join-Path $repoRoot 'src\MRC.Gui\Assets\MRC.ico'
 if (-not (Test-Path -LiteralPath $iconPath -PathType Leaf)) { throw 'Materialized MRC icon is missing.' }
 
