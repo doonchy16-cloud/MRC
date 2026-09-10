@@ -75,6 +75,7 @@ internal static class LayoutAcceptance
         var x = Xaml();
         var code = CodeBehind();
         var dashboard = File.ReadAllText(Path.Combine(RepoRoot(), "src", "MRC.Gui", "Presentation", "RunnerDashboardViewModel.cs"));
+        var responsive = File.ReadAllText(Path.Combine(RepoRoot(), "src", "MRC.Gui", "Presentation", "RunnerResponsiveLayout.cs"));
 
         Require(x.Contains("x:Key=\"RunnerCardStyle\"", StringComparison.Ordinal)
                 && (x.Contains("Property=\"CornerRadius\" Value=\"14\"", StringComparison.Ordinal)
@@ -85,13 +86,10 @@ internal static class LayoutAcceptance
         Require(dashboard.Contains("CardColumnCount", StringComparison.Ordinal)
                 && dashboard.Contains("Math.Clamp(value, 1, 4)", StringComparison.Ordinal)
                 && code.Contains("ApplyResponsiveLayout", StringComparison.Ordinal)
-                && code.Contains("ActualWidth >= 1600", StringComparison.Ordinal)
-                && code.Contains("? 4", StringComparison.Ordinal)
-                && code.Contains("ActualWidth >= 1100", StringComparison.Ordinal)
-                && code.Contains("? 3", StringComparison.Ordinal)
-                && code.Contains("ActualWidth >= 800", StringComparison.Ordinal)
-                && code.Contains("? 2", StringComparison.Ordinal),
-            "4/3/2/1 responsive layout authority is incomplete.");
+                && code.Contains("RunnerResponsiveLayout.ColumnCountForWidth(ActualWidth)", StringComparison.Ordinal)
+                && responsive.Contains("MinimumCardSlotWidth = 470", StringComparison.Ordinal)
+                && responsive.Contains("Math.Clamp(columns, 1, 4)", StringComparison.Ordinal),
+            "Safe-width 1-through-4 responsive layout authority is incomplete.");
         Require(x.Contains("Text=\"{Binding RunnerName}\"", StringComparison.Ordinal)
                 && x.Contains("FontSize=\"19\"", StringComparison.Ordinal),
             "Runner identity is not presented at the reference-first card hierarchy.");
