@@ -30,8 +30,8 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         Icon = BitmapFrame.Create(new Uri("pack://application:,,,/MRC.Gui;component/Assets/MRC.ico", UriKind.Absolute));
-        VersionValue.Text = $"v{BuildInfo.Version} // PRE-CERT";
         DataContext = _dashboard;
+        UpdateHeroTruth(false);
         RunnerList.Loaded += (_, _) => ApplyRunnerScrollBarStyle();
 
         _refreshTimer.Interval = TimeSpan.FromSeconds(3);
@@ -58,11 +58,7 @@ public partial class MainWindow : Window
         _previewMode = true;
         _dashboard.ApplyRuntimeReport(report);
         ApplyResponsiveLayout();
-        MachineValue.Text = "MAIN-PC";
-        RootValue.Text = MrcConstants.RunnerRoot;
-        BoundaryValue.Text = "CONTROL AUTHORIZED";
-        BoundaryValue.Foreground = BrushFromHex("#39E58C");
-        BoundaryDot.Fill = BrushFromHex("#39E58C");
+        UpdateHeroTruth(true);
         SetBoundaryDetails($"Deterministic v{BuildInfo.Version} visual preview data — controls shown but runtime operation disabled.");
         RefreshStatusValue.Text = $"v{BuildInfo.Version} preview • {_dashboard.TotalCount} runners • operations disabled in render mode";
         OperationsPanel.IsEnabled = false;
@@ -96,6 +92,7 @@ public partial class MainWindow : Window
                 _operations = null;
                 OperationsPanel.IsEnabled = false;
                 RunnerList.IsHitTestVisible = false;
+                UpdateHeroTruth(false);
                 RefreshStatusValue.Text = $"Engine unavailable • {ex.Message}";
                 RefreshStatusValue.Foreground = BrushFromHex("#FF8A3D");
             }
@@ -132,6 +129,14 @@ public partial class MainWindow : Window
         e.Handled = true;
     }
 
+    private void HeroHeader_OnMenuRequested(object sender, RoutedEventArgs e) => OpenControlDrawer();
+
+    private void OpenControlDrawer()
+    {
+        SearchBox.Focus();
+        SearchBox.SelectAll();
+    }
+
     private void ApplyRunnerScrollBarStyle()
     {
         if (Application.Current?.TryFindResource("DarkScrollBarStyle") is not Style style) return;
@@ -151,22 +156,26 @@ public partial class MainWindow : Window
         }
     }
 
+    private void UpdateHeroTruth(bool authorized)
+    {
+        HeroHeader.InventoryText = authorized
+            ? $"LOCAL INVENTORY LIVE • {_dashboard.TotalCount} MANAGED"
+            : "LOCAL INVENTORY • CONTROL BLOCKED";
+        HeroHeader.TruthText = $"local truth • {DateTime.Now:HH:mm:ss} • 3s refresh • 20 FPS UI";
+        HeroHeader.VersionText = $"v{BuildInfo.Version} // PRE-CERT";
+        HeroHeader.Authorized = authorized;
+    }
+
     private void RenderBoundary(EnvironmentFenceResult fence)
     {
-        MachineValue.Text = string.IsNullOrWhiteSpace(fence.MachineName) ? "UNKNOWN" : fence.MachineName;
-        RootValue.Text = MrcConstants.RunnerRoot;
-        BoundaryValue.Text = fence.IsAuthorized ? "CONTROL AUTHORIZED" : $"CONTROL BLOCKED — {fence.Code}";
-        var boundaryBrush = BrushFromHex(fence.IsAuthorized ? "#39E58C" : "#FF8A3D");
-        BoundaryValue.Foreground = boundaryBrush;
-        BoundaryDot.Fill = boundaryBrush;
+        UpdateHeroTruth(fence.IsAuthorized);
         SetBoundaryDetails(fence.Message);
     }
 
     private void SetBoundaryDetails(string message)
     {
-        BoundaryValue.ToolTip = message;
-        BoundaryDot.ToolTip = message;
-        AutomationProperties.SetHelpText(BoundaryValue, message);
+        HeroHeader.ToolTip = message;
+        AutomationProperties.SetHelpText(HeroHeader, message);
     }
 
     private async Task RefreshDashboardAsync()
@@ -181,6 +190,7 @@ public partial class MainWindow : Window
             var report = await Task.Run(() => _engine.RefreshReport());
             _dashboard.ApplyRuntimeReport(report);
             _animationClock.Tick(DateTimeOffset.UtcNow, _dashboard.Rows);
+            UpdateHeroTruth(HeroHeader.Authorized);
             RefreshStatusValue.Text = $"Updated {DateTime.Now:HH:mm:ss} • {_dashboard.TotalCount} runners • stable repository/name order";
             RefreshStatusValue.Foreground = BrushFromHex("#AAB6C3");
         }
