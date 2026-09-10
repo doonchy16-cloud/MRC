@@ -1,0 +1,110 @@
+name: Pre-cert v0.0.12 Release
+
+on:
+  push:
+    branches: [ redesign-v0.0.12 ]
+    paths:
+      - .release/v0.0.12.trigger
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Verify, package, and publish v0.0.12
+    runs-on: windows-latest
+    timeout-minutes: 55
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup .NET from global.json
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Run v0.0.12 redesign acceptance harness
+        shell: pwsh
+        run: ./scripts/verify-redesign.ps1
+
+      - name: Run PASS4 operations and updater regression
+        shell: pwsh
+        run: ./scripts/verify-pass4.ps1
+
+      - name: Run PASS3 presentation regression
+        shell: pwsh
+        run: ./scripts/verify-pass3.ps1
+
+      - name: Run PASS2 runtime regression
+        shell: pwsh
+        run: ./scripts/verify-pass2.ps1
+
+      - name: Run PASS1 foundation and distribution regression
+        shell: pwsh
+        run: ./scripts/verify-pass1.ps1
+
+      - name: Render canonical v0.0.12 previews
+        shell: pwsh
+        run: ./scripts/render-v0.0.12-preview.ps1
+
+      - name: Build v0.0.12 installable pre-cert package
+        shell: pwsh
+        run: ./scripts/package.ps1 -Configuration Release -Runtime win-x64 -ArtifactsRoot ./artifacts/v0.0.12/package
+
+      - name: Verify package identity hash manifest and CLI
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $root = Join-Path $PWD 'artifacts\v0.0.12\package'
+          $zip = Join-Path $root 'MRC-v0.0.12-win-x64.zip'
+          $sums = Join-Path $root 'SHA256SUMS.txt'
+          if (-not (Test-Path -LiteralPath $zip -PathType Leaf)) { throw "Missing package: $zip" }
+          if (-not (Test-Path -LiteralPath $sums -PathType Leaf)) { throw "Missing checksum authority: $sums" }
+          $line = Get-Content -LiteralPath $sums | Where-Object { $_ -match 'MRC-v0\.0\.12-win-x64\.zip$' } | Select-Object -First 1
+          if ([string]::IsNullOrWhiteSpace($line)) { throw 'SHA256SUMS.txt does not name the v0.0.12 package.' }
+          $expected = ([regex]::Match($line, '^([A-Fa-f0-9]{64})')).Groups[1].Value.ToLowerInvariant()
+          $actual = (Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($actual -ne $expected) { throw "Package SHA-256 mismatch. Expected $expected, got $actual." }
+
+          $extract = Join-Path $env:RUNNER_TEMP 'mrc-v0.0.12-release-verify'
+          Remove-Item -LiteralPath $extract -Recurse -Force -ErrorAction SilentlyContinue
+          Expand-Archive -LiteralPath $zip -DestinationPath $extract -Force
+          $manifest = Get-Content -LiteralPath (Join-Path $extract 'manifest.json') -Raw | ConvertFrom-Json
+          if ([string]$manifest.version -ne '0.0.12') { throw "Manifest version mismatch: $($manifest.version)" }
+          if ([string]$manifest.channel -ne 'precert') { throw "Manifest channel mismatch: $($manifest.channel)" }
+          if ([string]$manifest.releaseStage -ne 'PreCertification') { throw "Manifest releaseStage mismatch: $($manifest.releaseStage)" }
+          if ([string]$manifest.finalTarget -ne '0.1.0') { throw "Manifest finalTarget mismatch: $($manifest.finalTarget)" }
+          if ([string]$manifest.targetMachine -ne 'DOONCHYSCOMPUTI') { throw "Manifest targetMachine mismatch: $($manifest.targetMachine)" }
+          if ([string]$manifest.runnerRoot -ne 'D:\Git_Runners_Main') { throw "Manifest runnerRoot mismatch: $($manifest.runnerRoot)" }
+          if (-not (Test-Path -LiteralPath (Join-Path $extract 'MRC.ico'))) { throw 'Package-root MRC.ico missing.' }
+
+          $versionOutput = & (Join-Path $extract 'payload\MRC.exe') --version 2>&1 | Out-String
+          if ($LASTEXITCODE -ne 0) { throw "Packaged MRC --version failed: $versionOutput" }
+          if ($versionOutput -notmatch '0\.0\.12' -or $versionOutput -notmatch 'PRE-CERTIFICATION' -or $versionOutput -notmatch '0\.1\.0') {
+            throw "Packaged executable does not report truthful pre-cert authority: $versionOutput"
+          }
+          Write-Host "RELEASE PACKAGE VERIFIED SHA256=$actual"
+
+      - name: Refuse duplicate tag
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if (gh release view v0.0.12 2>$null) { throw 'GitHub release v0.0.12 already exists.' }
+
+      - name: Publish v0.0.12 bootstrap-compatible pre-cert release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # IMPORTANT: This release intentionally omits --prerelease because installed v0.0.11
+          # resolves /releases/latest and therefore cannot discover GitHub prereleases.
+          # MRC v0.0.12 itself still truthfully reports channel=precert and stage=PRE-CERTIFICATION.
+          gh release create v0.0.12 `
+            artifacts/v0.0.12/package/MRC-v0.0.12-win-x64.zip `
+            artifacts/v0.0.12/package/SHA256SUMS.txt `
+            artifacts/v0.0.12/MRC-v0.0.12-1180x760.png `
+            artifacts/v0.0.12/MRC-v0.0.12-900x560.png `
+            --target "$env:GITHUB_SHA" `
+            --title "MRC v0.0.12 — Root Redesign Pre-Cert Build" `
+            --notes "PRE-CERTIFICATION BUILD — final target remains v0.1.0. Root redesign implements the new managed/external/unattributed process model, repair-capable Doctor, deep read-only Diagnose, semantic CLI/update presentation, existing-window activation, terminal operations-console GUI, state-specific shared-clock animation, and MRC application identity. Automated redesign + PASS4 + PASS3 + PASS2 + PASS1 + render + package/hash/manifest + Windows CLI gates passed before publishing. GitHub prerelease metadata is intentionally disabled only so legacy v0.0.11 /releases/latest updater clients can discover this bootstrap release. Final certification remains HOLD until live Main-PC acceptance and Owner visual review reach 10.0/10 in every applicable category."
