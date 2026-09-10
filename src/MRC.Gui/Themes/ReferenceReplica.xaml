@@ -99,8 +99,11 @@
         <Setter Property="CornerRadius" Value="8" />
         <Setter Property="TextElement.Foreground" Value="{StaticResource ReplicaOffBrush}" />
         <Style.Triggers>
+            <DataTrigger Binding="{Binding Row.State, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="{x:Static runtime:RunnerState.OFF}"><Setter Property="BorderBrush" Value="#47535A" /><Setter Property="Background" Value="#11191C" /><Setter Property="TextElement.Foreground" Value="{StaticResource ReplicaOffBrush}" /></DataTrigger>
             <DataTrigger Binding="{Binding Row.State, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="{x:Static runtime:RunnerState.IDLE}"><Setter Property="BorderBrush" Value="#24734F" /><Setter Property="Background" Value="#102A1E" /><Setter Property="TextElement.Foreground" Value="{StaticResource ReplicaIdleBrush}" /></DataTrigger>
             <DataTrigger Binding="{Binding Row.State, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="{x:Static runtime:RunnerState.BUSY}"><Setter Property="BorderBrush" Value="#7A6527" /><Setter Property="Background" Value="#2A230E" /><Setter Property="TextElement.Foreground" Value="{StaticResource ReplicaBusyBrush}" /></DataTrigger>
+            <DataTrigger Binding="{Binding Row.State, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="{x:Static runtime:RunnerState.STARTING}"><Setter Property="BorderBrush" Value="#2B6088" /><Setter Property="Background" Value="#10283B" /><Setter Property="TextElement.Foreground" Value="#55AFFF" /></DataTrigger>
+            <DataTrigger Binding="{Binding Row.State, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="{x:Static runtime:RunnerState.STOPPING}"><Setter Property="BorderBrush" Value="#57437C" /><Setter Property="Background" Value="#211832" /><Setter Property="TextElement.Foreground" Value="#BA92FF" /></DataTrigger>
             <DataTrigger Binding="{Binding Row.State, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="{x:Static runtime:RunnerState.ERROR}"><Setter Property="BorderBrush" Value="#7A3F24" /><Setter Property="Background" Value="#2A160D" /><Setter Property="TextElement.Foreground" Value="{StaticResource ReplicaErrorBrush}" /></DataTrigger>
         </Style.Triggers>
     </Style>
