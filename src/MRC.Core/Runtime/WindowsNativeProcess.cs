@@ -7,6 +7,8 @@ namespace MRC.Core.Runtime;
 internal static class WindowsNativeProcess
 {
     private const uint ProcessQueryLimitedInformation = 0x1000;
+    private const uint Th32CsSnapProcess = 0x00000002;
+    private static readonly IntPtr InvalidHandleValue = new(-1);
 
     public static bool TryGetImagePath(int processId, out string? path, out string? error)
     {
@@ -94,6 +96,54 @@ internal static class WindowsNativeProcess
         }
     }
 
+    public static IReadOnlyDictionary<int, int?> CaptureParentProcessIds()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return new Dictionary<int, int?>();
+        }
+
+        var snapshot = CreateToolhelp32Snapshot(Th32CsSnapProcess, 0);
+        if (snapshot == IntPtr.Zero || snapshot == InvalidHandleValue)
+        {
+            return new Dictionary<int, int?>();
+        }
+
+        try
+        {
+            var parents = new Dictionary<int, int?>();
+            var entry = new ProcessEntry32
+            {
+                Size = (uint)Marshal.SizeOf<ProcessEntry32>()
+            };
+
+            if (!Process32First(snapshot, ref entry))
+            {
+                return parents;
+            }
+
+            do
+            {
+                if (entry.ProcessId <= int.MaxValue)
+                {
+                    int? parent = entry.ParentProcessId <= int.MaxValue
+                        ? (int)entry.ParentProcessId
+                        : null;
+                    parents[(int)entry.ProcessId] = parent;
+                }
+
+                entry.Size = (uint)Marshal.SizeOf<ProcessEntry32>();
+            }
+            while (Process32Next(snapshot, ref entry));
+
+            return parents;
+        }
+        finally
+        {
+            CloseHandle(snapshot);
+        }
+    }
+
     [DllImport("kernel32.dll", SetLastError = true)]
     private static extern IntPtr OpenProcess(uint processAccess, bool inheritHandle, int processId);
 
@@ -104,6 +154,17 @@ internal static class WindowsNativeProcess
         int flags,
         StringBuilder executablePath,
         ref int size);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern IntPtr CreateToolhelp32Snapshot(uint flags, uint processId);
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true, EntryPoint = "Process32FirstW")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool Process32First(IntPtr snapshot, ref ProcessEntry32 entry);
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true, EntryPoint = "Process32NextW")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool Process32Next(IntPtr snapshot, ref ProcessEntry32 entry);
 
     [DllImport("kernel32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
@@ -116,6 +177,23 @@ internal static class WindowsNativeProcess
         out ProcessBasicInformation processInformation,
         int processInformationLength,
         out int returnLength);
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    private struct ProcessEntry32
+    {
+        public uint Size;
+        public uint Usage;
+        public uint ProcessId;
+        public IntPtr DefaultHeapId;
+        public uint ModuleId;
+        public uint ThreadCount;
+        public uint ParentProcessId;
+        public int PriorityClassBase;
+        public uint Flags;
+
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)]
+        public string ExecutableFile;
+    }
 
     [StructLayout(LayoutKind.Sequential)]
     private struct ProcessBasicInformation
