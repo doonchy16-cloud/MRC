@@ -41,6 +41,11 @@ public sealed class GuiLauncher : IGuiLauncher
     public GuiLaunchResult Launch()
     {
         var activation = _activator.TryActivate(TimeSpan.FromMilliseconds(300));
+        if (!activation.Success)
+        {
+            activation = _activator.TryActivate(TimeSpan.FromMilliseconds(300));
+        }
+
         if (activation.Success)
         {
             return new GuiLaunchResult(
