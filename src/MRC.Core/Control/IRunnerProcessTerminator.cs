@@ -17,9 +17,31 @@ internal sealed record RunnerTerminationResult(
     RunnerTerminationOutcome Outcome,
     string Message);
 
+internal enum RunnerGracefulShutdownOutcome
+{
+    Exited,
+    TimedOut,
+    Unavailable,
+    Failed
+}
+
+internal sealed record RunnerGracefulShutdownResult(
+    RunnerGracefulShutdownOutcome Outcome,
+    string Message);
+
 internal interface IRunnerProcessTerminator
 {
     RunnerTerminationResult Terminate(RunnerDescriptor runner, ProcessSnapshot listener);
+}
+
+internal interface IRunnerGracefulShutdown
+{
+    RunnerGracefulShutdownResult TryShutdown(ProcessSnapshot listener, TimeSpan timeout);
+}
+
+internal interface IRunnerExitVerifier
+{
+    bool WaitUntilOff(RunnerDescriptor runner, TimeSpan timeout, out string? error);
 }
 
 internal interface IProcessPathReader
