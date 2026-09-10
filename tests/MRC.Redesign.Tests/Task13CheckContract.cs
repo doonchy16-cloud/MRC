@@ -9,14 +9,32 @@ internal static class Task13CheckContract
     [ModuleInitializer]
     internal static void Run()
     {
+        VerifyCoreCheckIsMetadataOnlyAsync().GetAwaiter().GetResult();
+        Console.WriteLine("PASS  Task13A core update check resolves metadata without download");
+
         VerifyUpdateAvailableAsync().GetAwaiter().GetResult();
-        Console.WriteLine("PASS  Task13A --check reports update available without mutation");
+        Console.WriteLine("PASS  Task13B --check reports update available without mutation");
 
         VerifyUpToDateAsync().GetAwaiter().GetResult();
-        Console.WriteLine("PASS  Task13B --check reports up to date without mutation");
+        Console.WriteLine("PASS  Task13C --check reports up to date without mutation");
 
         VerifySemanticPresentation();
-        Console.WriteLine("PASS  Task13C --check semantic colors and white labels");
+        Console.WriteLine("PASS  Task13D --check semantic colors and white labels");
+    }
+
+    private static async Task VerifyCoreCheckIsMetadataOnlyAsync()
+    {
+        var source = new CountingReleaseSource(new UpdateRelease(
+            "v0.0.13",
+            new Version(0, 0, 13),
+            new[] { new UpdateAsset("MRC-v0.0.13-win-x64.zip", new Uri("https://example.invalid/MRC.zip")) }));
+        var service = new UpdateCheckService(source, () => new Version(0, 0, 12));
+
+        var result = await service.CheckAsync();
+
+        Require(result.Outcome == UpdateCheckOutcome.UpdateAvailable, $"Core check outcome was {result.Outcome}.");
+        Require(source.ResolveCalls == 1, $"Core check resolved metadata {source.ResolveCalls} times; expected once.");
+        Require(source.DownloadCalls == 0, $"Core check downloaded {source.DownloadCalls} asset(s); read-only --check must never download.");
     }
 
     private static async Task VerifyUpdateAvailableAsync()
@@ -117,6 +135,28 @@ internal static class Task13CheckContract
     private static void Require(bool condition, string message)
     {
         if (!condition) throw new InvalidOperationException(message);
+    }
+
+    private sealed class CountingReleaseSource : IUpdateReleaseSource
+    {
+        private readonly UpdateRelease _release;
+
+        public CountingReleaseSource(UpdateRelease release) => _release = release;
+
+        public int ResolveCalls { get; private set; }
+        public int DownloadCalls { get; private set; }
+
+        public Task<UpdateRelease> ResolveLatestAsync(CancellationToken cancellationToken = default)
+        {
+            ResolveCalls++;
+            return Task.FromResult(_release);
+        }
+
+        public Task<byte[]> DownloadAssetAsync(UpdateAsset asset, CancellationToken cancellationToken = default)
+        {
+            DownloadCalls++;
+            return Task.FromResult(Array.Empty<byte>());
+        }
     }
 
     private sealed class SuccessfulLauncher : IGuiLauncher
