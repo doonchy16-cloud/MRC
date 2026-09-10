@@ -64,7 +64,7 @@ internal static class OperationsAcceptance
         var stop = service.StopIdle(idle);
 
         Require(start.Outcome == RunnerControlOutcome.Starting && start.State == RunnerState.STARTING, "OFF runner did not enter STARTING.");
-        Require(stop.Outcome == RunnerControlOutcome.Stopping && stop.State == RunnerState.STOPPING, "IDLE runner did not enter STOPPING.");
+        Require(stop.Outcome == RunnerControlOutcome.Stopped && stop.State == RunnerState.OFF, "IDLE runner did not reconcile to verified OFF after successful termination.");
         Require(launcher.CallCount == 1, "Start did not use the existing safe launcher exactly once.");
         Require(normal.CallCount == 1, "Idle stop did not use the existing exact-listener terminator exactly once.");
     }
