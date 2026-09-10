@@ -1,10 +1,12 @@
 using System.IO;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using MRC.Core.Runners;
 using MRC.Core.Runtime;
 using MRC.Gui;
+using MRC.Gui.Presentation;
 
 namespace MRC.Pass3.Preview;
 
@@ -22,6 +24,7 @@ internal static class Program
         {
             var previewWidth = args.Length > 1 ? ParseDimension(args[1], "width") : DefaultPreviewWidth;
             var previewHeight = args.Length > 2 ? ParseDimension(args[2], "height") : DefaultPreviewHeight;
+            var focusState = args.Length > 3 ? ParseState(args[3]) : (RunnerState?)null;
             if (previewWidth < MinimumPreviewWidth || previewHeight < MinimumPreviewHeight)
             {
                 throw new ArgumentOutOfRangeException(nameof(args),
@@ -56,6 +59,12 @@ internal static class Program
             window.Arrange(new Rect(0, 0, previewWidth, previewHeight));
             window.UpdateLayout();
 
+            if (focusState is not null)
+            {
+                FocusRunnerState(window, focusState.Value);
+                window.UpdateLayout();
+            }
+
             var bitmap = new RenderTargetBitmap(
                 previewWidth,
                 previewHeight,
@@ -76,6 +85,7 @@ internal static class Program
 
             Console.WriteLine($"PASS 3 preview rendered: {outputPath}");
             Console.WriteLine($"Dimensions: {previewWidth}x{previewHeight}");
+            if (focusState is not null) Console.WriteLine($"Focused state: {focusState.Value}");
             return 0;
         }
         catch (Exception ex)
@@ -92,6 +102,34 @@ internal static class Program
             throw new ArgumentException($"Invalid preview {name}: '{raw}'.", name);
         }
         return value;
+    }
+
+    private static RunnerState ParseState(string raw)
+    {
+        if (!Enum.TryParse<RunnerState>(raw, ignoreCase: true, out var state))
+        {
+            throw new ArgumentException($"Invalid preview focus state: '{raw}'.", nameof(raw));
+        }
+        return state;
+    }
+
+    private static void FocusRunnerState(MainWindow window, RunnerState focusState)
+    {
+        if (window.FindName("RunnerList") is not ListBox runnerList)
+        {
+            throw new InvalidOperationException("RunnerList was not available for focused preview evidence.");
+        }
+
+        var target = runnerList.Items
+            .OfType<RunnerRowViewModel>()
+            .FirstOrDefault(row => row.State == focusState);
+        if (target is null)
+        {
+            throw new InvalidOperationException($"No preview runner exists in state {focusState}.");
+        }
+
+        runnerList.ScrollIntoView(target);
+        runnerList.UpdateLayout();
     }
 
     private static RunnerRuntimeReport BuildPreviewReport() =>
