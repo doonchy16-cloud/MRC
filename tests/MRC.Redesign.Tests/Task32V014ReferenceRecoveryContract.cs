@@ -24,8 +24,8 @@ internal static class Task32V014ReferenceRecoveryContract
         Require(code.Contains("RunnerResponsiveLayout.ColumnCountForWidth(ActualWidth)", StringComparison.Ordinal),
             "MainWindow does not delegate responsive card allocation to the safe-width layout authority.");
         Require(responsive.Contains("MinimumCardSlotWidth", StringComparison.Ordinal)
-                && responsive.Contains("Math.Clamp(columns, 1, 4)", StringComparison.Ordinal),
-            "Safe-width responsive authority is missing its minimum-slot or one-through-four bounds.");
+                && responsive.Contains("ReferenceReplicaMetrics.ColumnCountForWidth(windowWidth)", StringComparison.Ordinal),
+            "Safe-width responsive authority no longer delegates to the reference-replica metrics authority.");
 
         Require(xaml.Contains("<UniformGrid Columns=\"{Binding CardColumnCount}\"", StringComparison.Ordinal),
             "Reference recovery lost adaptive card layout authority.");
