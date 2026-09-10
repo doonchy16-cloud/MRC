@@ -57,15 +57,15 @@ public static class CliPresentation
             new CliLine("Commands", CliTone.Heading),
             Command("MRC", "Open or focus the GUI"),
             Command("MRC --version", "Show installed version information"),
-            Alias("    aliases: -v, -version"),
+            Alias("    aliases: MRC -v, MRC -version"),
             Command("MRC --help", "Show this help"),
-            Alias("    aliases: -h, -help"),
+            Alias("    aliases: MRC -h, MRC -help"),
             Command("MRC --doctor", "Find issues and apply verified automatic low-risk repairs"),
-            Alias("    alias: -doctor"),
+            Alias("    alias: MRC -doctor"),
             Command("MRC --diagnose", "Run deep read-only runner/process diagnostics"),
-            Alias("    alias: -diagnose"),
+            Alias("    alias: MRC -diagnose"),
             Command("MRC --update", "Resolve, verify, and atomically activate an allowed release"),
-            Alias("    alias: -update"),
+            Alias("    alias: MRC -update"),
             Command("MRC --check", "Check for an available update without installing it")
         };
     }
