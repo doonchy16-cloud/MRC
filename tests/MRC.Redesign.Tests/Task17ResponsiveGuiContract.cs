@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 
 internal static class Task17ResponsiveGuiContract
 {
@@ -16,6 +17,7 @@ internal static class Task17ResponsiveGuiContract
     {
         var root = Directory.GetCurrentDirectory();
         var code = File.ReadAllText(Path.Combine(root, "src", "MRC.Gui", "MainWindow.xaml.cs"));
+        var compactCode = Regex.Replace(code, @"\s+", " ");
 
         Require(code.Contains("ApplyResponsiveScale", StringComparison.Ordinal),
             "MainWindow has no responsive scaling authority for large windows.");
@@ -28,7 +30,7 @@ internal static class Task17ResponsiveGuiContract
         Require(code.Contains("RootSurface.LayoutTransform", StringComparison.Ordinal)
                 && code.Contains("new ScaleTransform(scale, scale)", StringComparison.Ordinal),
             "Responsive scale is not applied centrally to the terminal surface.");
-        Require(code.Contains("1d, 1.5d", StringComparison.Ordinal),
+        Require(compactCode.Contains("1d, 1.5d", StringComparison.Ordinal),
             "Responsive scale must stay bounded between 1.0x and 1.5x.");
     }
 
