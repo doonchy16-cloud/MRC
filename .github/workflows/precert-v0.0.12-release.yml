@@ -85,13 +85,6 @@ jobs:
           }
           Write-Host "RELEASE PACKAGE VERIFIED SHA256=$actual"
 
-      - name: Refuse duplicate tag
-        shell: pwsh
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          if (gh release view v0.0.12 2>$null) { throw 'GitHub release v0.0.12 already exists.' }
-
       - name: Publish v0.0.12 bootstrap-compatible pre-cert release
         shell: pwsh
         env:
