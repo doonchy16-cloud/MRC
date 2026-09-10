@@ -10,20 +10,22 @@ public sealed class CliDispatcher
     private readonly Func<DoctorRunOptions, CancellationToken, Task<DoctorReport>> _doctorRunner;
     private readonly Func<IProgress<UpdateProgress>, CancellationToken, Task<UpdateResult>> _updateRunner;
     private readonly Func<EnvironmentFenceResult> _fenceEvaluator;
+    private readonly Func<CancellationToken, Task<UpdateCheckResult>> _checkRunner;
 
     public CliDispatcher(IGuiLauncher guiLauncher)
         : this(
             guiLauncher,
             static (options, cancellationToken) => new DoctorService().RunAsync(options, cancellationToken),
             RunDefaultUpdateAsync,
-            EnvironmentFence.EvaluateCurrent)
+            EnvironmentFence.EvaluateCurrent,
+            RunDefaultCheckAsync)
     {
     }
 
     public CliDispatcher(
         IGuiLauncher guiLauncher,
         Func<DoctorRunOptions, CancellationToken, Task<DoctorReport>> doctorRunner)
-        : this(guiLauncher, doctorRunner, RunDefaultUpdateAsync, EnvironmentFence.EvaluateCurrent)
+        : this(guiLauncher, doctorRunner, RunDefaultUpdateAsync, EnvironmentFence.EvaluateCurrent, RunDefaultCheckAsync)
     {
     }
 
@@ -32,11 +34,22 @@ public sealed class CliDispatcher
         Func<DoctorRunOptions, CancellationToken, Task<DoctorReport>> doctorRunner,
         Func<IProgress<UpdateProgress>, CancellationToken, Task<UpdateResult>> updateRunner,
         Func<EnvironmentFenceResult> fenceEvaluator)
+        : this(guiLauncher, doctorRunner, updateRunner, fenceEvaluator, RunDefaultCheckAsync)
+    {
+    }
+
+    public CliDispatcher(
+        IGuiLauncher guiLauncher,
+        Func<DoctorRunOptions, CancellationToken, Task<DoctorReport>> doctorRunner,
+        Func<IProgress<UpdateProgress>, CancellationToken, Task<UpdateResult>> updateRunner,
+        Func<EnvironmentFenceResult> fenceEvaluator,
+        Func<CancellationToken, Task<UpdateCheckResult>> checkRunner)
     {
         _guiLauncher = guiLauncher ?? throw new ArgumentNullException(nameof(guiLauncher));
         _doctorRunner = doctorRunner ?? throw new ArgumentNullException(nameof(doctorRunner));
         _updateRunner = updateRunner ?? throw new ArgumentNullException(nameof(updateRunner));
         _fenceEvaluator = fenceEvaluator ?? throw new ArgumentNullException(nameof(fenceEvaluator));
+        _checkRunner = checkRunner ?? throw new ArgumentNullException(nameof(checkRunner));
     }
 
     public async Task<int> ExecuteAsync(string[] args, TextWriter output, TextWriter error)
@@ -105,6 +118,10 @@ public sealed class CliDispatcher
             case "--update":
                 return await RunUpdateAsync(output, error);
 
+            case "-check":
+            case "--check":
+                return await RunCheckAsync(output, error);
+
             default:
                 await WriteUnknownAsync(error, args[0]);
                 return 2;
@@ -127,6 +144,26 @@ public sealed class CliDispatcher
         {
             var renderer = new CliRenderer(error);
             await renderer.WriteLineAsync($"Diagnose failed safely: {ex.Message}", CliTone.Error);
+            return 1;
+        }
+    }
+
+    private async Task<int> RunCheckAsync(TextWriter output, TextWriter error)
+    {
+        try
+        {
+            var result = await _checkRunner(CancellationToken.None);
+            var renderer = new CliRenderer(output);
+            foreach (var line in CliPresentation.UpdateCheckLines(result))
+            {
+                await renderer.WriteLineAsync(line);
+            }
+            return 0;
+        }
+        catch (Exception ex)
+        {
+            var renderer = new CliRenderer(error);
+            await renderer.WriteLineAsync($"Update check failed safely: {ex.Message}", CliTone.Error);
             return 1;
         }
     }
@@ -168,6 +205,14 @@ public sealed class CliDispatcher
             await errorRenderer.WriteLineAsync($"Update failed safely: {ex.Message}", CliTone.Error);
             return 1;
         }
+    }
+
+    private static async Task<UpdateCheckResult> RunDefaultCheckAsync(CancellationToken cancellationToken)
+    {
+        using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
+        var source = new GitHubReleaseSource(client);
+        var checker = new UpdateCheckService(source);
+        return await checker.CheckAsync(cancellationToken);
     }
 
     private static async Task<UpdateResult> RunDefaultUpdateAsync(IProgress<UpdateProgress> progress, CancellationToken cancellationToken)
