@@ -10,6 +10,7 @@ public sealed class RunnerOperationsService
     private readonly Func<IReadOnlyList<RunnerSnapshot>> _refresh;
     private readonly Func<RunnerDescriptor, RunnerControlResult> _start;
     private readonly Func<RunnerDescriptor, RunnerControlResult> _stopIdle;
+    private readonly Func<RunnerDescriptor, RunnerControlResult> _restart;
     private readonly Func<RunnerDescriptor, bool, RunnerControlResult> _forceStopBusy;
     private readonly Func<TimeSpan, CancellationToken, Task> _delay;
 
@@ -18,6 +19,7 @@ public sealed class RunnerOperationsService
             engine.Refresh,
             engine.Start,
             engine.StopIdle,
+            engine.Restart,
             engine.ForceStopBusy,
             static (delay, cancellationToken) => Task.Delay(delay, cancellationToken))
     {
@@ -30,17 +32,40 @@ public sealed class RunnerOperationsService
         Func<RunnerDescriptor, RunnerControlResult> stopIdle,
         Func<RunnerDescriptor, bool, RunnerControlResult> forceStopBusy,
         Func<TimeSpan, CancellationToken, Task> delay)
+        : this(
+            refresh,
+            start,
+            stopIdle,
+            static _ => new RunnerControlResult(
+                RunnerControlOutcome.Error,
+                RunnerState.ERROR,
+                "Restart delegate is not configured for this test fixture."),
+            forceStopBusy,
+            delay)
     {
-        _refresh = refresh;
-        _start = start;
-        _stopIdle = stopIdle;
-        _forceStopBusy = forceStopBusy;
-        _delay = delay;
+    }
+
+    internal RunnerOperationsService(
+        Func<IReadOnlyList<RunnerSnapshot>> refresh,
+        Func<RunnerDescriptor, RunnerControlResult> start,
+        Func<RunnerDescriptor, RunnerControlResult> stopIdle,
+        Func<RunnerDescriptor, RunnerControlResult> restart,
+        Func<RunnerDescriptor, bool, RunnerControlResult> forceStopBusy,
+        Func<TimeSpan, CancellationToken, Task> delay)
+    {
+        _refresh = refresh ?? throw new ArgumentNullException(nameof(refresh));
+        _start = start ?? throw new ArgumentNullException(nameof(start));
+        _stopIdle = stopIdle ?? throw new ArgumentNullException(nameof(stopIdle));
+        _restart = restart ?? throw new ArgumentNullException(nameof(restart));
+        _forceStopBusy = forceStopBusy ?? throw new ArgumentNullException(nameof(forceStopBusy));
+        _delay = delay ?? throw new ArgumentNullException(nameof(delay));
     }
 
     public RunnerControlResult Start(RunnerDescriptor runner) => _start(runner);
 
     public RunnerControlResult StopIdle(RunnerDescriptor runner) => _stopIdle(runner);
+
+    public RunnerControlResult Restart(RunnerDescriptor runner) => _restart(runner);
 
     public RunnerControlResult ForceStopBusy(RunnerDescriptor runner, bool confirmed) =>
         _forceStopBusy(runner, confirmed);
