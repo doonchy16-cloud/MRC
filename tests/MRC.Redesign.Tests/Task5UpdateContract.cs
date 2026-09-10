@@ -11,6 +11,7 @@ internal static class Task5UpdateContract
     internal static void Run()
     {
         VerifyReleaseAuthority();
+        VerifyLegacyBootstrapCompatibility();
         VerifyReleaseCollectionSelection();
         VerifyProgressContract();
         Console.WriteLine("PASS  Task5 release-stage/update contract");
@@ -39,6 +40,19 @@ internal static class Task5UpdateContract
             "v0.0.12 must report PreCertification stage.");
         Require(currentType.GetProperty("FinalTarget")!.GetValue(current)?.ToString() == "0.1.0",
             "Final target must remain v0.1.0.");
+    }
+
+    private static void VerifyLegacyBootstrapCompatibility()
+    {
+        var bootstrap = new Version(0, 0, 12);
+        Require(ReleaseAuthority.ChannelFor(bootstrap) == "precert",
+            "Installed v0.0.12 application authority must remain precert.");
+        Require(ReleaseAuthority.ManifestCompatibilityChannelFor(bootstrap) == "stable",
+            "v0.0.12 package manifest must use stable transport channel so installed v0.0.11 can validate the bootstrap update.");
+        Require(ReleaseAuthority.ManifestCompatibilityChannelFor(new Version(0, 0, 13)) == "precert",
+            "The legacy transport bridge must be limited to v0.0.12; later pre-cert packages must use precert.");
+        Require(ReleaseAuthority.ManifestCompatibilityChannelFor(ReleaseAuthority.FinalTargetVersion) == "stable",
+            "Final v0.1.0 package transport channel must remain stable.");
     }
 
     private static void VerifyReleaseCollectionSelection()
