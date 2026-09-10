@@ -118,14 +118,7 @@ public partial class MainWindow : Window
     private void ApplyResponsiveLayout()
     {
         if (ActualWidth <= 0) return;
-
-        _dashboard.CardColumnCount = ActualWidth >= 1600
-            ? 4
-            : ActualWidth >= 1100
-                ? 3
-                : ActualWidth >= 800
-                    ? 2
-                    : 1;
+        _dashboard.CardColumnCount = RunnerResponsiveLayout.ColumnCountForWidth(ActualWidth);
     }
 
     private void MainWindow_OnPreviewKeyDown(object sender, KeyEventArgs e)
