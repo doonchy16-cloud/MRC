@@ -88,7 +88,7 @@ internal static class GuiOperationsAcceptance
                 && route.Contains("ExecuteForceStopAsync(e.Row)"),
             "BUSY card action does not remain state-gated and separately routed to confirmed force-stop policy.");
 
-        var force = MethodBody(code, "ExecuteForceStopAsync");
+        var force = MethodBody(code, "private async Task ExecuteForceStopAsync");
         Require(force.Contains("row.State != RunnerState.BUSY"), "Force-stop execution helper is not BUSY-only.");
         Require(force.Contains("_operations.ForceStopBusy(row.Runner, confirmed: false)"),
             "Force-stop path no longer performs a non-destructive confirmation preflight.");
@@ -125,7 +125,7 @@ internal static class GuiOperationsAcceptance
                 && route.Contains("_operationInProgress"),
             "Active extracted-card dispatcher does not block preview, unavailable operations, or overlapping operations.");
 
-        var force = MethodBody(code, "ExecuteForceStopAsync");
+        var force = MethodBody(code, "private async Task ExecuteForceStopAsync");
         Require(force.Contains("_previewMode") && force.Contains("_operations is null"),
             "Force-stop helper is not independently preview/unavailable guarded.");
         Require(!CardCode().Contains("RunnerOperationsService") && !CardCode().Contains("RunnerEngine"),
