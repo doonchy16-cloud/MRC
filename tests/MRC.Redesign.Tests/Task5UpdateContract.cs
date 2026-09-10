@@ -34,8 +34,8 @@ internal static class Task5UpdateContract
         {
             Require(currentType.GetProperty(property) is not null, $"ReleaseInfo.{property} is missing.");
         }
-        Require(currentType.GetProperty("Version")!.GetValue(current)?.ToString() == "0.0.14",
-            $"Current pre-cert build must identify as 0.0.14, got {currentType.GetProperty("Version")!.GetValue(current)}.");
+        Require(currentType.GetProperty("Version")!.GetValue(current)?.ToString() == "0.0.15",
+            $"Current pre-cert build must identify as 0.0.15, got {currentType.GetProperty("Version")!.GetValue(current)}.");
         Require(currentType.GetProperty("Channel")!.GetValue(current)?.ToString() == "precert",
             "Current pre-cert build must report precert channel.");
         Require(currentType.GetProperty("Stage")!.GetValue(current)?.ToString() == "PreCertification",
