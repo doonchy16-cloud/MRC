@@ -7,7 +7,7 @@
              Height="150"
              MinWidth="330"
              FontFamily="Segoe UI"
-             Foreground="{StaticResource ReplicaHeroWhiteBrush}">
+             Foreground="{DynamicResource ReplicaHeroWhiteBrush}">
     <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
