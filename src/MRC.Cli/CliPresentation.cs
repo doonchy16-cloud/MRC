@@ -48,6 +48,28 @@ public static class CliPresentation
         };
     }
 
+    public static IReadOnlyList<CliLine> HelpLines()
+    {
+        return new[]
+        {
+            new CliLine("Main Runner Control (MRC)", CliTone.Heading),
+            new CliLine(string.Empty, CliTone.Normal),
+            new CliLine("Commands", CliTone.Heading),
+            Command("MRC", "Open or focus the GUI"),
+            Command("MRC --version", "Show installed version information"),
+            Alias("    aliases: -v, -version"),
+            Command("MRC --help", "Show this help"),
+            Alias("    aliases: -h, -help"),
+            Command("MRC --doctor", "Find issues and apply verified automatic low-risk repairs"),
+            Alias("    alias: -doctor"),
+            Command("MRC --diagnose", "Run deep read-only runner/process diagnostics"),
+            Alias("    alias: -diagnose"),
+            Command("MRC --update", "Resolve, verify, and atomically activate an allowed release"),
+            Alias("    alias: -update"),
+            Command("MRC --check", "Check for an available update without installing it")
+        };
+    }
+
     public static CliLine UpdateProgressLine(UpdateProgress progress)
     {
         ArgumentNullException.ThrowIfNull(progress);
@@ -274,6 +296,14 @@ public static class CliPresentation
 
         return lines;
     }
+
+    private static CliLine Command(string command, string description) =>
+        new(
+            CliTone.Heading,
+            new CliSegment($"  {command,-22}", CliTone.Heading),
+            new CliSegment(description, CliTone.Normal));
+
+    private static CliLine Alias(string text) => new(text, CliTone.Secondary);
 
     private static CliLine Field(string label, string value, CliTone valueTone) =>
         new(
