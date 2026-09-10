@@ -178,7 +178,7 @@ internal static class V013GlobalControlContract
         var services = new FixedServiceEvidenceProvider(
             new RunnerServiceEvidence(
                 "actions.runner.doonchy16-cloud-Lotto_engine.Lotto_MainPC_Runner",
-                @"\"C:\actions-runner-lotto-mainpc\bin\RunnerService.exe\"",
+                "\"C:\\actions-runner-lotto-mainpc\\bin\\RunnerService.exe\"",
                 7000));
 
         var analysis = RunnerProcessInventoryAnalyzer.Analyze(temp.Path, new[] { runner }, inventory, services.Inspect());
