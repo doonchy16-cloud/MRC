@@ -15,6 +15,7 @@ public sealed class RunnerDashboardViewModel : INotifyPropertyChanged
     private int _offCount;
     private int _errorCount;
     private int _transitionCount;
+    private int _cardColumnCount = 2;
     private bool _hasSystemFindings;
     private string _systemFindingsSummary = "No external or unattributed runner processes observed.";
 
@@ -55,6 +56,12 @@ public sealed class RunnerDashboardViewModel : INotifyPropertyChanged
     public int OffCount { get => _offCount; private set => Set(ref _offCount, value); }
     public int ErrorCount { get => _errorCount; private set => Set(ref _errorCount, value); }
     public int TransitionCount { get => _transitionCount; private set => Set(ref _transitionCount, value); }
+
+    public int CardColumnCount
+    {
+        get => _cardColumnCount;
+        set => Set(ref _cardColumnCount, Math.Clamp(value, 1, 3));
+    }
 
     public bool HasSystemFindings
     {
