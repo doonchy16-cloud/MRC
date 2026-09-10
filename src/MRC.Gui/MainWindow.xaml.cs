@@ -39,7 +39,7 @@ public partial class MainWindow : Window
         _animationTimer.Interval = TimeSpan.FromMilliseconds(50);
         _animationTimer.Tick += (_, _) => _animationClock.Tick(DateTimeOffset.UtcNow, _dashboard.Rows);
 
-        SizeChanged += (_, _) => ApplyResponsiveScale();
+        SizeChanged += (_, _) => ApplyResponsiveLayout();
         PreviewKeyDown += MainWindow_OnPreviewKeyDown;
         Loaded += OnLoaded;
         Closed += OnClosed;
@@ -56,6 +56,7 @@ public partial class MainWindow : Window
         ArgumentNullException.ThrowIfNull(report);
         _previewMode = true;
         _dashboard.ApplyRuntimeReport(report);
+        ApplyResponsiveLayout();
         MachineValue.Text = "MAIN-PC";
         RootValue.Text = MrcConstants.RunnerRoot;
         BoundaryValue.Text = "AUTHORIZED";
@@ -70,7 +71,7 @@ public partial class MainWindow : Window
 
     private async void OnLoaded(object sender, RoutedEventArgs e)
     {
-        ApplyResponsiveScale();
+        ApplyResponsiveLayout();
         if (_previewMode) return;
 
         var fence = EnvironmentFence.EvaluateCurrent();
@@ -114,23 +115,15 @@ public partial class MainWindow : Window
         _animationTimer.Stop();
     }
 
-    private void ApplyResponsiveScale()
+    private void ApplyResponsiveLayout()
     {
-        if (ActualWidth <= 0 || ActualHeight <= 0) return;
+        if (ActualWidth <= 0) return;
 
-        var scale = Math.Clamp(
-            Math.Min(ActualWidth / 1200d, ActualHeight / 760d),
-            1d,
-            1.5d);
-
-        if (RootSurface.LayoutTransform is ScaleTransform current
-            && Math.Abs(current.ScaleX - scale) < 0.001
-            && Math.Abs(current.ScaleY - scale) < 0.001)
-        {
-            return;
-        }
-
-        RootSurface.LayoutTransform = new ScaleTransform(scale, scale);
+        _dashboard.CardColumnCount = ActualWidth >= 1650
+            ? 3
+            : ActualWidth >= 1080
+                ? 2
+                : 1;
     }
 
     private void MainWindow_OnPreviewKeyDown(object sender, KeyEventArgs e)
@@ -338,47 +331,6 @@ public partial class MainWindow : Window
         catch (Exception ex)
         {
             RenderOperationException($"{row.RunnerName} {operation}", ex);
-            return;
-        }
-        finally
-        {
-            EndOperation();
-        }
-
-        await RefreshDashboardAsync();
-        RenderControlResult(row, result);
-    }
-
-    private async void RunnerPrimaryControl_OnClick(object sender, RoutedEventArgs e)
-    {
-        if (_previewMode || _operations is null || _operationInProgress) return;
-        if (sender is not Button { CommandParameter: RunnerRowViewModel row }) return;
-
-        if (row.State == RunnerState.ERROR)
-        {
-            var dialog = new DiagnosticDialog(row) { Owner = this };
-            dialog.ShowDialog();
-            return;
-        }
-
-        if (row.State is not RunnerState.OFF and not RunnerState.IDLE) return;
-
-        RunnerControlResult result;
-        BeginOperation($"{row.RunnerName} • applying verified control…");
-        try
-        {
-            if (row.State == RunnerState.OFF)
-            {
-                result = await Task.Run(() => _operations.Start(row.Runner));
-            }
-            else
-            {
-                result = await Task.Run(() => _operations.StopIdle(row.Runner));
-            }
-        }
-        catch (Exception ex)
-        {
-            RenderOperationException(row.RunnerName, ex);
             return;
         }
         finally
