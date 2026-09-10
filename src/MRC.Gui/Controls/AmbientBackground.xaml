@@ -1,0 +1,74 @@
+<UserControl x:Class="MRC.Gui.Controls.AmbientBackground"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             IsHitTestVisible="False"
+             Focusable="False">
+    <Grid ClipToBounds="True">
+        <Rectangle x:Name="NearBlackBase" Fill="#090E0F" />
+
+        <Ellipse x:Name="CoolHaze"
+                 Width="820"
+                 Height="560"
+                 HorizontalAlignment="Right"
+                 VerticalAlignment="Top"
+                 Margin="0,-170,-190,0">
+            <Ellipse.Fill>
+                <RadialGradientBrush Center="0.48,0.48" GradientOrigin="0.48,0.48" RadiusX="0.52" RadiusY="0.52">
+                    <GradientStop Color="#38274547" Offset="0" />
+                    <GradientStop Color="#17205B61" Offset="0.48" />
+                    <GradientStop Color="#00090E0F" Offset="1" />
+                </RadialGradientBrush>
+            </Ellipse.Fill>
+            <Ellipse.Effect>
+                <BlurEffect Radius="76" />
+            </Ellipse.Effect>
+        </Ellipse>
+
+        <Ellipse x:Name="LowerRightAmberBloom"
+                 Width="980"
+                 Height="650"
+                 HorizontalAlignment="Right"
+                 VerticalAlignment="Bottom"
+                 Margin="0,0,-260,-245">
+            <Ellipse.Fill>
+                <RadialGradientBrush Center="0.5,0.5" GradientOrigin="0.5,0.5" RadiusX="0.5" RadiusY="0.5">
+                    <GradientStop Color="#4AA96B11" Offset="0" />
+                    <GradientStop Color="#26FCB83D" Offset="0.42" />
+                    <GradientStop Color="#0EA76518" Offset="0.70" />
+                    <GradientStop Color="#00090E0F" Offset="1" />
+                </RadialGradientBrush>
+            </Ellipse.Fill>
+            <Ellipse.Effect>
+                <BlurEffect Radius="86" />
+            </Ellipse.Effect>
+        </Ellipse>
+
+        <Ellipse x:Name="UnderCardWarmth"
+                 Width="820"
+                 Height="300"
+                 HorizontalAlignment="Center"
+                 VerticalAlignment="Bottom"
+                 Margin="0,0,0,-108">
+            <Ellipse.Fill>
+                <RadialGradientBrush Center="0.5,0.5" GradientOrigin="0.5,0.5" RadiusX="0.5" RadiusY="0.5">
+                    <GradientStop Color="#1EFCC34C" Offset="0" />
+                    <GradientStop Color="#0EA65E16" Offset="0.56" />
+                    <GradientStop Color="#00090E0F" Offset="1" />
+                </RadialGradientBrush>
+            </Ellipse.Fill>
+            <Ellipse.Effect>
+                <BlurEffect Radius="64" />
+            </Ellipse.Effect>
+        </Ellipse>
+
+        <Rectangle x:Name="OuterVignette">
+            <Rectangle.Fill>
+                <RadialGradientBrush Center="0.5,0.46" GradientOrigin="0.5,0.46" RadiusX="0.78" RadiusY="0.78">
+                    <GradientStop Color="#00000000" Offset="0.38" />
+                    <GradientStop Color="#16000000" Offset="0.70" />
+                    <GradientStop Color="#5B000000" Offset="1" />
+                </RadialGradientBrush>
+            </Rectangle.Fill>
+        </Rectangle>
+    </Grid>
+</UserControl>
