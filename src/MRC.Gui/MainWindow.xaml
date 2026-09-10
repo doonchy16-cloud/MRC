@@ -8,39 +8,42 @@
         MinWidth="900"
         MinHeight="560"
         WindowStartupLocation="CenterScreen"
-        Background="#080D12"
+        Background="#071015"
         Foreground="#F4F7FA"
         FontFamily="Segoe UI">
     <Window.Resources>
-        <SolidColorBrush x:Key="BackgroundBrush" Color="#080D12" />
-        <SolidColorBrush x:Key="PanelBrush" Color="#0D141C" />
-        <SolidColorBrush x:Key="RaisedBrush" Color="#111B25" />
-        <SolidColorBrush x:Key="RaisedHoverBrush" Color="#152330" />
-        <SolidColorBrush x:Key="BorderBrush" Color="#223141" />
-        <SolidColorBrush x:Key="StrongBorderBrush" Color="#30465B" />
-        <SolidColorBrush x:Key="LabelBrush" Color="#F4F7FA" />
-        <SolidColorBrush x:Key="SecondaryBrush" Color="#AAB6C3" />
-        <SolidColorBrush x:Key="MutedBrush" Color="#708091" />
-        <SolidColorBrush x:Key="RunnerBrush" Color="#35D9FF" />
-        <SolidColorBrush x:Key="RepositoryBrush" Color="#76CFE8" />
-        <SolidColorBrush x:Key="MetadataBrush" Color="#8BAFD1" />
-        <SolidColorBrush x:Key="CountBrush" Color="#C792EA" />
-        <SolidColorBrush x:Key="IdleBrush" Color="#39E58C" />
+        <SolidColorBrush x:Key="BackgroundBrush" Color="#071015" />
+        <SolidColorBrush x:Key="PanelBrush" Color="#0B141B" />
+        <SolidColorBrush x:Key="RaisedBrush" Color="#111C25" />
+        <SolidColorBrush x:Key="RaisedHoverBrush" Color="#172630" />
+        <SolidColorBrush x:Key="BorderBrush" Color="#253542" />
+        <SolidColorBrush x:Key="StrongBorderBrush" Color="#385266" />
+        <SolidColorBrush x:Key="LabelBrush" Color="#F7F9FB" />
+        <SolidColorBrush x:Key="SecondaryBrush" Color="#B2BDC7" />
+        <SolidColorBrush x:Key="MutedBrush" Color="#728391" />
+        <SolidColorBrush x:Key="RunnerBrush" Color="#43DDF8" />
+        <SolidColorBrush x:Key="RepositoryBrush" Color="#73CFE4" />
+        <SolidColorBrush x:Key="MetadataBrush" Color="#8FB1CC" />
+        <SolidColorBrush x:Key="CountBrush" Color="#D09AF4" />
+        <SolidColorBrush x:Key="IdleBrush" Color="#35E08A" />
         <SolidColorBrush x:Key="BusyBrush" Color="#FFD166" />
-        <SolidColorBrush x:Key="OffBrush" Color="#FF6676" />
-        <SolidColorBrush x:Key="ErrorBrush" Color="#FF8A3D" />
-        <SolidColorBrush x:Key="StartingBrush" Color="#4CA7FF" />
-        <SolidColorBrush x:Key="StoppingBrush" Color="#B48CFF" />
+        <SolidColorBrush x:Key="OffBrush" Color="#FF6474" />
+        <SolidColorBrush x:Key="ErrorBrush" Color="#FF934F" />
+        <SolidColorBrush x:Key="StartingBrush" Color="#55AFFF" />
+        <SolidColorBrush x:Key="StoppingBrush" Color="#BA92FF" />
+        <SolidColorBrush x:Key="AmberActionBrush" Color="#FFC857" />
+        <SolidColorBrush x:Key="AmberActionHoverBrush" Color="#FFD978" />
+        <SolidColorBrush x:Key="AmberActionTextBrush" Color="#201500" />
 
         <Style x:Key="ApplicationButtonStyle" TargetType="Button">
             <Setter Property="Foreground" Value="{StaticResource SecondaryBrush}" />
-            <Setter Property="Background" Value="#111A23" />
+            <Setter Property="Background" Value="#121C24" />
             <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Padding" Value="12,7" />
-            <Setter Property="MinHeight" Value="34" />
+            <Setter Property="Padding" Value="13,7" />
+            <Setter Property="MinHeight" Value="38" />
             <Setter Property="MinWidth" Value="58" />
-            <Setter Property="Margin" Value="0,0,6,0" />
+            <Setter Property="Margin" Value="0,0,7,0" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="FontSize" Value="12" />
             <Setter Property="FontWeight" Value="SemiBold" />
@@ -53,21 +56,21 @@
                                 Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="8">
+                                CornerRadius="9">
                             <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                               VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
                                               Margin="{TemplateBinding Padding}" />
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Chrome" Property="Background" Value="#172431" />
-                                <Setter TargetName="Chrome" Property="BorderBrush" Value="#3A5269" />
+                                <Setter TargetName="Chrome" Property="Background" Value="#1A2934" />
+                                <Setter TargetName="Chrome" Property="BorderBrush" Value="#4B687C" />
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="Chrome" Property="Opacity" Value="0.78" />
+                                <Setter TargetName="Chrome" Property="Opacity" Value="0.80" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="Chrome" Property="Opacity" Value="0.34" />
+                                <Setter TargetName="Chrome" Property="Opacity" Value="0.27" />
                                 <Setter Property="Cursor" Value="Arrow" />
                             </Trigger>
                         </ControlTemplate.Triggers>
@@ -77,56 +80,69 @@
         </Style>
 
         <Style x:Key="FilterButtonStyle" TargetType="Button" BasedOn="{StaticResource ApplicationButtonStyle}">
-            <Setter Property="Padding" Value="10,6" />
-            <Setter Property="MinWidth" Value="54" />
+            <Setter Property="Padding" Value="11,6" />
+            <Setter Property="MinWidth" Value="58" />
             <Setter Property="Foreground" Value="{StaticResource SecondaryBrush}" />
         </Style>
 
         <Style x:Key="BulkOnButtonStyle" TargetType="Button" BasedOn="{StaticResource ApplicationButtonStyle}">
-            <Setter Property="Foreground" Value="{StaticResource IdleBrush}" />
-            <Setter Property="BorderBrush" Value="#24563E" />
-            <Setter Property="Background" Value="#0D2118" />
+            <Setter Property="Foreground" Value="{StaticResource AmberActionTextBrush}" />
+            <Setter Property="BorderBrush" Value="#DDAA38" />
+            <Setter Property="Background" Value="{StaticResource AmberActionBrush}" />
+            <Setter Property="FontWeight" Value="Bold" />
         </Style>
 
         <Style x:Key="BulkOffButtonStyle" TargetType="Button" BasedOn="{StaticResource ApplicationButtonStyle}">
             <Setter Property="Foreground" Value="{StaticResource OffBrush}" />
-            <Setter Property="BorderBrush" Value="#5E2A32" />
-            <Setter Property="Background" Value="#241116" />
+            <Setter Property="BorderBrush" Value="#733541" />
+            <Setter Property="Background" Value="#241318" />
             <Setter Property="Margin" Value="0" />
         </Style>
 
         <Style x:Key="CardActionButtonStyle" TargetType="Button" BasedOn="{StaticResource ApplicationButtonStyle}">
-            <Setter Property="MinHeight" Value="38" />
+            <Setter Property="MinHeight" Value="44" />
             <Setter Property="MinWidth" Value="76" />
-            <Setter Property="Margin" Value="0,0,6,0" />
-            <Setter Property="Padding" Value="10,6" />
-            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Margin" Value="0,0,7,0" />
+            <Setter Property="Padding" Value="12,7" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="Bold" />
         </Style>
 
         <Style x:Key="StartButtonStyle" TargetType="Button" BasedOn="{StaticResource CardActionButtonStyle}">
-            <Setter Property="Foreground" Value="{StaticResource IdleBrush}" />
-            <Setter Property="BorderBrush" Value="#24563E" />
+            <Setter Property="Foreground" Value="{StaticResource AmberActionTextBrush}" />
+            <Setter Property="Background" Value="{StaticResource AmberActionBrush}" />
+            <Setter Property="BorderBrush" Value="#E0AE3D" />
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{StaticResource AmberActionHoverBrush}" />
+                    <Setter Property="BorderBrush" Value="#FFE3A3" />
+                </Trigger>
+            </Style.Triggers>
         </Style>
 
         <Style x:Key="StopButtonStyle" TargetType="Button" BasedOn="{StaticResource CardActionButtonStyle}">
-            <Setter Property="Foreground" Value="{StaticResource OffBrush}" />
-            <Setter Property="BorderBrush" Value="#5E2A32" />
+            <Setter Property="Foreground" Value="#FF8A96" />
+            <Setter Property="Background" Value="#201217" />
+            <Setter Property="BorderBrush" Value="#7C3543" />
         </Style>
 
         <Style x:Key="RestartButtonStyle" TargetType="Button" BasedOn="{StaticResource CardActionButtonStyle}">
             <Setter Property="Foreground" Value="{StaticResource RunnerBrush}" />
-            <Setter Property="BorderBrush" Value="#20566A" />
+            <Setter Property="Background" Value="#0D1D24" />
+            <Setter Property="BorderBrush" Value="#21667A" />
         </Style>
 
         <Style x:Key="DetailsButtonStyle" TargetType="Button" BasedOn="{StaticResource CardActionButtonStyle}">
             <Setter Property="Foreground" Value="{StaticResource SecondaryBrush}" />
+            <Setter Property="Background" Value="#101820" />
             <Setter Property="Margin" Value="0" />
         </Style>
 
         <Style x:Key="ForceStopButtonStyle" TargetType="Button" BasedOn="{StaticResource CardActionButtonStyle}">
             <Setter Property="Foreground" Value="{StaticResource ErrorBrush}" />
-            <Setter Property="BorderBrush" Value="#6B3D20" />
-            <Setter Property="Margin" Value="6,0,0,0" />
+            <Setter Property="Background" Value="#24150D" />
+            <Setter Property="BorderBrush" Value="#704525" />
+            <Setter Property="Margin" Value="7,0,0,0" />
             <Setter Property="Visibility" Value="Collapsed" />
             <Setter Property="IsEnabled" Value="False" />
             <Style.Triggers>
@@ -138,24 +154,49 @@
         </Style>
 
         <Style x:Key="RunnerCardStyle" TargetType="Border">
-            <Setter Property="Background" Value="{StaticResource RaisedBrush}" />
+            <Setter Property="Background" Value="#111C25" />
             <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="14" />
-            <Setter Property="Padding" Value="12" />
-            <Setter Property="Margin" Value="6" />
-            <Setter Property="MinHeight" Value="108" />
+            <Setter Property="Padding" Value="16" />
+            <Setter Property="Margin" Value="8" />
+            <Setter Property="MinHeight" Value="168" />
+            <Setter Property="MaxHeight" Value="210" />
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect Color="#000000" BlurRadius="14" ShadowDepth="2" Opacity="0.28" />
+                </Setter.Value>
+            </Setter>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="{StaticResource RaisedHoverBrush}" />
+                    <Setter Property="Background" Value="#152630" />
                     <Setter Property="BorderBrush" Value="{StaticResource StrongBorderBrush}" />
                 </Trigger>
+                <DataTrigger Binding="{Binding State}" Value="{x:Static runtime:RunnerState.IDLE}">
+                    <Setter Property="Background" Value="#10221D" />
+                    <Setter Property="BorderBrush" Value="#2C7553" />
+                    <Setter Property="Effect">
+                        <Setter.Value>
+                            <DropShadowEffect Color="#2AE78B" BlurRadius="18" ShadowDepth="0" Opacity="0.18" />
+                        </Setter.Value>
+                    </Setter>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding State}" Value="{x:Static runtime:RunnerState.BUSY}">
+                    <Setter Property="Background" Value="#211D12" />
+                    <Setter Property="BorderBrush" Value="#6F5B25" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding State}" Value="{x:Static runtime:RunnerState.OFF}">
+                    <Setter Property="BorderBrush" Value="#3D3D46" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding State}" Value="{x:Static runtime:RunnerState.ERROR}">
+                    <Setter Property="BorderBrush" Value="#754020" />
+                </DataTrigger>
             </Style.Triggers>
         </Style>
 
         <Style x:Key="RunnerCardItemStyle" TargetType="ListBoxItem">
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-            <Setter Property="VerticalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Top" />
             <Setter Property="Padding" Value="0" />
             <Setter Property="Margin" Value="0" />
             <Setter Property="Background" Value="Transparent" />
@@ -187,184 +228,211 @@
             <Setter Property="BorderBrush" Value="{StaticResource StrongBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="999" />
-            <Setter Property="Padding" Value="9,4" />
+            <Setter Property="Padding" Value="10,5" />
             <Style.Triggers>
-                <DataTrigger Binding="{Binding State}" Value="{x:Static runtime:RunnerState.IDLE}"><Setter Property="BorderBrush" Value="#24563E" /><Setter Property="Background" Value="#0D2118" /></DataTrigger>
-                <DataTrigger Binding="{Binding State}" Value="{x:Static runtime:RunnerState.BUSY}"><Setter Property="BorderBrush" Value="#66552A" /><Setter Property="Background" Value="#251F0E" /></DataTrigger>
-                <DataTrigger Binding="{Binding State}" Value="{x:Static runtime:RunnerState.OFF}"><Setter Property="BorderBrush" Value="#5E2A32" /><Setter Property="Background" Value="#241116" /></DataTrigger>
-                <DataTrigger Binding="{Binding State}" Value="{x:Static runtime:RunnerState.ERROR}"><Setter Property="BorderBrush" Value="#6B3D20" /><Setter Property="Background" Value="#26170E" /></DataTrigger>
-                <DataTrigger Binding="{Binding State}" Value="{x:Static runtime:RunnerState.STARTING}"><Setter Property="BorderBrush" Value="#28577C" /><Setter Property="Background" Value="#102338" /></DataTrigger>
-                <DataTrigger Binding="{Binding State}" Value="{x:Static runtime:RunnerState.STOPPING}"><Setter Property="BorderBrush" Value="#4D3C70" /><Setter Property="Background" Value="#1D1730" /></DataTrigger>
+                <DataTrigger Binding="{Binding State}" Value="{x:Static runtime:RunnerState.IDLE}"><Setter Property="BorderBrush" Value="#2E7A57" /><Setter Property="Background" Value="#0E2A1D" /></DataTrigger>
+                <DataTrigger Binding="{Binding State}" Value="{x:Static runtime:RunnerState.BUSY}"><Setter Property="BorderBrush" Value="#796322" /><Setter Property="Background" Value="#2B240D" /></DataTrigger>
+                <DataTrigger Binding="{Binding State}" Value="{x:Static runtime:RunnerState.OFF}"><Setter Property="BorderBrush" Value="#6A303A" /><Setter Property="Background" Value="#291319" /></DataTrigger>
+                <DataTrigger Binding="{Binding State}" Value="{x:Static runtime:RunnerState.ERROR}"><Setter Property="BorderBrush" Value="#74411F" /><Setter Property="Background" Value="#2A180D" /></DataTrigger>
+                <DataTrigger Binding="{Binding State}" Value="{x:Static runtime:RunnerState.STARTING}"><Setter Property="BorderBrush" Value="#2B6088" /><Setter Property="Background" Value="#10283B" /></DataTrigger>
+                <DataTrigger Binding="{Binding State}" Value="{x:Static runtime:RunnerState.STOPPING}"><Setter Property="BorderBrush" Value="#57437C" /><Setter Property="Background" Value="#211832" /></DataTrigger>
             </Style.Triggers>
         </Style>
 
         <Style x:Key="CounterCardStyle" TargetType="Border">
-            <Setter Property="Background" Value="{StaticResource PanelBrush}" />
+            <Setter Property="Background" Value="#0E1820" />
             <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="10" />
-            <Setter Property="Padding" Value="10,8" />
-            <Setter Property="Margin" Value="0,0,8,0" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Padding" Value="13,10" />
+            <Setter Property="Margin" Value="0,0,9,0" />
         </Style>
     </Window.Resources>
 
-    <Grid x:Name="RootSurface" Background="{StaticResource BackgroundBrush}" Margin="18">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
+    <Grid x:Name="RootSurface" Background="{StaticResource BackgroundBrush}">
+        <Grid x:Name="AmbientGlowLayer" IsHitTestVisible="False" ClipToBounds="True">
+            <Ellipse Width="900" Height="520" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="-220,0,0,-170">
+                <Ellipse.Fill>
+                    <RadialGradientBrush>
+                        <GradientStop Color="#42A96B11" Offset="0" />
+                        <GradientStop Color="#18FFC857" Offset="0.45" />
+                        <GradientStop Color="#00000000" Offset="1" />
+                    </RadialGradientBrush>
+                </Ellipse.Fill>
+                <Ellipse.Effect><BlurEffect Radius="70" /></Ellipse.Effect>
+            </Ellipse>
+            <Ellipse Width="740" Height="440" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-120,-170,0">
+                <Ellipse.Fill>
+                    <RadialGradientBrush>
+                        <GradientStop Color="#2539E58C" Offset="0" />
+                        <GradientStop Color="#1135D9FF" Offset="0.55" />
+                        <GradientStop Color="#00000000" Offset="1" />
+                    </RadialGradientBrush>
+                </Ellipse.Fill>
+                <Ellipse.Effect><BlurEffect Radius="72" /></Ellipse.Effect>
+            </Ellipse>
+        </Grid>
 
-        <Grid Grid.Row="0" Margin="0,0,0,12">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <StackPanel>
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="MAIN RUNNER CONTROL" FontSize="28" FontWeight="Bold" Foreground="{StaticResource LabelBrush}" />
-                    <Border Margin="12,2,0,0" Padding="9,3" Background="#0D2118" BorderBrush="#24563E" BorderThickness="1" CornerRadius="999" VerticalAlignment="Center">
+        <Grid Margin="22">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0" Margin="2,0,2,18">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="LOCAL-FIRST RUNNER CONTROL" Foreground="{StaticResource MutedBrush}" FontSize="11" FontWeight="Bold" CharacterSpacing="90" Margin="1,0,0,4" />
+                    <TextBlock Text="MAIN RUNNER CONTROL" FontSize="34" FontWeight="Bold" Foreground="{StaticResource LabelBrush}" />
+                    <StackPanel Orientation="Horizontal" Margin="1,7,0,0">
+                        <TextBlock Text="HOST" Foreground="{StaticResource MutedBrush}" FontSize="10" FontWeight="Bold" />
+                        <TextBlock x:Name="MachineValue" Margin="7,0,20,0" Foreground="{StaticResource RunnerBrush}" FontFamily="Cascadia Mono, Consolas" FontSize="11" FontWeight="SemiBold" />
+                        <TextBlock Text="ROOT" Foreground="{StaticResource MutedBrush}" FontSize="10" FontWeight="Bold" />
+                        <TextBlock x:Name="RootValue" Margin="7,0,0,0" Foreground="{StaticResource MetadataBrush}" FontFamily="Cascadia Mono, Consolas" FontSize="11" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Top">
+                    <Border Padding="13,7" Background="#10261D" BorderBrush="#2B7654" BorderThickness="1" CornerRadius="999" HorizontalAlignment="Right">
                         <StackPanel Orientation="Horizontal">
-                            <Ellipse x:Name="BoundaryDot" Width="8" Height="8" Fill="{StaticResource IdleBrush}" Margin="0,0,7,0" VerticalAlignment="Center" />
-                            <TextBlock x:Name="BoundaryValue" Text="AUTHORIZED" FontSize="11" FontWeight="Bold" Foreground="{StaticResource IdleBrush}" />
+                            <Ellipse x:Name="BoundaryDot" Width="9" Height="9" Fill="{StaticResource IdleBrush}" Margin="0,0,8,0" VerticalAlignment="Center" />
+                            <TextBlock x:Name="BoundaryValue" Text="CONTROL AUTHORIZED" FontSize="11" FontWeight="Bold" Foreground="{StaticResource IdleBrush}" />
                         </StackPanel>
                     </Border>
+                    <TextBlock x:Name="VersionValue" Text="PRE-CERT" Foreground="{StaticResource CountBrush}" FontFamily="Cascadia Mono, Consolas" FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Right" Margin="0,8,1,0" />
                 </StackPanel>
-                <StackPanel Orientation="Horizontal" Margin="1,5,0,0">
-                    <TextBlock Text="HOST" Foreground="{StaticResource MutedBrush}" FontSize="10" FontWeight="Bold" />
-                    <TextBlock x:Name="MachineValue" Margin="7,0,18,0" Foreground="{StaticResource RunnerBrush}" FontFamily="Cascadia Mono, Consolas" FontSize="11" FontWeight="SemiBold" />
-                    <TextBlock Text="ROOT" Foreground="{StaticResource MutedBrush}" FontSize="10" FontWeight="Bold" />
-                    <TextBlock x:Name="RootValue" Margin="7,0,0,0" Foreground="{StaticResource MetadataBrush}" FontFamily="Cascadia Mono, Consolas" FontSize="11" TextTrimming="CharacterEllipsis" />
+            </Grid>
+
+            <UniformGrid Grid.Row="1" Columns="6" Margin="0,0,0,16">
+                <Border Style="{StaticResource CounterCardStyle}">
+                    <StackPanel><TextBlock Text="TOTAL" Foreground="{StaticResource MutedBrush}" FontSize="10" FontWeight="Bold" /><TextBlock Text="{Binding TotalCount}" Foreground="{StaticResource CountBrush}" FontSize="24" FontWeight="Bold" /></StackPanel>
+                </Border>
+                <Border Style="{StaticResource CounterCardStyle}">
+                    <StackPanel><TextBlock Text="IDLE" Foreground="{StaticResource MutedBrush}" FontSize="10" FontWeight="Bold" /><TextBlock Text="{Binding IdleCount}" Foreground="{StaticResource IdleBrush}" FontSize="24" FontWeight="Bold" /></StackPanel>
+                </Border>
+                <Border Style="{StaticResource CounterCardStyle}">
+                    <StackPanel><TextBlock Text="BUSY" Foreground="{StaticResource MutedBrush}" FontSize="10" FontWeight="Bold" /><TextBlock Text="{Binding BusyCount}" Foreground="{StaticResource BusyBrush}" FontSize="24" FontWeight="Bold" /></StackPanel>
+                </Border>
+                <Border Style="{StaticResource CounterCardStyle}">
+                    <StackPanel><TextBlock Text="OFF" Foreground="{StaticResource MutedBrush}" FontSize="10" FontWeight="Bold" /><TextBlock Text="{Binding OffCount}" Foreground="{StaticResource OffBrush}" FontSize="24" FontWeight="Bold" /></StackPanel>
+                </Border>
+                <Border Style="{StaticResource CounterCardStyle}">
+                    <StackPanel><TextBlock Text="ERROR" Foreground="{StaticResource MutedBrush}" FontSize="10" FontWeight="Bold" /><TextBlock Text="{Binding ErrorCount}" Foreground="{StaticResource ErrorBrush}" FontSize="24" FontWeight="Bold" /></StackPanel>
+                </Border>
+                <Border Style="{StaticResource CounterCardStyle}" Margin="0">
+                    <StackPanel><TextBlock Text="TRANSITION" Foreground="{StaticResource MutedBrush}" FontSize="10" FontWeight="Bold" /><TextBlock Text="{Binding TransitionCount}" Foreground="{StaticResource StartingBrush}" FontSize="24" FontWeight="Bold" /></StackPanel>
+                </Border>
+            </UniformGrid>
+
+            <Grid x:Name="OperationsPanel" Grid.Row="2" Margin="0,0,0,14" IsEnabled="False">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" MinWidth="160" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                <StackPanel x:Name="FilterPanel" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Content="ALL" Tag="ALL" AutomationProperties.Name="Show all runners" Style="{StaticResource FilterButtonStyle}" Click="FilterButton_OnClick" />
+                    <Button Content="IDLE" Tag="IDLE" AutomationProperties.Name="Show idle runners" Style="{StaticResource FilterButtonStyle}" Click="FilterButton_OnClick" />
+                    <Button Content="BUSY" Tag="BUSY" AutomationProperties.Name="Show busy runners" Style="{StaticResource FilterButtonStyle}" Click="FilterButton_OnClick" />
+                    <Button Content="OFF" Tag="OFF" AutomationProperties.Name="Show off runners" Style="{StaticResource FilterButtonStyle}" Click="FilterButton_OnClick" />
+                    <Button Content="ERROR" Tag="ERROR" AutomationProperties.Name="Show error runners" Style="{StaticResource FilterButtonStyle}" Click="FilterButton_OnClick" />
                 </StackPanel>
-            </StackPanel>
-            <TextBlock x:Name="VersionValue" Grid.Column="1" Text="PRE-CERT" Foreground="{StaticResource CountBrush}" FontFamily="Cascadia Mono, Consolas" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Top" Margin="12,6,0,0" />
-        </Grid>
 
-        <UniformGrid Grid.Row="1" Columns="6" Margin="0,0,0,12">
-            <Border Style="{StaticResource CounterCardStyle}">
-                <StackPanel><TextBlock Text="TOTAL" Foreground="{StaticResource MutedBrush}" FontSize="10" FontWeight="Bold" /><TextBlock Text="{Binding TotalCount}" Foreground="{StaticResource CountBrush}" FontSize="20" FontWeight="Bold" /></StackPanel>
-            </Border>
-            <Border Style="{StaticResource CounterCardStyle}">
-                <StackPanel><TextBlock Text="IDLE" Foreground="{StaticResource MutedBrush}" FontSize="10" FontWeight="Bold" /><TextBlock Text="{Binding IdleCount}" Foreground="{StaticResource IdleBrush}" FontSize="20" FontWeight="Bold" /></StackPanel>
-            </Border>
-            <Border Style="{StaticResource CounterCardStyle}">
-                <StackPanel><TextBlock Text="BUSY" Foreground="{StaticResource MutedBrush}" FontSize="10" FontWeight="Bold" /><TextBlock Text="{Binding BusyCount}" Foreground="{StaticResource BusyBrush}" FontSize="20" FontWeight="Bold" /></StackPanel>
-            </Border>
-            <Border Style="{StaticResource CounterCardStyle}">
-                <StackPanel><TextBlock Text="OFF" Foreground="{StaticResource MutedBrush}" FontSize="10" FontWeight="Bold" /><TextBlock Text="{Binding OffCount}" Foreground="{StaticResource OffBrush}" FontSize="20" FontWeight="Bold" /></StackPanel>
-            </Border>
-            <Border Style="{StaticResource CounterCardStyle}">
-                <StackPanel><TextBlock Text="ERROR" Foreground="{StaticResource MutedBrush}" FontSize="10" FontWeight="Bold" /><TextBlock Text="{Binding ErrorCount}" Foreground="{StaticResource ErrorBrush}" FontSize="20" FontWeight="Bold" /></StackPanel>
-            </Border>
-            <Border Style="{StaticResource CounterCardStyle}" Margin="0">
-                <StackPanel><TextBlock Text="TRANSITION" Foreground="{StaticResource MutedBrush}" FontSize="10" FontWeight="Bold" /><TextBlock Text="{Binding TransitionCount}" Foreground="{StaticResource StartingBrush}" FontSize="20" FontWeight="Bold" /></StackPanel>
-            </Border>
-        </UniformGrid>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="10,0,10,0">
+                    <Button x:Name="TurnAllOnButton" AutomationProperties.Name="Turn all verified OFF runners on" Content="TURN ALL ON" Click="TurnAllOnButton_OnClick" Style="{StaticResource BulkOnButtonStyle}" />
+                    <Button x:Name="TurnAllOffButton" AutomationProperties.Name="Stop all verified IDLE runners" Content="TURN ALL OFF" Click="TurnAllOffButton_OnClick" Style="{StaticResource BulkOffButtonStyle}" />
+                </StackPanel>
 
-        <Grid x:Name="OperationsPanel" Grid.Row="2" Margin="0,0,0,10" IsEnabled="False">
-            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" MinWidth="160" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-            <StackPanel x:Name="FilterPanel" Orientation="Horizontal" VerticalAlignment="Center">
-                <Button Content="ALL" Tag="ALL" AutomationProperties.Name="Show all runners" Style="{StaticResource FilterButtonStyle}" Click="FilterButton_OnClick" />
-                <Button Content="IDLE" Tag="IDLE" AutomationProperties.Name="Show idle runners" Style="{StaticResource FilterButtonStyle}" Click="FilterButton_OnClick" />
-                <Button Content="BUSY" Tag="BUSY" AutomationProperties.Name="Show busy runners" Style="{StaticResource FilterButtonStyle}" Click="FilterButton_OnClick" />
-                <Button Content="OFF" Tag="OFF" AutomationProperties.Name="Show off runners" Style="{StaticResource FilterButtonStyle}" Click="FilterButton_OnClick" />
-                <Button Content="ERROR" Tag="ERROR" AutomationProperties.Name="Show error runners" Style="{StaticResource FilterButtonStyle}" Click="FilterButton_OnClick" />
-            </StackPanel>
+                <Border Grid.Column="2" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Background="#0E1820" CornerRadius="9" MinHeight="38" Padding="11,0">
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                        <TextBlock Text="SEARCH" Foreground="{StaticResource MutedBrush}" FontSize="10" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,10,0" />
+                        <TextBox x:Name="SearchBox" Grid.Column="1" AutomationProperties.Name="Search runners" ToolTip="Press / to focus search" TextChanged="SearchBox_OnTextChanged" Background="Transparent" BorderThickness="0" Foreground="{StaticResource LabelBrush}" CaretBrush="{StaticResource RunnerBrush}" FontSize="12" VerticalContentAlignment="Center" />
+                        <TextBlock Grid.Column="2" Text="/" Foreground="{StaticResource MutedBrush}" FontFamily="Cascadia Mono, Consolas" FontSize="12" VerticalAlignment="Center" Margin="8,0,0,0" />
+                    </Grid>
+                </Border>
+                <Button Grid.Column="3" x:Name="ManualRefreshButton" AutomationProperties.Name="Refresh runner states now" Content="↻" Click="ManualRefreshButton_OnClick" Style="{StaticResource ApplicationButtonStyle}" Margin="7,0,0,0" MinWidth="46" />
+            </Grid>
 
-            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="8,0,8,0">
-                <Button x:Name="TurnAllOnButton" AutomationProperties.Name="Turn all verified OFF runners on" Content="TURN ALL ON" Click="TurnAllOnButton_OnClick" Style="{StaticResource BulkOnButtonStyle}" />
-                <Button x:Name="TurnAllOffButton" AutomationProperties.Name="Stop all verified IDLE runners" Content="TURN ALL OFF" Click="TurnAllOffButton_OnClick" Style="{StaticResource BulkOffButtonStyle}" />
-            </StackPanel>
+            <Border x:Name="RunnerCardSurface" Grid.Row="3" Background="#66070D12" BorderBrush="#182733" BorderThickness="1" CornerRadius="16" Padding="5" ClipToBounds="True">
+                <ListBox x:Name="RunnerList"
+                         AutomationProperties.Name="Managed runner command cards"
+                         ItemsSource="{Binding VisibleRows}"
+                         ItemContainerStyle="{StaticResource RunnerCardItemStyle}"
+                         Background="Transparent"
+                         BorderThickness="0"
+                         Foreground="{StaticResource LabelBrush}"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         ScrollViewer.VerticalScrollBarVisibility="Auto">
+                    <ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <UniformGrid Columns="{Binding CardColumnCount}" IsItemsHost="True" VerticalAlignment="Top" />
+                        </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Border Style="{StaticResource RunnerCardStyle}" ToolTip="{Binding DirectoryPath}">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="*" />
+                                    </Grid.RowDefinitions>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <Border Width="38" Height="38" CornerRadius="10" Background="#091117" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Margin="0,0,11,0">
+                                            <TextBlock Text="{Binding Glyph}" Opacity="{Binding AnimationIntensity}" Style="{StaticResource StateForegroundStyle}" FontFamily="Cascadia Mono, Consolas" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Border>
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding RunnerName}" AutomationProperties.Name="{Binding RunnerName}" Foreground="{StaticResource LabelBrush}" TextTrimming="CharacterEllipsis" FontSize="19" FontWeight="Bold" />
+                                            <TextBlock Text="{Binding RepositoryName}" Foreground="{StaticResource RepositoryBrush}" TextTrimming="CharacterEllipsis" FontSize="12" Margin="0,3,8,0" />
+                                        </StackPanel>
+                                        <Border Grid.Column="2" Style="{StaticResource StateBadgeStyle}" VerticalAlignment="Top">
+                                            <TextBlock Text="{Binding StateText}" AutomationProperties.Name="{Binding StateText}" Style="{StaticResource StateForegroundStyle}" FontSize="10" FontWeight="Bold" />
+                                        </Border>
+                                    </Grid>
 
-            <Border Grid.Column="2" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Background="{StaticResource PanelBrush}" CornerRadius="8" MinHeight="34" Padding="10,0">
+                                    <Grid Grid.Row="1" Margin="0,14,0,0" VerticalAlignment="Bottom">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <Button Grid.Column="0" Content="START" CommandParameter="{Binding}" IsEnabled="{Binding CanStart}" Click="RunnerStart_OnClick" AutomationProperties.Name="Start runner" Style="{StaticResource StartButtonStyle}" />
+                                        <Button Grid.Column="1" Content="STOP" CommandParameter="{Binding}" IsEnabled="{Binding CanStop}" Click="RunnerStop_OnClick" AutomationProperties.Name="Stop runner" Style="{StaticResource StopButtonStyle}" />
+                                        <Button Grid.Column="2" Content="RESTART" CommandParameter="{Binding}" IsEnabled="{Binding CanRestart}" Click="RunnerRestart_OnClick" AutomationProperties.Name="Restart runner" Style="{StaticResource RestartButtonStyle}" />
+                                        <Button Grid.Column="3" Content="DETAILS" CommandParameter="{Binding}" IsEnabled="{Binding CanShowDetails}" Click="RunnerDetails_OnClick" AutomationProperties.Name="Open runner diagnostics" Style="{StaticResource DetailsButtonStyle}" />
+                                        <Button Grid.Column="5" Content="FORCE STOP" CommandParameter="{Binding}" Click="RunnerMoreControl_OnClick" AutomationProperties.Name="Force stop BUSY runner" Style="{StaticResource ForceStopButtonStyle}" />
+                                    </Grid>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Border>
+
+            <Border x:Name="SystemFindingsPanel" Grid.Row="4" Margin="0,12,0,0" Padding="12,9" Background="#101820" BorderBrush="#304253" BorderThickness="1" CornerRadius="9">
                 <Grid>
-                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                    <TextBlock Text="SEARCH" Foreground="{StaticResource MutedBrush}" FontSize="10" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,10,0" />
-                    <TextBox x:Name="SearchBox" Grid.Column="1" AutomationProperties.Name="Search runners" ToolTip="Press / to focus search" TextChanged="SearchBox_OnTextChanged" Background="Transparent" BorderThickness="0" Foreground="{StaticResource LabelBrush}" CaretBrush="{StaticResource RunnerBrush}" FontSize="12" VerticalContentAlignment="Center" />
-                    <TextBlock Grid.Column="2" Text="/" Foreground="{StaticResource MutedBrush}" FontFamily="Cascadia Mono, Consolas" FontSize="12" VerticalAlignment="Center" Margin="8,0,0,0" />
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                    <TextBlock Text="SYSTEM" Foreground="{StaticResource BusyBrush}" FontSize="10" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,11,0" />
+                    <TextBlock x:Name="SystemFindingsValue" Grid.Column="1" Text="{Binding SystemFindingsSummary}" Foreground="{StaticResource SecondaryBrush}" FontFamily="Cascadia Mono, Consolas" FontSize="10" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" ToolTip="{Binding SystemFindingsSummary}" />
                 </Grid>
             </Border>
-            <Button Grid.Column="3" x:Name="ManualRefreshButton" AutomationProperties.Name="Refresh runner states now" Content="↻" Click="ManualRefreshButton_OnClick" Style="{StaticResource ApplicationButtonStyle}" Margin="6,0,0,0" MinWidth="42" />
-        </Grid>
 
-        <Border x:Name="RunnerCardSurface" Grid.Row="3" Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="14" Padding="6" ClipToBounds="True">
-            <ListBox x:Name="RunnerList"
-                     AutomationProperties.Name="Managed runner command cards"
-                     ItemsSource="{Binding VisibleRows}"
-                     ItemContainerStyle="{StaticResource RunnerCardItemStyle}"
-                     Background="Transparent"
-                     BorderThickness="0"
-                     Foreground="{StaticResource LabelBrush}"
-                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                     ScrollViewer.VerticalScrollBarVisibility="Auto">
-                <ListBox.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <UniformGrid Columns="{Binding CardColumnCount}" IsItemsHost="True" />
-                    </ItemsPanelTemplate>
-                </ListBox.ItemsPanel>
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <Border Style="{StaticResource RunnerCardStyle}" ToolTip="{Binding DirectoryPath}">
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="*" />
-                                </Grid.RowDefinitions>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <Border Width="34" Height="34" CornerRadius="9" Background="#0A1118" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Margin="0,0,10,0">
-                                        <TextBlock Text="{Binding Glyph}" Opacity="{Binding AnimationIntensity}" Style="{StaticResource StateForegroundStyle}" FontFamily="Cascadia Mono, Consolas" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                    </Border>
-                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding RunnerName}" AutomationProperties.Name="{Binding RunnerName}" Foreground="{StaticResource LabelBrush}" TextTrimming="CharacterEllipsis" FontSize="18" FontWeight="SemiBold" />
-                                        <TextBlock Text="{Binding RepositoryName}" Foreground="{StaticResource RepositoryBrush}" TextTrimming="CharacterEllipsis" FontSize="12" Margin="0,2,8,0" />
-                                    </StackPanel>
-                                    <Border Grid.Column="2" Style="{StaticResource StateBadgeStyle}" VerticalAlignment="Top">
-                                        <TextBlock Text="{Binding StateText}" AutomationProperties.Name="{Binding StateText}" Style="{StaticResource StateForegroundStyle}" FontSize="10" FontWeight="Bold" />
-                                    </Border>
-                                </Grid>
-
-                                <Grid Grid.Row="1" Margin="0,14,0,0" VerticalAlignment="Bottom">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <Button Grid.Column="0" Content="START" CommandParameter="{Binding}" IsEnabled="{Binding CanStart}" Click="RunnerStart_OnClick" AutomationProperties.Name="Start runner" Style="{StaticResource StartButtonStyle}" />
-                                    <Button Grid.Column="1" Content="STOP" CommandParameter="{Binding}" IsEnabled="{Binding CanStop}" Click="RunnerStop_OnClick" AutomationProperties.Name="Stop runner" Style="{StaticResource StopButtonStyle}" />
-                                    <Button Grid.Column="2" Content="RESTART" CommandParameter="{Binding}" IsEnabled="{Binding CanRestart}" Click="RunnerRestart_OnClick" AutomationProperties.Name="Restart runner" Style="{StaticResource RestartButtonStyle}" />
-                                    <Button Grid.Column="3" Content="DETAILS" CommandParameter="{Binding}" IsEnabled="{Binding CanShowDetails}" Click="RunnerDetails_OnClick" AutomationProperties.Name="Open runner diagnostics" Style="{StaticResource DetailsButtonStyle}" />
-                                    <Button Grid.Column="5" Content="FORCE STOP" CommandParameter="{Binding}" Click="RunnerMoreControl_OnClick" AutomationProperties.Name="Force stop BUSY runner" Style="{StaticResource ForceStopButtonStyle}" />
-                                </Grid>
-                            </Grid>
-                        </Border>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
-        </Border>
-
-        <Border x:Name="SystemFindingsPanel" Grid.Row="4" Margin="0,10,0,0" Padding="10,8" Background="#10171F" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8">
-            <Grid>
-                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                <TextBlock Text="SYSTEM" Foreground="{StaticResource MutedBrush}" FontSize="10" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,10,0" />
-                <TextBlock x:Name="SystemFindingsValue" Grid.Column="1" Text="{Binding SystemFindingsSummary}" Foreground="{StaticResource SecondaryBrush}" FontFamily="Cascadia Mono, Consolas" FontSize="10" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" ToolTip="{Binding SystemFindingsSummary}" />
+            <Grid Grid.Row="5" Margin="3,10,3,0">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                <TextBlock x:Name="RefreshStatusValue" Text="Waiting for runner state…" Foreground="{StaticResource SecondaryBrush}" FontSize="11" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="1" Text="20 FPS UI • 3s runtime refresh" Foreground="{StaticResource MutedBrush}" FontFamily="Cascadia Mono, Consolas" FontSize="10" VerticalAlignment="Center" Margin="12,0,0,0" />
             </Grid>
-        </Border>
-
-        <Grid Grid.Row="5" Margin="2,9,2,0">
-            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-            <TextBlock x:Name="RefreshStatusValue" Text="Waiting for runner state…" Foreground="{StaticResource SecondaryBrush}" FontSize="11" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
-            <TextBlock Grid.Column="1" Text="20 FPS UI • 3s runtime refresh" Foreground="{StaticResource MutedBrush}" FontFamily="Cascadia Mono, Consolas" FontSize="10" VerticalAlignment="Center" Margin="12,0,0,0" />
         </Grid>
     </Grid>
 </Window>
