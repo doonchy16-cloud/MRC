@@ -110,9 +110,12 @@ internal static class LayoutAcceptance
     private static void MultiChannelState()
     {
         var card = CardXaml();
+        var orb = OrbXaml();
         var theme = ThemeXaml();
-        Require(card.Contains("Opacity=\"{Binding Row.AnimationIntensity, ElementName=Root}\"", StringComparison.Ordinal),
-            "Active card indicator does not render the shared AnimationIntensity signal.");
+        Require(card.Contains("<controls:StateOrb", StringComparison.Ordinal)
+                && card.Contains("Intensity=\"{Binding Row.AnimationIntensity, ElementName=Root}\"", StringComparison.Ordinal)
+                && orb.Contains("Opacity=\"{Binding Intensity, ElementName=Root}\"", StringComparison.Ordinal),
+            "Active StateOrb does not render the shared AnimationIntensity signal.");
         Require(card.Contains("Text=\"{Binding Row.StateText, ElementName=Root}\"", StringComparison.Ordinal),
             "State text binding is missing from the active card.");
         Require(theme.Contains("x:Key=\"ReplicaStateBadgeStyle\"", StringComparison.Ordinal),
@@ -126,12 +129,13 @@ internal static class LayoutAcceptance
         var code = CodeBehind();
         var rows = File.ReadAllText(Path.Combine(RepoRoot(), "src", "MRC.Gui", "Presentation", "RunnerRowViewModel.cs"));
         var cardCode = CardCode();
+        var orbCode = OrbCode();
         Require(code.Contains("_refreshTimer") && code.Contains("_animationTimer") && code.Contains("TimeSpan.FromSeconds(3)"),
             "Shared refresh/animation timers or refresh cadence are missing.");
         Require(code.Contains("TimeSpan.FromMilliseconds(50)"), "20 FPS shared animation clock target is missing.");
         Require(Count(code, "new DispatcherTimer") == 2, "MainWindow must create exactly one refresh and one shared animation timer.");
-        Require(!rows.Contains("DispatcherTimer") && !cardCode.Contains("DispatcherTimer"),
-            "Runner presentation components must never allocate per-row/per-card timers.");
+        Require(!rows.Contains("DispatcherTimer") && !cardCode.Contains("DispatcherTimer") && !orbCode.Contains("DispatcherTimer"),
+            "Runner presentation components must never allocate per-row/per-card/per-orb timers.");
     }
 
     private static void StableBinding()
@@ -213,6 +217,8 @@ internal static class LayoutAcceptance
     private static string CodeBehind()=>File.ReadAllText(Path.Combine(RepoRoot(),"src","MRC.Gui","MainWindow.xaml.cs"));
     private static string CardXaml()=>File.ReadAllText(Path.Combine(RepoRoot(),"src","MRC.Gui","Controls","RunnerControlCard.xaml"));
     private static string CardCode()=>File.ReadAllText(Path.Combine(RepoRoot(),"src","MRC.Gui","Controls","RunnerControlCard.xaml.cs"));
+    private static string OrbXaml()=>File.ReadAllText(Path.Combine(RepoRoot(),"src","MRC.Gui","Controls","StateOrb.xaml"));
+    private static string OrbCode()=>File.ReadAllText(Path.Combine(RepoRoot(),"src","MRC.Gui","Controls","StateOrb.xaml.cs"));
     private static string ThemeXaml()=>File.ReadAllText(Path.Combine(RepoRoot(),"src","MRC.Gui","Themes","ReferenceReplica.xaml"));
     private static string RepoRoot(){var d=new DirectoryInfo(Directory.GetCurrentDirectory());while(d is not null){if(File.Exists(Path.Combine(d.FullName,"Auth","0000_MasterAuth.md")))return d.FullName;d=d.Parent;}throw new InvalidOperationException("Could not locate MRC repository root.");}
     private static int Count(string text,string value){var count=0;var i=0;while((i=text.IndexOf(value,i,StringComparison.Ordinal))>=0){count++;i+=value.Length;}return count;}
