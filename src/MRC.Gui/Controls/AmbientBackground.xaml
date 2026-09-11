@@ -25,11 +25,11 @@
         </Ellipse>
 
         <Ellipse x:Name="LowerRightAmberBloom"
-                 Width="1180"
-                 Height="760"
+                 Width="980"
+                 Height="650"
                  HorizontalAlignment="Right"
                  VerticalAlignment="Bottom"
-                 Margin="0,0,-210,-80">
+                 Margin="0,0,-260,-245">
             <Ellipse.Fill>
                 <RadialGradientBrush Center="0.5,0.5" GradientOrigin="0.5,0.5" RadiusX="0.5" RadiusY="0.5">
                     <GradientStop Color="#7CBA5C10" Offset="0" />
@@ -44,11 +44,11 @@
         </Ellipse>
 
         <Ellipse x:Name="UnderCardWarmth"
-                 Width="820"
-                 Height="300"
-                 HorizontalAlignment="Center"
-                 VerticalAlignment="Bottom"
-                 Margin="0,0,0,-108">
+                 Width="1200"
+                 Height="520"
+                 HorizontalAlignment="Right"
+                 VerticalAlignment="Top"
+                 Margin="0,520,-100,0">
             <Ellipse.Fill>
                 <RadialGradientBrush Center="0.5,0.5" GradientOrigin="0.5,0.5" RadiusX="0.5" RadiusY="0.5">
                     <GradientStop Color="#34F0A83A" Offset="0" />
