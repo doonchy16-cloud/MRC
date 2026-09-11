@@ -1,0 +1,146 @@
+name: Pre-cert v0.0.15 Release
+
+on:
+  push:
+    branches: [ precert-v0.0.15 ]
+    paths:
+      - .release/v0.0.15.trigger
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Verify, package, and publish v0.0.15
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup .NET from global.json
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Run v0.0.15 acceptance harness
+        shell: pwsh
+        run: ./scripts/verify-redesign.ps1
+
+      - name: Run PASS4 operations and updater regression
+        shell: pwsh
+        run: ./scripts/verify-pass4.ps1
+
+      - name: Run PASS3 presentation regression
+        shell: pwsh
+        run: ./scripts/verify-pass3.ps1
+
+      - name: Run PASS2 runtime regression
+        shell: pwsh
+        run: ./scripts/verify-pass2.ps1
+
+      - name: Run PASS1 foundation and distribution regression
+        shell: pwsh
+        run: ./scripts/verify-pass1.ps1
+
+      - name: Render canonical v0.0.15 previews
+        shell: pwsh
+        run: ./scripts/render-v0.0.15-preview.ps1
+
+      - name: Build v0.0.15 installable pre-cert package
+        shell: pwsh
+        run: ./scripts/package.ps1 -Configuration Release -Runtime win-x64 -ArtifactsRoot ./artifacts/v0.0.15/package
+
+      - name: Verify package identity hash manifest and CLI
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $root = Join-Path $PWD 'artifacts\v0.0.15\package'
+          $zip = Join-Path $root 'MRC-v0.0.15-win-x64.zip'
+          $sums = Join-Path $root 'SHA256SUMS.txt'
+          if (-not (Test-Path -LiteralPath $zip -PathType Leaf)) { throw "Missing package: $zip" }
+          if (-not (Test-Path -LiteralPath $sums -PathType Leaf)) { throw "Missing checksum authority: $sums" }
+
+          $line = Get-Content -LiteralPath $sums | Where-Object { $_ -match 'MRC-v0\.0\.15-win-x64\.zip$' } | Select-Object -First 1
+          if ([string]::IsNullOrWhiteSpace($line)) { throw 'SHA256SUMS.txt does not name the v0.0.15 package.' }
+          $expected = ([regex]::Match($line, '^([A-Fa-f0-9]{64})')).Groups[1].Value.ToLowerInvariant()
+          if ([string]::IsNullOrWhiteSpace($expected)) { throw 'SHA256SUMS.txt does not contain a valid SHA-256 digest.' }
+          $actual = (Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($actual -ne $expected) { throw "Package SHA-256 mismatch. Expected $expected, got $actual." }
+
+          $extract = Join-Path $env:RUNNER_TEMP 'mrc-v0.0.15-release-verify'
+          Remove-Item -LiteralPath $extract -Recurse -Force -ErrorAction SilentlyContinue
+          Expand-Archive -LiteralPath $zip -DestinationPath $extract -Force
+
+          $manifestPath = Join-Path $extract 'manifest.json'
+          if (-not (Test-Path -LiteralPath $manifestPath -PathType Leaf)) { throw 'Package manifest.json missing.' }
+          $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+          if ([string]$manifest.version -ne '0.0.15') { throw "Manifest version mismatch: $($manifest.version)" }
+          if ([string]$manifest.channel -ne 'precert') { throw "Manifest transport channel mismatch: $($manifest.channel)" }
+          if ([string]$manifest.applicationChannel -ne 'precert') { throw "Application channel mismatch: $($manifest.applicationChannel)" }
+          if ([string]$manifest.releaseStage -ne 'PreCertification') { throw "Manifest releaseStage mismatch: $($manifest.releaseStage)" }
+          if ([string]$manifest.finalTarget -ne '0.1.0') { throw "Manifest finalTarget mismatch: $($manifest.finalTarget)" }
+          if ([string]$manifest.targetMachine -ne 'DOONCHYSCOMPUTI') { throw "Manifest targetMachine mismatch: $($manifest.targetMachine)" }
+          if ([string]$manifest.runnerRoot -ne 'D:\Git_Runners_Main') { throw "Manifest runnerRoot mismatch: $($manifest.runnerRoot)" }
+          if (-not (Test-Path -LiteralPath (Join-Path $extract 'MRC.ico') -PathType Leaf)) { throw 'Package-root MRC.ico missing.' }
+          if (-not (Test-Path -LiteralPath (Join-Path $extract 'payload\MRC.exe') -PathType Leaf)) { throw 'Packaged MRC.exe missing.' }
+          if (-not (Test-Path -LiteralPath (Join-Path $extract 'payload\MRC.Gui.exe') -PathType Leaf)) { throw 'Packaged MRC.Gui.exe missing.' }
+
+          $versionOutput = & (Join-Path $extract 'payload\MRC.exe') --version 2>&1 | Out-String
+          if ($LASTEXITCODE -ne 0) { throw "Packaged MRC --version failed: $versionOutput" }
+          if ($versionOutput -notmatch 'Version:\s+0\.0\.15' -or
+              $versionOutput -notmatch 'Channel:\s+precert' -or
+              $versionOutput -notmatch 'Stage:\s+PRE-CERTIFICATION' -or
+              $versionOutput -notmatch 'Final target:\s+0\.1\.0') {
+            throw "Packaged executable does not report truthful v0.0.15 pre-cert authority: $versionOutput"
+          }
+
+          Write-Host "RELEASE PACKAGE VERIFIED SHA256=$actual"
+
+      - name: Publish or replace exact-head v0.0.15 pre-cert release assets
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $assets = @(
+            'artifacts/v0.0.15/package/MRC-v0.0.15-win-x64.zip',
+            'artifacts/v0.0.15/package/SHA256SUMS.txt',
+            'artifacts/v0.0.15/MRC-v0.0.15-2048x1222.png',
+            'artifacts/v0.0.15/MRC-v0.0.15-1200x760.png',
+            'artifacts/v0.0.15/MRC-v0.0.15-1180x760.png',
+            'artifacts/v0.0.15/MRC-v0.0.15-900x560.png',
+            'artifacts/v0.0.15/MRC-v0.0.15-900x560-busy.png',
+            'artifacts/v0.0.15/MRC-v0.0.15-1200x760-drawer.png',
+            'artifacts/v0.0.15/MRC-v0.0.15-1200x760-system-drawer.png',
+            'artifacts/v0.0.15/MRC-v0.0.15-2048x1222-mixed.png'
+          )
+          foreach ($asset in $assets) {
+            if (-not (Test-Path -LiteralPath $asset -PathType Leaf)) { throw "Release asset missing: $asset" }
+          }
+
+          $notes = "PRE-CERTIFICATION BUILD. Final target remains v0.1.0. v0.0.15 is the Owner-reference replica convergence build: reference-scale hero/header, compact three-slot managed-runner cards, luminous six-state orbs, state edge lighting, native ambient field, responsive 4/2/1-column behavior, Control Drawer, read-only System Drawer, dark scrollbar chrome, segmented CLI Help presentation, and single-instance bare-MRC activation truth. All Task 12 visual categories reached 10.0/10 against the certified eight-frame matrix before release authorization. v0.0.14 remains immutable historical pre-cert evidence. Final certification remains HOLD until the real Main-PC update and live certification gauntlet reaches 10.0/10 in every applicable category."
+
+          gh release view v0.0.15 *> $null
+          if ($LASTEXITCODE -eq 0) {
+            gh release edit v0.0.15 --target "$env:GITHUB_SHA" --title "MRC v0.0.15 Reference Replica Pre-Cert Build" --notes $notes --prerelease
+            if ($LASTEXITCODE -ne 0) { throw 'Failed to update v0.0.15 release metadata.' }
+            gh release upload v0.0.15 $assets --clobber
+            if ($LASTEXITCODE -ne 0) { throw 'Failed to replace v0.0.15 release assets.' }
+
+            gh api --method PATCH "repos/$env:GITHUB_REPOSITORY/git/refs/tags/v0.0.15" -f "sha=$env:GITHUB_SHA" -F "force=false" *> $null
+            if ($LASTEXITCODE -ne 0) { throw 'Failed to fast-forward the existing v0.0.15 Git tag to the exact candidate.' }
+          }
+          else {
+            gh release create v0.0.15 $assets --target "$env:GITHUB_SHA" --title "MRC v0.0.15 Reference Replica Pre-Cert Build" --notes $notes --prerelease
+            if ($LASTEXITCODE -ne 0) { throw 'Failed to create v0.0.15 prerelease.' }
+          }
+
+          $publishedTarget = gh api "repos/$env:GITHUB_REPOSITORY/git/ref/tags/v0.0.15" --jq '.object.sha'
+          if ($LASTEXITCODE -ne 0) { throw 'Failed to verify published v0.0.15 tag target.' }
+          $publishedTarget = ([string]$publishedTarget).Trim()
+          if ($publishedTarget -ne $env:GITHUB_SHA) {
+            throw "Published v0.0.15 tag target mismatch. Expected $env:GITHUB_SHA, got $publishedTarget."
+          }
+
+          Write-Host "RELEASE TARGET VERIFIED v0.0.15 -> $publishedTarget"
