@@ -276,6 +276,9 @@
                          Foreground="{StaticResource LabelBrush}"
                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                          ScrollViewer.VerticalScrollBarVisibility="Auto">
+                    <ListBox.Resources>
+                        <Style TargetType="{x:Type ScrollBar}" BasedOn="{StaticResource DarkScrollBarStyle}" />
+                    </ListBox.Resources>
                     <ListBox.ItemsPanel>
                         <ItemsPanelTemplate>
                             <UniformGrid Columns="{Binding CardColumnCount}" IsItemsHost="True" VerticalAlignment="Top" />
