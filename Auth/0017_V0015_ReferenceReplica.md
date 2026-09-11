@@ -317,3 +317,140 @@ Exact Owner visual reference retrieval requirement:
 - do not reconstruct the reference from prose alone.
 
 Handoff execution entrypoint: read this authority, the locked spec, and the committed implementation plan; retrieve the exact Owner reference image; create/use `precert-v0.0.15`; then begin Task 1 of the plan with Subagent-Driven Development. Do not skip directly to GUI implementation.
+
+## 17. Superseding implementation checkpoint — 2026-09-11
+
+This section supersedes the stale implementation-state bullets in Section 16. The design/authority portions above remain locked.
+
+### Exact repository state
+
+- repository: `doonchy16-cloud/MRC`;
+- active implementation branch: `precert-v0.0.15`;
+- exact implementation head before this documentation checkpoint: `157a52c2f39c7c2c9a93196efa9a592cc5a8cb5f`;
+- commit message: `fix: make system drawer dismissible and visually isolated`;
+- exact-head Windows workflow run: `34580892411` / run number `115`;
+- run #115 result: SUCCESS across redesign, PASS4, PASS3, PASS2, PASS1, render matrix, evidence upload, and cleanup;
+- run #115 GUI artifact: `MRC-v0.0.15-gui-previews`, artifact id `10191635708`, archive digest `sha256:334b9f8458ba53be8711903ef9c1d0070ea54dbd55edf6fde9550f2e383d3370`;
+- v0.0.14 remains frozen historical/live evidence. Never mutate or republish v0.0.14 bytes.
+
+After this authority checkpoint commit, the branch HEAD will naturally advance by one documentation-only commit. Implementation evidence remains anchored to `157a52c2...` until a later production/test change creates a new candidate.
+
+### Execution/tooling truth
+
+TDD remains mandatory: RED -> prove exact intended failure -> minimal GREEN -> exact-head Windows verification -> regression ladder -> rendered evidence -> visual review where applicable.
+
+The requested subagent-driven workflow could not be literally satisfied in the active ChatGPT runtime because no genuine subagent/task-dispatch tool was exposed. This limitation was disclosed rather than inventing worker/reviewer results. Continue using exact-SHA review, narrow diffs, TDD, full CI, and explicit rendered evidence unless a future runtime exposes real subagents.
+
+### Implemented plan state
+
+Plan Tasks 1 through 11 are implemented and verified. Task 12, the visual convergence/certification gate, is in its final evidence phase. Task 13 exact-head prerelease and Task 14 Main-PC live update gauntlet have NOT begun and remain locked until Task 12 is fully certified.
+
+Key locked production outcomes already implemented include:
+
+- exact v0.0.15 identity and frozen v0.0.14 historical boundary;
+- reference-responsive metrics and native WPF replica theme;
+- compact extracted `RunnerControlCard` with three lifecycle slots;
+- BUSY first-slot `FORCE STOP` with existing explicit destructive confirmation;
+- 32x32 luminous `StateOrb` driven by shared `AnimationIntensity`, no per-card timers;
+- exact header strings `MAIN PC • LOCAL-FIRST CONTROL` and `MAIN RUNNER CONTROL`;
+- five-layer ambient background;
+- left Control Drawer with search/filters/counters/bulk controls;
+- read-only bottom System Drawer for EXTERNAL/UNATTRIBUTED evidence;
+- Help token grammar and bare-MRC single-instance behavior from the committed plan;
+- deterministic render matrix and reference-comparison tooling;
+- one shared 20 FPS animation timer and one refresh timer;
+- all lifecycle operations still route through `RunnerOperationsService`.
+
+### Task 12 focused convergence findings closed before handoff
+
+The following focused findings have been TDD-proved, implemented, fully regression-verified, and pixel-reviewed at the point stated:
+
+- F-V15-004: 150 px visible card body + 22 px inter-card gap; outer card footprint is 172 px so 11 px top/bottom spacing does not steal from the visible body. CLOSED 10.0/10.
+- F-V15-005: ambient depth; preserved proven lower-right amber anchor and lifted separate under-card warmth. CLOSED 10.0/10.
+- F-V15-006: enabled secondary STOP/RESTART rails use restrained warm-gold outlines. CLOSED 10.0/10.
+- F-V15-007: menu button changed from solid yellow tile to dark surface with amber glyph/rim and restrained halo. CLOSED 10.0/10.
+- F-V15-008: removed the giant runner-field dashboard frame; cards float over ambient field while scrolling/containment remain intact. CLOSED 10.0/10.
+- F-V15-009: card metadata legibility raised without crowding: repo 11 px, path 10 px, stronger path contrast. CLOSED 10.0/10.
+- F-V15-010: runner-list scrollbar now truly renders with shared dark scrollbar chrome; deterministic preview now initializes real `App.xaml` resources. CLOSED 10.0/10.
+- F-V15-011: deterministic canonical fixture now contains exactly 15 managed preview runners, producing the Owner-reference 4+4+4+3 wide-screen density while live runtime inventory remains truthful. CLOSED 10.0/10.
+- F-V15-013: System Drawer findings scrollbar uses the shared dark scrollbar style and was pixel-reviewed dark at run #113. CLOSED 10.0/10.
+
+### System Drawer evidence chain and current unresolved gate
+
+F-V15-012 added the missing deterministic System Drawer evidence path: `--drawer system` plus `MRC-v0.0.15-1200x760-system-drawer.png`. The first successful System Drawer render exposed two genuine defects rather than earning an automatic PASS:
+
+1. native/light findings scrollbar, fixed and pixel-verified by F-V15-013;
+2. translucent expanded drawer allowed the collapsed summary strip to ghost through, and the expanded overlay had no deterministic close path because it covered the opening toggle and Escape only handled the Control Drawer.
+
+F-V15-014 addressed the second defect at exact implementation head `157a52c2...`:
+
+- expanded System Drawer outer surface is opaque `#0B1013`;
+- compact custom `CLOSE` affordance added inside the drawer;
+- `SystemDrawer.CloseRequested` is presentation-only and contains no `RunnerOperationsService`, `RunnerEngine`, or lifecycle authority;
+- MainWindow routes `CloseRequested` to `SystemFindingsPanel.IsChecked = false`;
+- Escape also dismisses the System Drawer;
+- existing read-only evidence boundary, 35% max-height authority, runner grid layout, dark scrollbar, and runtime separation remain preserved;
+- run #115 is fully GREEN, including fresh render generation.
+
+**Important unresolved handoff action:** the run #115 artifact was downloaded, but the final fresh `MRC-v0.0.15-1200x760-system-drawer.png` from `157a52c2...` was NOT visually inspected before handoff mode began. Therefore F-V15-014 and the overall System Drawer category remain HOLD, not PASS, despite structural/CI green.
+
+First action in the next chat MUST be to retrieve/download run #115 artifact `10191635708`, inspect `MRC-v0.0.15-1200x760-system-drawer.png` at realistic size, and verify all of:
+
+- no collapsed-summary ghosting through the expanded drawer;
+- dark custom scrollbar remains rendered;
+- CLOSE control is legible, visually coherent, and not oversized;
+- drawer remains a bottom overlay within the locked 35% cap;
+- runner field is not resized/reflowed by opening it;
+- read-only evidence content remains readable and unclipped.
+
+Only if every item passes may F-V15-014 be scored 10.0/10 and the System Drawer category close. If any pixel defect remains, open a new focused RED and continue TDD.
+
+### Task 12 final certification requirements after System Drawer closes
+
+Do a fresh exact-head review of all required visual evidence, not just structural tests:
+
+- `MRC-v0.0.15-2048x1222.png`;
+- `MRC-v0.0.15-1200x760.png`;
+- `MRC-v0.0.15-1180x760.png`;
+- `MRC-v0.0.15-900x560.png`;
+- `MRC-v0.0.15-900x560-busy.png`;
+- `MRC-v0.0.15-1200x760-drawer.png`;
+- `MRC-v0.0.15-1200x760-system-drawer.png`;
+- `MRC-v0.0.15-2048x1222-mixed.png`.
+
+Also generate/re-generate from the latest exact candidate and exact Owner reference:
+
+- `reference-side-by-side.png`;
+- `reference-overlay-50.png`.
+
+The comparison tooling already exists at `scripts/build-v0.0.15-reference-comparison.ps1`; CI currently uploads candidate renders but does not automatically include those two comparison files, so do not claim they exist unless actually generated for the latest candidate.
+
+Exact Owner reference: retrieve from File Library using the `Screenshot 2026-09-09 214130...` name and verify it is the Owner-authorized 2048x1222 Runner Control screenshot. In the implementation session the usable local file was `/mnt/data/Screenshot 2026-09-09 214130(1).png`; a fresh chat must retrieve it again rather than assuming that sandbox path persists.
+
+Final Task 12 certification categories, each independently required to be exactly 10.0/10:
+
+1. composition;
+2. hero/header;
+3. card geometry/density;
+4. state orb;
+5. border/glow treatment;
+6. action rail;
+7. enabled/disabled clarity;
+8. ambient background;
+9. typography hierarchy;
+10. responsiveness;
+11. Control Drawer;
+12. System Drawer;
+13. accessibility/readability.
+
+Any category below 10.0/10 or any unresolved/unverified visual requirement means Task 12 remains HOLD.
+
+### Release lock and next tasks
+
+Do NOT begin Task 13 while Task 12 is HOLD.
+
+After Task 12 genuinely passes, read the exact committed Task 13 plan section from `docs/superpowers/plans/2026-09-10-mrc-v0.0.15-reference-replica.md` at the then-current HEAD before changing release files. Task 13 must produce an exact-head v0.0.15 prerelease package with coherent version/channel/stage/final-target metadata, checksum/manifest identity, packaged CLI identity, required visual evidence, and exact tag/trigger/release-head coherence. Preserve the frozen v0.0.14 release.
+
+Only after Task 13 passes may Task 14 perform the live Main-PC update gauntlet: installed v0.0.14 should discover available v0.0.15 as UPDATE AVAILABLE, update through the normal SHA/manifest/atomic-activation/rollback path, then undergo live GUI, CLI, repeated START/STOP/RESTART, BUSY protection, bulk-operation, single-instance, Doctor/Diagnose, and reference-quality acceptance. Final product target remains v0.1.0.
+
+Until all applicable certification and live gates are complete: HOLD.
