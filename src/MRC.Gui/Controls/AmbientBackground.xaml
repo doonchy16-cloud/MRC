@@ -32,9 +32,9 @@
                  Margin="0,0,-260,-245">
             <Ellipse.Fill>
                 <RadialGradientBrush Center="0.5,0.5" GradientOrigin="0.5,0.5" RadiusX="0.5" RadiusY="0.5">
-                    <GradientStop Color="#4AA96B11" Offset="0" />
-                    <GradientStop Color="#26FCB83D" Offset="0.42" />
-                    <GradientStop Color="#0EA76518" Offset="0.70" />
+                    <GradientStop Color="#7CBA5C10" Offset="0" />
+                    <GradientStop Color="#42E7982A" Offset="0.42" />
+                    <GradientStop Color="#20995A16" Offset="0.70" />
                     <GradientStop Color="#00090E0F" Offset="1" />
                 </RadialGradientBrush>
             </Ellipse.Fill>
@@ -51,8 +51,8 @@
                  Margin="0,0,0,-108">
             <Ellipse.Fill>
                 <RadialGradientBrush Center="0.5,0.5" GradientOrigin="0.5,0.5" RadiusX="0.5" RadiusY="0.5">
-                    <GradientStop Color="#1EFCC34C" Offset="0" />
-                    <GradientStop Color="#0EA65E16" Offset="0.56" />
+                    <GradientStop Color="#34F0A83A" Offset="0" />
+                    <GradientStop Color="#1CA65E16" Offset="0.56" />
                     <GradientStop Color="#00090E0F" Offset="1" />
                 </RadialGradientBrush>
             </Ellipse.Fill>
