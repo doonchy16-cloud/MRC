@@ -266,7 +266,7 @@
                                  Margin="2,0,2,18"
                                  MenuRequested="HeroHeader_OnMenuRequested" />
 
-            <Border x:Name="RunnerCardSurface" Grid.Row="1" Background="#66070D12" BorderBrush="#182733" BorderThickness="1" CornerRadius="16" Padding="5" ClipToBounds="True">
+            <Border x:Name="RunnerCardSurface" Grid.Row="1" Background="Transparent" BorderBrush="#182733" BorderThickness="0" CornerRadius="16" Padding="5" ClipToBounds="True">
                 <ListBox x:Name="RunnerList"
                          AutomationProperties.Name="Managed runner command cards"
                          ItemsSource="{Binding VisibleRows}"
