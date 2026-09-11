@@ -14,8 +14,8 @@ internal static class Task45EV0015ResponsiveHeroContract
                 && heroCode.Contains("public bool Compact", StringComparison.Ordinal),
             "F-V15-003: HeroHeader must expose an explicit compact responsive mode.");
 
-        Require(mainCode.Contains("HeroHeader.Compact = ActualWidth <= 960", StringComparison.Ordinal),
-            "F-V15-003: minimum-width layout must activate compact hero composition at the 900px evidence viewport without changing desktop composition.");
+        Require(heroCode.Contains("Compact = ActualWidth <= 960", StringComparison.Ordinal),
+            "F-V15-003: HeroHeader must own its minimum-width compact threshold at the 900px evidence viewport.");
 
         Require(heroXaml.Contains("x:Name=\"HeroIdentityCluster\"", StringComparison.Ordinal)
                 && heroXaml.Contains("x:Name=\"HeroTruthCluster\"", StringComparison.Ordinal)
