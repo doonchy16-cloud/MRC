@@ -98,7 +98,7 @@
 
     <Style x:Key="ReplicaSecondaryActionButtonStyle" TargetType="Button" BasedOn="{StaticResource ReplicaActionButtonBaseStyle}">
         <Setter Property="Background" Value="#0E1518" />
-        <Setter Property="BorderBrush" Value="#334047" />
+        <Setter Property="BorderBrush" Value="#6E5A2C" />
     </Style>
 
     <Style x:Key="ReplicaDetailsButtonStyle" TargetType="Button" BasedOn="{StaticResource ReplicaActionButtonBaseStyle}">
