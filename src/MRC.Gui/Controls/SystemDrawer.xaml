@@ -76,6 +76,10 @@
             <ScrollViewer Grid.Row="2"
                           VerticalScrollBarVisibility="Auto"
                           HorizontalScrollBarVisibility="Disabled">
+                <ScrollViewer.Resources>
+                    <Style TargetType="{x:Type ScrollBar}"
+                           BasedOn="{StaticResource DarkScrollBarStyle}" />
+                </ScrollViewer.Resources>
                 <ItemsControl ItemsSource="{Binding SystemFindings}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
