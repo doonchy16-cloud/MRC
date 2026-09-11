@@ -10,10 +10,23 @@ internal static class Task40V0015AmbientBackgroundContract
         var backgroundCodePath = Path.Combine(root, "src", "MRC.Gui", "Controls", "AmbientBackground.xaml.cs");
 
         Require(File.Exists(backgroundPath), "AmbientBackground.xaml is missing.");
-        Require(!File.Exists(backgroundCodePath), "AmbientBackground must remain visual-only with no handwritten code-behind.");
+        Require(File.Exists(backgroundCodePath),
+            "AmbientBackground requires constructor-only code-behind so its XAML visual tree initializes at runtime.");
 
         var xaml = File.ReadAllText(backgroundPath);
+        var codeBehind = File.ReadAllText(backgroundCodePath);
         var main = File.ReadAllText(Path.Combine(root, "src", "MRC.Gui", "MainWindow.xaml"));
+
+        Require(codeBehind.Contains("public partial class AmbientBackground", StringComparison.Ordinal)
+                && codeBehind.Contains("public AmbientBackground()", StringComparison.Ordinal)
+                && codeBehind.Contains("InitializeComponent();", StringComparison.Ordinal),
+            "AmbientBackground code-behind must be limited to WPF visual-tree initialization.");
+        Require(!codeBehind.Contains("DispatcherTimer", StringComparison.Ordinal)
+                && !codeBehind.Contains("RunnerEngine", StringComparison.Ordinal)
+                && !codeBehind.Contains("RunnerOperationsService", StringComparison.Ordinal)
+                && !codeBehind.Contains("DataContext", StringComparison.Ordinal)
+                && !codeBehind.Contains("Click", StringComparison.Ordinal),
+            "AmbientBackground code-behind gained behavior, state, or lifecycle ownership.");
 
         foreach (var layer in new[]
                  {
