@@ -34,7 +34,8 @@ internal static class Program
 
             Directory.CreateDirectory(Path.GetDirectoryName(options.OutputPath)!);
 
-            var application = new Application { ShutdownMode = ShutdownMode.OnExplicitShutdown };
+            var application = new App { ShutdownMode = ShutdownMode.OnExplicitShutdown };
+            application.InitializeComponent();
             var window = new MainWindow
             {
                 Width = options.Width,
