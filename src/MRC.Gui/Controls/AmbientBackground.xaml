@@ -25,11 +25,11 @@
         </Ellipse>
 
         <Ellipse x:Name="LowerRightAmberBloom"
-                 Width="980"
-                 Height="650"
+                 Width="1180"
+                 Height="760"
                  HorizontalAlignment="Right"
                  VerticalAlignment="Bottom"
-                 Margin="0,0,-260,-245">
+                 Margin="0,0,-210,-80">
             <Ellipse.Fill>
                 <RadialGradientBrush Center="0.5,0.5" GradientOrigin="0.5,0.5" RadiusX="0.5" RadiusY="0.5">
                     <GradientStop Color="#7CBA5C10" Offset="0" />
