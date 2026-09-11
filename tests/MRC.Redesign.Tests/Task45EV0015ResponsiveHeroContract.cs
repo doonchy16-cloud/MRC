@@ -24,6 +24,23 @@ internal static class Task45EV0015ResponsiveHeroContract
                 && heroXaml.Contains("Compact, ElementName=Root", StringComparison.Ordinal),
             "F-V15-003: compact mode must reflow hero identity and truth metadata instead of clipping or globally scaling the window.");
 
+        var truthMarker = "x:Name=\"HeroTruthCluster\"";
+        var truthStart = heroXaml.IndexOf(truthMarker, StringComparison.Ordinal);
+        var truthTagEnd = truthStart < 0 ? -1 : heroXaml.IndexOf('>', truthStart);
+        Require(truthStart >= 0 && truthTagEnd > truthStart,
+            "F-V15-003: HeroTruthCluster opening tag could not be inspected.");
+        var truthOpeningTag = heroXaml[truthStart..truthTagEnd];
+
+        Require(!truthOpeningTag.Contains("Grid.Row=", StringComparison.Ordinal)
+                && !truthOpeningTag.Contains("Grid.Column=", StringComparison.Ordinal),
+            "F-V15-003: HeroTruthCluster must not use local Grid.Row/Grid.Column values that outrank compact-mode trigger setters in WPF.");
+
+        Require(heroXaml.Contains("<Setter Property=\"Grid.Row\" Value=\"0\" />", StringComparison.Ordinal)
+                && heroXaml.Contains("<Setter Property=\"Grid.Column\" Value=\"1\" />", StringComparison.Ordinal)
+                && heroXaml.Contains("<Setter Property=\"Grid.Row\" Value=\"1\" />", StringComparison.Ordinal)
+                && heroXaml.Contains("<Setter Property=\"Grid.Column\" Value=\"0\" />", StringComparison.Ordinal),
+            "F-V15-003: desktop and compact truth-cluster placement must both be style-driven so the compact trigger can win.");
+
         Require(!mainCode.Contains("RootSurface.LayoutTransform", StringComparison.Ordinal),
             "F-V15-003: responsive hero must not reintroduce whole-window scaling.");
     }
