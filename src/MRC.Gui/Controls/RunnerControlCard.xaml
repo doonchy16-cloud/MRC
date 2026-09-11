@@ -4,7 +4,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:controls="clr-namespace:MRC.Gui.Controls"
              xmlns:runtime="clr-namespace:MRC.Core.Runtime;assembly=MRC.Core"
-             Height="150"
+             Height="172"
              MinWidth="330"
              FontFamily="Segoe UI"
              Foreground="{DynamicResource ReplicaHeroWhiteBrush}">
