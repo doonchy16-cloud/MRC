@@ -8,6 +8,7 @@ internal static class Task51FV0015RunnerScrollbarChromeContract
         var root = Directory.GetCurrentDirectory();
         var mainWindow = File.ReadAllText(Path.Combine(root, "src", "MRC.Gui", "MainWindow.xaml"));
         var app = File.ReadAllText(Path.Combine(root, "src", "MRC.Gui", "App.xaml"));
+        var preview = File.ReadAllText(Path.Combine(root, "tools", "MRC.Pass3.Preview", "Program.cs"));
 
         Require(app.Contains("x:Key=\"DarkScrollBarStyle\"", StringComparison.Ordinal)
                 && app.Contains("x:Key=\"DarkScrollThumbTemplate\"", StringComparison.Ordinal),
@@ -24,11 +25,15 @@ internal static class Task51FV0015RunnerScrollbarChromeContract
                 && runnerBlock.Contains("BasedOn=\"{StaticResource DarkScrollBarStyle}\"", StringComparison.Ordinal),
             "F-V15-010: RunnerList must consume DarkScrollBarStyle at the visual resource boundary; merely defining or attempting runtime discovery is insufficient.");
 
+        Require(preview.Contains("new App", StringComparison.Ordinal)
+                && preview.Contains("InitializeComponent();", StringComparison.Ordinal),
+            "F-V15-010: deterministic preview must initialize the real MRC App resources before constructing MainWindow.");
+
         Require(runnerBlock.Contains("ScrollViewer.VerticalScrollBarVisibility=\"Auto\"", StringComparison.Ordinal)
                 && runnerBlock.Contains("ScrollViewer.HorizontalScrollBarVisibility=\"Disabled\"", StringComparison.Ordinal),
             "F-V15-010: dark scrollbar convergence must preserve vertical-auto/horizontal-disabled scrolling semantics.");
 
-        Console.WriteLine("PASS  F-V15-010 RunnerList dark-scrollbar consumption contract");
+        Console.WriteLine("PASS  F-V15-010 RunnerList dark-scrollbar consumption + preview-resource contract");
     }
 
     private static void Require(bool condition, string message)
