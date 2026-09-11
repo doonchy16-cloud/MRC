@@ -93,6 +93,7 @@ internal static class LayoutAcceptance
         var code = CodeBehind();
         var dashboard = File.ReadAllText(Path.Combine(RepoRoot(), "src", "MRC.Gui", "Presentation", "RunnerDashboardViewModel.cs"));
         var responsive = File.ReadAllText(Path.Combine(RepoRoot(), "src", "MRC.Gui", "Presentation", "RunnerResponsiveLayout.cs"));
+        var metrics = File.ReadAllText(Path.Combine(RepoRoot(), "src", "MRC.Gui", "Presentation", "ReferenceReplicaMetrics.cs"));
 
         Require(theme.Contains("x:Key=\"ReplicaCardSurfaceStyle\"", StringComparison.Ordinal)
                 && theme.Contains("CornerRadius\" Value=\"16\"", StringComparison.Ordinal),
@@ -111,10 +112,13 @@ internal static class LayoutAcceptance
             "Runner identity is not presented at the compact reference-first card hierarchy.");
         Require(card.Contains("TextTrimming=\"CharacterEllipsis\"", StringComparison.Ordinal),
             "Long identity text must ellipsize.");
-        Require(card.Contains("Height=\"150\"", StringComparison.Ordinal)
+        Require(metrics.Contains("CardTargetHeight = 150", StringComparison.Ordinal)
+                && metrics.Contains("CardGap = 22", StringComparison.Ordinal)
+                && theme.Contains("<Setter Property=\"Margin\" Value=\"11\" />", StringComparison.Ordinal)
+                && card.Contains("Height=\"172\"", StringComparison.Ordinal)
                 && card.Contains("x:Name=\"ThreeSlotActionRail\"", StringComparison.Ordinal)
                 && card.Contains("Grid.Row=\"1\" Height=\"46\"", StringComparison.Ordinal),
-            "Compact runner card does not preserve the locked 150 px card and 46 px action-rail geometry.");
+            "Compact runner card does not preserve the locked 150 px visible body, 22 px gap, and 46 px action-rail geometry.");
         Require(!code.Contains("RootSurface.LayoutTransform", StringComparison.Ordinal),
             "Superseded whole-window scaling remains active.");
     }
