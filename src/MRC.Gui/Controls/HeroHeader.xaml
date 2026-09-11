@@ -47,13 +47,16 @@
                     FontFamily="Segoe UI Symbol"
                     FontSize="23"
                     FontWeight="Bold"
-                    Foreground="#241A08"
-                    Background="{StaticResource ReplicaAmberBrush}"
-                    BorderBrush="#FFD77B"
+                    Foreground="{StaticResource ReplicaAmberBrush}"
+                    Background="#0E1518"
+                    BorderBrush="#6E5A2C"
                     BorderThickness="1"
                     Cursor="Hand"
                     AutomationProperties.Name="Open runner control drawer"
                     Click="Menu_OnClick">
+                <Button.Effect>
+                    <DropShadowEffect Color="#FCC34C" BlurRadius="14" ShadowDepth="0" Opacity="0.16" />
+                </Button.Effect>
                 <Button.Template>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="Chrome"
