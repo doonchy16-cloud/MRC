@@ -28,6 +28,9 @@ New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
 Add-Type -AssemblyName PresentationCore
 Add-Type -AssemblyName WindowsBase
 
+$ReferenceViewportTop = 176
+$ComparisonHeight = 884
+
 function Load-Bitmap([string]$Path) {
     $resolved = (Resolve-Path -LiteralPath $Path).Path
     $bitmap = [System.Windows.Media.Imaging.BitmapImage]::new()
@@ -72,14 +75,26 @@ $candidate = Load-Bitmap $CandidatePath
 Assert-BitmapSize $reference 2048 1222 'Owner reference'
 Assert-BitmapSize $candidate 2048 1222 'Candidate'
 
+$referenceBand = [System.Windows.Media.Imaging.CroppedBitmap]::new(
+    $reference,
+    [System.Windows.Int32Rect]::new(0, $ReferenceViewportTop, 2048, $ComparisonHeight))
+$referenceBand.Freeze()
+$candidateBand = [System.Windows.Media.Imaging.CroppedBitmap]::new(
+    $candidate,
+    [System.Windows.Int32Rect]::new(0, 0, 2048, $ComparisonHeight))
+$candidateBand.Freeze()
+
 $sideBySidePath = Join-Path $OutputDir 'reference-side-by-side.png'
 $overlayPath = Join-Path $OutputDir 'reference-overlay-50.png'
+$neutral = [System.Windows.Media.SolidColorBrush]::new([System.Windows.Media.Color]::FromRgb(7, 16, 21))
+$neutral.Freeze()
 
 $sideBySide = [System.Windows.Media.DrawingVisual]::new()
 $dc = $sideBySide.RenderOpen()
 try {
-    $dc.DrawImage($reference, [System.Windows.Rect]::new(0, 0, 2048, 1222))
-    $dc.DrawImage($candidate, [System.Windows.Rect]::new(2048, 0, 2048, 1222))
+    $dc.DrawRectangle($neutral, $null, [System.Windows.Rect]::new(0, 0, 4096, 1222))
+    $dc.DrawImage($referenceBand, [System.Windows.Rect]::new(0, 0, 2048, $ComparisonHeight))
+    $dc.DrawImage($candidateBand, [System.Windows.Rect]::new(2048, 0, 2048, $ComparisonHeight))
 }
 finally {
     $dc.Close()
@@ -89,9 +104,10 @@ Save-Visual $sideBySide 4096 1222 $sideBySidePath
 $overlay = [System.Windows.Media.DrawingVisual]::new()
 $dc = $overlay.RenderOpen()
 try {
-    $dc.DrawImage($reference, [System.Windows.Rect]::new(0, 0, 2048, 1222))
+    $dc.DrawRectangle($neutral, $null, [System.Windows.Rect]::new(0, 0, 2048, 1222))
+    $dc.DrawImage($referenceBand, [System.Windows.Rect]::new(0, 0, 2048, $ComparisonHeight))
     $dc.PushOpacity(0.5)
-    $dc.DrawImage($candidate, [System.Windows.Rect]::new(0, 0, 2048, 1222))
+    $dc.DrawImage($candidateBand, [System.Windows.Rect]::new(0, 0, 2048, $ComparisonHeight))
     $dc.Pop()
 }
 finally {
@@ -106,3 +122,4 @@ Assert-BitmapSize $over 2048 1222 '50% overlay comparison'
 
 Write-Host "REFERENCE COMPARISON VERIFIED  $sideBySidePath"
 Write-Host "REFERENCE OVERLAY VERIFIED     $overlayPath"
+Write-Host "NORMALIZED VIEWPORT BAND       reference y=$ReferenceViewportTop..$($ReferenceViewportTop + $ComparisonHeight), candidate y=0..$ComparisonHeight"
