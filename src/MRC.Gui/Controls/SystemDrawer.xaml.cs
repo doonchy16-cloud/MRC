@@ -1,3 +1,4 @@
+using System;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -13,9 +14,17 @@ public partial class SystemDrawer : UserControl
         InitializeComponent();
     }
 
+    public event EventHandler? CloseRequested;
+
     public string StatusText
     {
         get => (string)GetValue(StatusTextProperty);
         set => SetValue(StatusTextProperty, value);
+    }
+
+    private void CloseButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        CloseRequested?.Invoke(this, EventArgs.Empty);
+        e.Handled = true;
     }
 }

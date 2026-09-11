@@ -8,7 +8,6 @@ internal static class Task55FV0015SystemDrawerDismissContract
         var root = Directory.GetCurrentDirectory();
         var drawerXaml = File.ReadAllText(Path.Combine(root, "src", "MRC.Gui", "Controls", "SystemDrawer.xaml"));
         var drawerCode = File.ReadAllText(Path.Combine(root, "src", "MRC.Gui", "Controls", "SystemDrawer.xaml.cs"));
-        var windowXaml = File.ReadAllText(Path.Combine(root, "src", "MRC.Gui", "MainWindow.xaml"));
         var windowCode = File.ReadAllText(Path.Combine(root, "src", "MRC.Gui", "MainWindow.xaml.cs"));
 
         Require(drawerXaml.Contains("Background=\"#FF0B1013\"", StringComparison.Ordinal),
@@ -21,9 +20,8 @@ internal static class Task55FV0015SystemDrawerDismissContract
                 && drawerCode.Contains("CloseRequested?.Invoke(this, EventArgs.Empty)", StringComparison.Ordinal),
             "F-V15-014: System Drawer close affordance does not raise a presentation-only close request.");
 
-        Require(windowXaml.Contains("CloseRequested=\"SystemDrawer_OnCloseRequested\"", StringComparison.Ordinal),
-            "F-V15-014: MainWindow does not consume the System Drawer close request.");
-        Require(windowCode.Contains("private void CloseSystemDrawer()", StringComparison.Ordinal)
+        Require(windowCode.Contains("SystemDrawer.CloseRequested += SystemDrawer_OnCloseRequested;", StringComparison.Ordinal)
+                && windowCode.Contains("private void CloseSystemDrawer()", StringComparison.Ordinal)
                 && windowCode.Contains("SystemFindingsPanel.IsChecked = false;", StringComparison.Ordinal)
                 && windowCode.Contains("SystemDrawer_OnCloseRequested", StringComparison.Ordinal),
             "F-V15-014: MainWindow does not deterministically close the System Drawer through the summary toggle authority.");

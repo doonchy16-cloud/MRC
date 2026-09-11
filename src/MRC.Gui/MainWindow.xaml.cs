@@ -33,6 +33,7 @@ public partial class MainWindow : Window
         DataContext = _dashboard;
         UpdateHeroTruth(false);
         RunnerList.Loaded += (_, _) => ApplyRunnerScrollBarStyle();
+        SystemDrawer.CloseRequested += SystemDrawer_OnCloseRequested;
 
         _refreshTimer.Interval = TimeSpan.FromSeconds(3);
         _refreshTimer.Tick += async (_, _) => await RefreshDashboardAsync();
@@ -126,11 +127,21 @@ public partial class MainWindow : Window
     {
         if (Keyboard.Modifiers != ModifierKeys.None) return;
 
-        if (e.Key == Key.Escape && ControlDrawerHost.Visibility == Visibility.Visible)
+        if (e.Key == Key.Escape)
         {
-            CloseControlDrawer();
-            e.Handled = true;
-            return;
+            if (ControlDrawerHost.Visibility == Visibility.Visible)
+            {
+                CloseControlDrawer();
+                e.Handled = true;
+                return;
+            }
+
+            if (SystemFindingsPanel.IsChecked == true)
+            {
+                CloseSystemDrawer();
+                e.Handled = true;
+                return;
+            }
         }
 
         if (e.Key is not Key.OemQuestion and not Key.Divide) return;
@@ -154,6 +165,14 @@ public partial class MainWindow : Window
     {
         ControlDrawerHost.Visibility = Visibility.Collapsed;
         DrawerScrim.Visibility = Visibility.Collapsed;
+        RunnerList.Focus();
+    }
+
+    private void SystemDrawer_OnCloseRequested(object? sender, EventArgs e) => CloseSystemDrawer();
+
+    private void CloseSystemDrawer()
+    {
+        SystemFindingsPanel.IsChecked = false;
         RunnerList.Focus();
     }
 

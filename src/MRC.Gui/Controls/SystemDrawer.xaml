@@ -3,7 +3,45 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Name="Root"
              Focusable="False">
-    <Border Background="#F50B1013"
+    <UserControl.Resources>
+        <Style x:Key="SystemDrawerCloseButtonStyle" TargetType="Button">
+            <Setter Property="Foreground" Value="#D6DDE1" />
+            <Setter Property="Background" Value="#11181C" />
+            <Setter Property="BorderBrush" Value="#765624" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="10,5" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FontFamily" Value="Cascadia Mono, Consolas" />
+            <Setter Property="FontSize" Value="9" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Chrome"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="999"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Chrome" Property="Background" Value="#161B19" />
+                                <Setter TargetName="Chrome" Property="BorderBrush" Value="#A7782B" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Chrome" Property="Opacity" Value="0.78" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <Border Background="#FF0B1013"
             BorderBrush="#765624"
             BorderThickness="1"
             CornerRadius="18"
@@ -33,30 +71,38 @@
                                FontWeight="SemiBold"
                                Margin="0,3,0,0" />
                 </StackPanel>
-                <Border Grid.Column="1"
-                        Background="#11181C"
-                        BorderBrush="#354248"
-                        BorderThickness="1"
-                        CornerRadius="999"
-                        Padding="10,5"
-                        VerticalAlignment="Center">
-                    <TextBlock FontFamily="Cascadia Mono, Consolas"
-                               FontSize="9"
-                               FontWeight="Bold">
-                        <TextBlock.Style>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="Text" Value="CLEAR" />
-                                <Setter Property="Foreground" Value="#8D969B" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding HasSystemFindings}" Value="True">
-                                        <Setter Property="Text" Value="EVIDENCE PRESENT" />
-                                        <Setter Property="Foreground" Value="#FFD166" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </TextBlock.Style>
-                    </TextBlock>
-                </Border>
+                <StackPanel Grid.Column="1"
+                            Orientation="Horizontal"
+                            VerticalAlignment="Center">
+                    <Border Background="#11181C"
+                            BorderBrush="#354248"
+                            BorderThickness="1"
+                            CornerRadius="999"
+                            Padding="10,5"
+                            Margin="0,0,8,0">
+                        <TextBlock FontFamily="Cascadia Mono, Consolas"
+                                   FontSize="9"
+                                   FontWeight="Bold">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Text" Value="CLEAR" />
+                                    <Setter Property="Foreground" Value="#8D969B" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding HasSystemFindings}" Value="True">
+                                            <Setter Property="Text" Value="EVIDENCE PRESENT" />
+                                            <Setter Property="Foreground" Value="#FFD166" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Border>
+                    <Button x:Name="CloseButton"
+                            Content="CLOSE"
+                            Style="{StaticResource SystemDrawerCloseButtonStyle}"
+                            ToolTip="Close system evidence drawer"
+                            Click="CloseButton_OnClick" />
+                </StackPanel>
             </Grid>
 
             <Border Grid.Row="1"
