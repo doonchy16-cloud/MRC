@@ -48,14 +48,14 @@
                     <TextBlock Margin="0,3,0,0"
                                Foreground="{StaticResource ReplicaMutedBrush}"
                                FontFamily="Cascadia Mono, Consolas"
-                               FontSize="10"
+                               FontSize="11"
                                TextTrimming="CharacterEllipsis">
                         <Run Text="REPO  " /><Run Text="{Binding Row.RepositoryName, ElementName=Root, Mode=OneWay}" />
                     </TextBlock>
                     <TextBlock Margin="0,2,0,0"
-                               Foreground="#667279"
+                               Foreground="#78848A"
                                FontFamily="Cascadia Mono, Consolas"
-                               FontSize="9"
+                               FontSize="10"
                                Text="{Binding Row.DirectoryPath, ElementName=Root}"
                                TextTrimming="CharacterEllipsis" />
                 </StackPanel>
