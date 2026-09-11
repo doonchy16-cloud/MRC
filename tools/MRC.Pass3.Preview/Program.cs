@@ -74,6 +74,11 @@ internal static class Program
                 ShowControlDrawer(window, options.Width);
                 window.UpdateLayout();
             }
+            else if (string.Equals(options.Drawer, "system", StringComparison.OrdinalIgnoreCase))
+            {
+                ShowSystemDrawer(window);
+                window.UpdateLayout();
+            }
 
             var bitmap = new RenderTargetBitmap(
                 options.Width,
@@ -137,8 +142,11 @@ internal static class Program
                     break;
                 case "--drawer":
                     drawer = NextValue(args, ref index, "--drawer");
-                    if (!string.Equals(drawer, "control", StringComparison.OrdinalIgnoreCase))
+                    if (!string.Equals(drawer, "control", StringComparison.OrdinalIgnoreCase)
+                        && !string.Equals(drawer, "system", StringComparison.OrdinalIgnoreCase))
+                    {
                         throw new ArgumentException($"Unsupported preview drawer: '{drawer}'.", nameof(args));
+                    }
                     break;
                 case "--mixed-state":
                     mixedState = true;
@@ -211,6 +219,19 @@ internal static class Program
         // Keep preview visually faithful while remaining non-interactive and runtime-gated.
         drawer.IsEnabled = true;
         drawer.IsHitTestVisible = false;
+    }
+
+    private static void ShowSystemDrawer(MainWindow window)
+    {
+        if (window.FindName("SystemFindingsPanel") is not ToggleButton toggle
+            || window.FindName("SystemDrawerHost") is not FrameworkElement host)
+        {
+            throw new InvalidOperationException("System Drawer composition was not available for preview evidence.");
+        }
+
+        host.MaxHeight = Math.Max(0, window.ActualHeight * 0.35);
+        host.IsHitTestVisible = false;
+        toggle.IsChecked = true;
     }
 
     private static void FocusRunnerState(MainWindow window, RunnerState focusState)

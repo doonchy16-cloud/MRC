@@ -174,6 +174,7 @@ Invoke-MrcPreview -FileName 'MRC-v0.0.15-1180x760.png' -Width 1180 -Height 760
 Invoke-MrcPreview -FileName 'MRC-v0.0.15-900x560.png' -Width 900 -Height 560
 Invoke-MrcPreview -FileName 'MRC-v0.0.15-900x560-busy.png' -Width 900 -Height 560 -FocusState 'BUSY'
 Invoke-MrcPreview -FileName 'MRC-v0.0.15-1200x760-drawer.png' -Width 1200 -Height 760 -Drawer 'control'
+Invoke-MrcPreview -FileName 'MRC-v0.0.15-1200x760-system-drawer.png' -Width 1200 -Height 760 -Drawer 'system'
 Invoke-MrcPreview -FileName 'MRC-v0.0.15-2048x1222-mixed.png' -Width 2048 -Height 1222 -MixedState
 
 Write-Host "V0.0.15 RENDER MATRIX VERIFIED  $artifactRoot"
