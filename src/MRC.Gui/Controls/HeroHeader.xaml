@@ -91,12 +91,12 @@
         </StackPanel>
 
         <StackPanel x:Name="HeroTruthCluster"
-                    Grid.Row="0"
-                    Grid.Column="1"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Center">
             <StackPanel.Style>
                 <Style TargetType="StackPanel">
+                    <Setter Property="Grid.Row" Value="0" />
+                    <Setter Property="Grid.Column" Value="1" />
                     <Setter Property="MinWidth" Value="300" />
                     <Setter Property="Margin" Value="28,0,0,0" />
                     <Setter Property="Grid.ColumnSpan" Value="1" />
