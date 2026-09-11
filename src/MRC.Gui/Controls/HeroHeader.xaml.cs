@@ -17,9 +17,14 @@ public partial class HeroHeader : UserControl
     public static readonly DependencyProperty AuthorizedProperty = DependencyProperty.Register(
         nameof(Authorized), typeof(bool), typeof(HeroHeader), new PropertyMetadata(false));
 
+    public static readonly DependencyProperty CompactProperty = DependencyProperty.Register(
+        nameof(Compact), typeof(bool), typeof(HeroHeader), new PropertyMetadata(false));
+
     public HeroHeader()
     {
         InitializeComponent();
+        Loaded += (_, _) => UpdateResponsiveMode();
+        SizeChanged += (_, _) => UpdateResponsiveMode();
     }
 
     public string InventoryText
@@ -46,7 +51,15 @@ public partial class HeroHeader : UserControl
         set => SetValue(AuthorizedProperty, value);
     }
 
+    public bool Compact
+    {
+        get => (bool)GetValue(CompactProperty);
+        set => SetValue(CompactProperty, value);
+    }
+
     public event RoutedEventHandler? MenuRequested;
+
+    private void UpdateResponsiveMode() => Compact = ActualWidth <= 960;
 
     private void Menu_OnClick(object sender, RoutedEventArgs e) =>
         MenuRequested?.Invoke(this, e);
