@@ -271,6 +271,11 @@ internal static class Program
         Snap(@"D:\Git_Runners_Main\eta-idle", "Eta Research", "Project Drift", RunnerState.IDLE),
         Snap(@"D:\Git_Runners_Main\theta-busy", "Theta Integration", "Project Drift", RunnerState.BUSY),
         Snap(@"D:\Git_Runners_Main\iota-off", "Iota Backup", "Project Ember", RunnerState.OFF),
+        Snap(@"D:\Git_Runners_Main\kappa-idle", "Kappa Cache", "Project Ember", RunnerState.IDLE),
+        Snap(@"D:\Git_Runners_Main\lambda-off", "Lambda Deploy", "Project Flux", RunnerState.OFF),
+        Snap(@"D:\Git_Runners_Main\mu-busy", "Mu Worker", "Project Flux", RunnerState.BUSY),
+        Snap(@"D:\Git_Runners_Main\nu-idle", "Nu Sync", "Project Grove", RunnerState.IDLE),
+        Snap(@"D:\Git_Runners_Main\xi-off", "Xi Monitor", "Project Grove", RunnerState.OFF),
         Snap(
             @"D:\Git_Runners_Main\VERY-LONG-RUNNER-FOLDER-NAME-FOR-ELLIPSIS-VALIDATION-0123456789",
             "VERY-LONG-RUNNER-NAME-FOR-ELLIPSIS-VALIDATION-ALPHA-0123456789",
