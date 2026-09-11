@@ -17,8 +17,10 @@ internal static class Task32V014ReferenceRecoveryContract
         var code = File.ReadAllText(Path.Combine(root, "src", "MRC.Gui", "MainWindow.xaml.cs"));
         var dashboard = File.ReadAllText(Path.Combine(root, "src", "MRC.Gui", "Presentation", "RunnerDashboardViewModel.cs"));
         var responsive = File.ReadAllText(Path.Combine(root, "src", "MRC.Gui", "Presentation", "RunnerResponsiveLayout.cs"));
+        var metrics = File.ReadAllText(Path.Combine(root, "src", "MRC.Gui", "Presentation", "ReferenceReplicaMetrics.cs"));
         var xaml = File.ReadAllText(Path.Combine(root, "src", "MRC.Gui", "MainWindow.xaml"));
         var card = File.ReadAllText(Path.Combine(root, "src", "MRC.Gui", "Controls", "RunnerControlCard.xaml"));
+        var theme = File.ReadAllText(Path.Combine(root, "src", "MRC.Gui", "Themes", "ReferenceReplica.xaml"));
 
         Require(dashboard.Contains("Math.Clamp(value, 1, 4)", StringComparison.Ordinal),
             "CardColumnCount is not bounded to the approved one-through-four column range.");
@@ -32,8 +34,11 @@ internal static class Task32V014ReferenceRecoveryContract
             "Reference recovery lost adaptive card layout authority.");
         Require(xaml.Contains("VerticalAlignment=\"Top\"", StringComparison.Ordinal),
             "Runner-card layout still stretches cards through the full available height.");
-        Require(card.Contains("Height=\"150\"", StringComparison.Ordinal),
-            "Current extracted runner cards do not preserve the locked compact 150 px reference height.");
+        Require(metrics.Contains("CardTargetHeight = 150", StringComparison.Ordinal)
+                && metrics.Contains("CardGap = 22", StringComparison.Ordinal)
+                && theme.Contains("<Setter Property=\"Margin\" Value=\"11\" />", StringComparison.Ordinal)
+                && card.Contains("Height=\"172\"", StringComparison.Ordinal),
+            "Current extracted runner cards do not preserve the locked 150 px visible body plus 22 px reference gap.");
     }
 
     private static void VerifyReferenceVisualHierarchy()
@@ -90,9 +95,10 @@ internal static class Task32V014ReferenceRecoveryContract
         Require(cardXaml.Contains("Text=\"{Binding Row.RunnerName, ElementName=Root}\"", StringComparison.Ordinal)
                 && cardXaml.Contains("FontSize=\"17\"", StringComparison.Ordinal),
             "Runner identity does not have the approved strong compact-card hierarchy.");
-        Require(cardXaml.Contains("Height=\"150\"", StringComparison.Ordinal)
-                && themeXaml.Contains("x:Key=\"ReplicaCardSurfaceStyle\"", StringComparison.Ordinal),
-            "Runner cards do not use the approved compact reference control-module surface.");
+        Require(cardXaml.Contains("Height=\"172\"", StringComparison.Ordinal)
+                && themeXaml.Contains("x:Key=\"ReplicaCardSurfaceStyle\"", StringComparison.Ordinal)
+                && themeXaml.Contains("<Setter Property=\"Margin\" Value=\"11\" />", StringComparison.Ordinal),
+            "Runner cards do not use the approved compact reference surface with 150 px visible body and 22 px gap.");
         Require(themeXaml.Contains("RunnerState.IDLE", StringComparison.Ordinal)
                 && themeXaml.Contains("DropShadowEffect", StringComparison.Ordinal),
             "Healthy runner cards have no restrained active-edge/glow treatment authority.");
